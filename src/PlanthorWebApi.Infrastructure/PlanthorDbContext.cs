@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore;
 using PlanthorWebApi.Domain;
 
@@ -10,8 +10,6 @@ namespace PlanthorWebApi.Infrastructure;
 /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
 public class PlanthorDbContext(DbContextOptions options) : DbContext(options)
 {
-    public DbSet<Tribe> Tribes { get; init; }
-
     /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

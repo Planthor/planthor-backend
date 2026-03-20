@@ -6,10 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NSwag;
 using NSwag.Generation.Processors.Security;
-using PlanthorWebApi.Application.Tribes.Commands.Create;
-using PlanthorWebApi.Application.Tribes.Commands.Delete;
-using PlanthorWebApi.Application.Tribes.Commands.Update;
-using PlanthorWebApi.Application.Tribes.Queries.Details;
 using PlanthorWebApi.Domain.Shared;
 using PlanthorWebApi.Infrastructure;
 using PlanthorWebApi.Infrastructure.Authentication;
@@ -50,10 +46,6 @@ try
 
     // API Client
     builder.Services.AddControllers();
-    builder.Services.AddScoped<IValidator<CreateTribeCommand>, CreateTribeCommandValidator>();
-    builder.Services.AddScoped<IValidator<UpdateTribeCommand>, UpdateTribeCommandValidator>();
-    builder.Services.AddScoped<IValidator<TribeDetailsQuery>, TribeDetailsQueryValidator>();
-    builder.Services.AddScoped<IValidator<DeleteTribeCommand>, DeleteTribeCommandValidator>();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApiDocument(options =>
     {
@@ -93,14 +85,8 @@ try
 
     builder.Services.AddMediatR(cfg =>
     {
-        var mediatRAssemblies = new[]
-        {
-            typeof(CreateTribeCommand).Assembly,
-            typeof(UpdateTribeCommand).Assembly,
-            typeof(TribeDetailsQuery).Assembly,
-            typeof(DeleteTribeCommand).Assembly,
-        };
-        cfg.RegisterServicesFromAssemblies(mediatRAssemblies);
+        var mediatRAssemblies = Array.Empty<object>();
+        cfg.RegisterServicesFromAssemblies((System.Reflection.Assembly[])mediatRAssemblies);
     });
 
     var app = builder.Build();

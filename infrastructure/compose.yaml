@@ -80,7 +80,6 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     networks:
       - app_network
-
   keycloak:
     image: quay.io/keycloak/keycloak:26.5
     container_name: keycloak

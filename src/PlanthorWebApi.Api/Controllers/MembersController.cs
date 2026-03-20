@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +10,7 @@ using PlanthorWebApi.Application.Dtos;
 using PlanthorWebApi.Application.Members.Commands.Create;
 using PlanthorWebApi.Application.Members.Commands.Update;
 using PlanthorWebApi.Application.Members.Queries.Details;
+using PlanthorWebApi.Application.Members.Queries.Lists;
 
 namespace PlanthorWebApi.Api.Controllers;
 
@@ -49,10 +50,9 @@ public class MembersController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Guid>> Create([FromBody] CreateMemberCommand command, CancellationToken token)
     {
-        // await createMemberCommandValidator.ValidateAndThrowAsync(command, token);
-        // var newMemberGuid = await _sender.Send(command, token);
-        // return Ok(newMemberGuid);
-        throw new NotImplementedException();
+        await createMemberCommandValidator.ValidateAndThrowAsync(command, token);
+        var newMemberGuid = await _sender.Send(command, token);
+        return Ok(newMemberGuid);
     }
 
     /// <summary>
@@ -77,16 +77,15 @@ public class MembersController(
         [FromBody] UpdateMemberCommand command,
         CancellationToken token)
     {
-        // if (command == null)
-        // {
-        //     return BadRequest();
-        // }
+        if (command == null)
+        {
+            return BadRequest();
+        }
 
-        // var updateMemberCommand = command with { Id = id };
-        // await updateMemberCommandValidator.ValidateAndThrowAsync(updateMemberCommand, token);
-        // await _sender.Send(updateMemberCommand, token);
-        // return NoContent();
-        throw new NotImplementedException();
+        var updateMemberCommand = command with { Id = id };
+        await updateMemberCommandValidator.ValidateAndThrowAsync(updateMemberCommand, token);
+        await _sender.Send(updateMemberCommand, token);
+        return NoContent();
     }
 
     /// <summary>
@@ -104,11 +103,10 @@ public class MembersController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MemberDto>> Read(Guid id, CancellationToken token)
     {
-        // var query = new MemberDetailsQuery(id);
-        // await memberDetailsQueryValidator.ValidateAndThrowAsync(query, token);
-        // var memberDto = await _sender.Send(query, token);
-        // return Ok(memberDto);
-        throw new NotImplementedException();
+        var query = new MemberDetailsQuery(id);
+        await memberDetailsQueryValidator.ValidateAndThrowAsync(query, token);
+        var memberDto = await _sender.Send(query, token);
+        return Ok(memberDto);
     }
 
     /// <summary>
@@ -121,8 +119,7 @@ public class MembersController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<MemberDto>>> Read(CancellationToken token)
     {
-        // var query = new ListMembersQuery();
-        // return Ok(await _sender.Send(query, token));
-        throw new NotImplementedException();
+        var query = new ListMembersQuery();
+        return Ok(await _sender.Send(query, token));
     }
 }
