@@ -19,6 +19,6 @@ public class Goal(Guid id) : IAggregateRoot, IEntity<Guid>
 
     public ValidationResult Validate()
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 }
