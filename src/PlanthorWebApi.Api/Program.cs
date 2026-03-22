@@ -3,10 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NSwag;
-using NSwag.Generation.Processors.Security;
 using PlanthorWebApi.Infrastructure;
 using PlanthorWebApi.Infrastructure.Authentication;
+using Scalar.AspNetCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -41,59 +40,24 @@ try
     // API Client
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddOpenApiDocument(options =>
-    {
-        options.PostProcess = document =>
-        {
-            document.Info = new OpenApiInfo
-            {
-                Version = "v0.0.1",
-                Title = "Planthor Web API",
-                Description = "A robust and scalable .NET Web API playing as a main resource server for Planthor",
-                Contact = new OpenApiContact
-                {
-                    Name = "Trung Pham",
-                    Url = "https://github.com/zovippro1996"
-                },
-                License = new OpenApiLicense
-                {
-                    Name = "MIT License",
-                    Url = "https://github.com/Planthor/PlanthorWebApi?tab=MIT-1-ov-file#readme"
-                }
-            };
-        };
 
-        // SwaggerUI JWTAuthentication
-        options.AddSecurity(
-            "JWTBearerAuthentication",
-            new OpenApiSecurityScheme
-            {
-                Type = OpenApiSecuritySchemeType.ApiKey,
-                Name = "Authorization",
-                In = OpenApiSecurityApiKeyLocation.Header,
-                Description = "Type into the textbox: Bearer {your JWT token}."
-            }
-        );
-        options.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWTBearerAuthentication"));
-    });
-
-    builder.Services.AddMediatR(cfg =>
-    {
-        var mediatRAssemblies = Array.Empty<object>();
-        cfg.RegisterServicesFromAssemblies((System.Reflection.Assembly[])mediatRAssemblies);
-    });
+    // OpenAPI + Scalar
+    builder.Services.AddOpenApi();
 
     var app = builder.Build();
 
     if (app.Environment.IsDevelopment())
     {
-        // Add OpenAPI 3.0 document serving middleware
-        // Available at: http://localhost:<port>/swagger/v1/swagger.json
-        app.UseOpenApi();
+        // Serves the OpenAPI JSON document at /openapi/v1.json
+        app.MapOpenApi();
 
-        // Add web UIs to interact with the document
-        // Available at: http://localhost:<port>/swagger
-        app.UseSwaggerUi();
+        // Serves the Scalar UI at /scalar/v1
+        app.MapScalarApiReference(options =>
+        {
+            options.Title = "Planthor API";
+            options.Theme = ScalarTheme.DeepSpace;
+            options.DefaultHttpClient = new(ScalarTarget.Swift, ScalarClient.HttpClient);
+        });
     }
 
     app.MapControllers();
