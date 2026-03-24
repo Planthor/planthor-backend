@@ -1,4 +1,4 @@
-dotnatdo# PlanthorWebApi
+# PlanthorWebApi
 
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Planthor_PlanthorWebApi&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Planthor_PlanthorWebApi)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Planthor_PlanthorWebApi&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Planthor_PlanthorWebApi)
