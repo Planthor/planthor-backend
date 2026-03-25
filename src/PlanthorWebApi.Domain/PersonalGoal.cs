@@ -40,17 +40,23 @@ public class PersonalGoal : AggregateRoot<Guid>
         var errors = new List<ValidationError>();
 
         if (MemberId == Guid.Empty)
+        {
             errors.Add(new ValidationError(
                 "memberId", "Member ID is required.", "REQUIRED_MEMBER_ID"));
+        }
 
         if (GoalId == Guid.Empty)
+        {
             errors.Add(new ValidationError(
                 "goalId", "Goal ID is required.", "REQUIRED_GOAL_ID"));
+        }
 
         if (Prioritize is < 0 or > 99)
+        {
             errors.Add(new ValidationError(
                 "prioritize", "Priority must be between 0 and 99.", "INVALID_PRIORITY"));
-
+        }
+        
         return errors.Count == 0
             ? new ValidationResult(new List<ValidationError>().AsReadOnly())
             : new ValidationResult(new List<ValidationError>(errors).AsReadOnly());
