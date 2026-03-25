@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PlanthorWebApi.Domain;
+namespace PlanthorWebApi.Domain.Shared.Goals;
 
 public class GoalStatus
 {

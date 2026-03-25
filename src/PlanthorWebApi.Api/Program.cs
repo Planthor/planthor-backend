@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PlanthorWebApi.Infrastructure;
-using PlanthorWebApi.Infrastructure.Authentication;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -24,18 +23,6 @@ try
     builder.Services.AddPlanthorDbContext(
         builder.Configuration.GetConnectionString("PlanthorDbContext")
             ?? throw new InvalidOperationException("PlanthorDbContext is not set in the configuration file."));
-
-    // builder.Services.AddScoped<IUserService, UserService>();
-    // builder
-    //     .Services
-    //     // .AddAuthentication("BasicAuthentication")
-    //     // .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null)
-    //     .AddAuthentication()
-    //     .AddJwtBearer(options =>
-    //     {
-    //         options.Authority = "https://localhost:5001";
-    //         options.Audience = "planthorAPI";
-    //     });
 
     // API Client
     builder.Services.AddControllers();

@@ -22,5 +22,5 @@ public interface IDomainEvent
     /// <summary>
     /// Gets the UTC timestamp of when this domain event occurred.
     /// </summary>
-    Instant OccurredOnUtc { get; }
+    Instant OccurredAt { get; }
 }

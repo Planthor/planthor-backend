@@ -1,6 +1,7 @@
 using System;
 using NodaTime;
-using PlanthorWebApi.Domain.Shared;
+
+namespace PlanthorWebApi.Domain.Shared.Goals;
 
 public sealed class ActivityLog : IEntity<Guid>, IHasAudit
 {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using PlanthorWebApi.Domain.Shared;
+using PlanthorWebApi.Domain.Shared.Goals;
 
 namespace PlanthorWebApi.Domain;
 
