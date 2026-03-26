@@ -177,7 +177,9 @@ public class Goal : AggregateRoot<Guid>
 
         var result = goal.Validate();
         if (!result.IsValid)
+        {
             throw new DomainValidationException(result);
+        }
 
         goal.RaiseDomainEvent(new GoalCreatedEvent(
             goal.Id,
@@ -245,44 +247,62 @@ public class Goal : AggregateRoot<Guid>
         var errors = new List<ValidationError>();
 
         if (MemberId == Guid.Empty)
+        {
             errors.Add(new ValidationError(
                 "memberId", "Member ID is required.", "REQUIRED_MEMBER_ID"));
+        }
 
         if (string.IsNullOrWhiteSpace(Name))
+        {
             errors.Add(new ValidationError(
                 "name", "Goal name is required.", "REQUIRED_NAME"));
+        }
 
         if (string.IsNullOrWhiteSpace(Unit))
+        {
             errors.Add(new ValidationError(
                 "unit", "Unit is required.", "REQUIRED_UNIT"));
+        }
 
         if (Target <= 0)
+        {
             errors.Add(new ValidationError(
                 "target", "Target must be greater than zero.", "INVALID_TARGET"));
+        }
 
         if (string.IsNullOrWhiteSpace(StartDateLocal))
+        {
             errors.Add(new ValidationError(
                 "startDateLocal", "Start date is required.", "REQUIRED_START_DATE"));
+        }
 
         if (string.IsNullOrWhiteSpace(EndDateLocal))
+        {
             errors.Add(new ValidationError(
                 "endDateLocal", "End date is required.", "REQUIRED_END_DATE"));
+        }
 
         if (!string.IsNullOrWhiteSpace(StartDateLocal)
             && !string.IsNullOrWhiteSpace(EndDateLocal)
             && string.Compare(StartDateLocal, EndDateLocal, StringComparison.Ordinal) >= 0)
+        {
             errors.Add(new ValidationError(
                 "endDateLocal",
                 "End date must be after start date.",
                 "INVALID_DATE_RANGE"));
+        }
 
         if (string.IsNullOrWhiteSpace(Timezone))
+        {
             errors.Add(new ValidationError(
                 "timezone", "Timezone is required.", "REQUIRED_TIMEZONE"));
+        }
 
         if (From >= To)
+        {
             errors.Add(new ValidationError(
                 "to", "Period end must be after period start.", "INVALID_PERIOD_RANGE"));
+        }
 
         return errors.Count == 0
             ? new ValidationResult(new List<ValidationError>().AsReadOnly())

@@ -29,7 +29,9 @@ public sealed class SportGoalDetails : ValueObject
     public SportGoalDetails(string unit, IReadOnlyList<string> sportTypes)
     {
         if (string.IsNullOrWhiteSpace(unit))
+        {
             throw new ArgumentException("Unit must not be empty.", nameof(unit));
+        }
 
         Unit = unit;
         SportTypes = sportTypes ?? new List<string>().AsReadOnly();
@@ -55,7 +57,9 @@ public sealed class SportGoalDetails : ValueObject
         {
             yield return Unit;
             foreach (var type in SportTypes)
+            {
                 yield return type;
+            }
         }
     }
 }
