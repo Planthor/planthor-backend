@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using NodaTime;
 
 namespace PlanthorWebApi.Domain.Shared.Goals;
@@ -8,7 +8,7 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
     private ActivityLog() { }
 
     /// <inheritdoc/>
-    public Guid Id { get; private set; } = default!;
+    public Guid Id { get; private set; }
 
     /// <summary>Gets the ID of the goal this log belongs to.</summary>
     public Guid GoalId { get; private set; }
