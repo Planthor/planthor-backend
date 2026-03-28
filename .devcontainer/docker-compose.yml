@@ -1,5 +1,5 @@
-version: '3.8'
-name: planthor-webapi-ws 
+﻿version: '3.8'
+name: planthor-webapi-ws
 
 services:
   planthorwebapi:
@@ -29,7 +29,7 @@ services:
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
       - ME_CONFIG_MONGODB_ADMINPASSWORD=Planthor_123
-      - ME_CONFIG_MONGODB_URL=mongodb://admin:Planthor_123@mongodb:27017/
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:${ME_CONFIG_MONGODB_ADMINPASSWORD}@mongodb:27017/
     ports:
       - 8081:8081
     depends_on:

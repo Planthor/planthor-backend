@@ -34,6 +34,9 @@ jobs:
 
       - name: Define docker image name
         id: define_docker_image
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           DOCKER_TAG=""
           PUSH_ENABLED=false
@@ -42,11 +45,11 @@ jobs:
             echo DOCKER_IMAGE="ghcr.io/planthor/webapi:$DOCKER_TAG" >> "$GITHUB_OUTPUT"
             PUSH_ENABLED=true
           elif [[ $GITHUB_REF =~ ^refs/tags/* ]]; then
-            DOCKER_TAG="${{  github.ref_name }}"
+            DOCKER_TAG=REF_NAME
             echo DOCKER_IMAGE="ghcr.io/planthor/webapi:$DOCKER_TAG" >> "$GITHUB_OUTPUT"
             PUSH_ENABLED=true
           else
-            DOCKER_TAG="${{ github.head_ref }}"
+            DOCKER_TAG="${HEAD_REF}"
             DOCKER_TAG=${DOCKER_TAG//\//-}
             echo DOCKER_IMAGE="planthordev/webapi:$DOCKER_TAG" >> "$GITHUB_OUTPUT"
           fi
