@@ -1,22 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using NodaTime;
+using PlanthorWebApi.Domain.Plans.Events;
+using PlanthorWebApi.Domain.Shared;
 using PlanthorWebApi.Domain.Shared.Exceptions;
-using PlanthorWebApi.Domain.Shared.Goals.Events;
 
-namespace PlanthorWebApi.Domain.Shared.Goals;
+namespace PlanthorWebApi.Domain.Plans;
 
 /// <summary>
-/// Aggregate root representing a member's personal relationship to a goal.
+/// Aggregate root representing a member's personal relationship to a plan.
 /// </summary>
 /// <remarks>
-/// Acts as a join aggregate between <c>Member</c> and <c>Goal</c>,
-/// enriched with member-specific goal preferences such as display order,
+/// Acts as a join aggregate between <c>Member</c> and <c>Plan</c>,
+/// enriched with member-specific plan preferences such as display order,
 /// profile visibility, and Strava sync opt-in.
 /// </remarks>
-public class PersonalGoal(
+public class PersonalPlan(
     Guid memberId,
-    Guid goalId,
+    Guid planId,
     bool displayOnProfile,
     int prioritize,
     bool linkUserAdapter
@@ -25,48 +26,48 @@ public class PersonalGoal(
     private const int MaxPrioritize = 999;
 
     /// <summary>
-    /// Gets the ID of the member who owns this personal goal.
+    /// Gets the ID of the member who owns this personal plan.
     /// </summary>
     public Guid MemberId { get; } = memberId;
 
     /// <summary>
-    /// Gets the ID of the underlying goal.
+    /// Gets the ID of the underlying plan.
     /// </summary>
-    public Guid GoalId { get; } = goalId;
+    public Guid PlanId { get; } = planId;
 
     /// <summary>
-    /// Gets whether this goal is displayed on the member's public profile.
+    /// Gets whether this plan is displayed on the member's public profile.
     /// Defaults to <c>true</c>.
     /// </summary>
     public bool DisplayOnProfile { get; } = displayOnProfile;
 
     /// <summary>
-    /// Gets the display priority of this goal on the member's profile.
+    /// Gets the display priority of this plan on the member's profile.
     /// Lower values indicate higher priority. Range: 0–99.
     /// </summary>
     public int Prioritize { get; } = prioritize;
 
     /// <summary>
-    /// Gets whether Strava activity sync is enabled for this goal.
+    /// Gets whether Strava activity sync is enabled for this plan.
     /// When <c>true</c>, incoming Strava activities are automatically
-    /// recorded as activity logs against this goal if they fall within
-    /// the goal's period boundary and sport type filters.
+    /// recorded as activity logs against this plan if they fall within
+    /// the plan's period boundary and sport type filters.
     /// Defaults to <c>true</c>.
     /// </summary>
     public bool LinkUserAdapter { get; } = linkUserAdapter;
 
-    public static PersonalGoal Create(
+    public static PersonalPlan Create(
         Guid memberId,
-        Guid goalId,
+        Guid planId,
         bool displayOnProfile,
         int prioritize,
         bool linkUserAdapter,
         Guid createdBy,
         IClock clock)
     {
-        var personalGoal = new PersonalGoal(
+        var personalPlan = new PersonalPlan(
             memberId,
-            goalId,
+            planId,
             displayOnProfile,
             prioritize,
             linkUserAdapter
@@ -75,26 +76,26 @@ public class PersonalGoal(
             Id = Guid.NewGuid()
         };
 
-        personalGoal.StampCreatedAudit(createdBy, clock);
+        personalPlan.StampCreatedAudit(createdBy, clock);
 
-        var result = personalGoal.Validate();
+        var result = personalPlan.Validate();
 
         if (!result.IsValid)
         {
             throw new DomainValidationException(result);
         }
 
-        personalGoal.RaiseDomainEvent(
-            new PersonalGoalCreatedEvent(
-                personalGoal.Id,
+        personalPlan.RaiseDomainEvent(
+            new PersonalPlanCreatedEvent(
+                personalPlan.Id,
                 memberId,
-                goalId,
+                planId,
                 displayOnProfile,
                 prioritize,
                 linkUserAdapter,
                 clock));
 
-        return personalGoal;
+        return personalPlan;
     }
 
     /// <inheritdoc/>
@@ -108,10 +109,10 @@ public class PersonalGoal(
                 "memberId", "Member ID is required.", "REQUIRED_MEMBER_ID"));
         }
 
-        if (GoalId == Guid.Empty)
+        if (PlanId == Guid.Empty)
         {
             errors.Add(new ValidationError(
-                "goalId", "Goal ID is required.", "REQUIRED_GOAL_ID"));
+                "planId", "Plan ID is required.", "REQUIRED_GOAL_ID"));
         }
 
         if (Prioritize is < 0 or > MaxPrioritize)

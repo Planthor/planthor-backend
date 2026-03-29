@@ -1,7 +1,8 @@
 ﻿using System;
 using NodaTime;
+using PlanthorWebApi.Domain.Shared;
 
-namespace PlanthorWebApi.Domain.Shared.Goals;
+namespace PlanthorWebApi.Domain.Plans;
 
 public sealed class ActivityLog : IEntity<Guid>, IHasAudit
 {
@@ -10,11 +11,11 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
     /// <inheritdoc/>
     public Guid Id { get; private set; }
 
-    /// <summary>Gets the ID of the goal this log belongs to.</summary>
-    public Guid GoalId { get; private set; }
+    /// <summary>Gets the ID of the plan this log belongs to.</summary>
+    public Guid PlanId { get; private set; }
 
     /// <summary>
-    /// Gets the recorded value in the goal's unit of measurement.
+    /// Gets the recorded value in the plan's unit of measurement.
     /// </summary>
     public float Value { get; private set; }
 
@@ -50,7 +51,7 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
     public Guid LastUpdatedBy { get; private set; }
 
     internal static ActivityLog Create(
-        Guid goalId,
+        Guid planId,
         float value,
         string activityLocalDate,
         Guid? stravaActivityLogId,
@@ -62,7 +63,7 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
         return new ActivityLog
         {
             Id = Guid.NewGuid(),
-            GoalId = goalId,
+            PlanId = planId,
             Value = value,
             ActivityLocalDate = activityLocalDate,
             CompletedDate = now,

@@ -1,15 +1,16 @@
 ﻿using System;
 using NodaTime;
+using PlanthorWebApi.Domain.Shared;
 
-namespace PlanthorWebApi.Domain.Shared.Goals.Events;
+namespace PlanthorWebApi.Domain.Plans.Events;
 
 /// <summary>
-/// Initializes a new instance of <see cref="GoalCreatedEvent"/>.
+/// Initializes a new instance of <see cref="PlanCreatedEvent"/>.
 /// </summary>
-/// <param name="goalId">The identifier of the newly created goal.</param>
-/// <param name="memberId">The identifier of the member who owns the goal.</param>
-/// <param name="goalName">The display name of the goal.</param>
-/// <param name="target">The numeric target of the goal.</param>
+/// <param name="planId">The identifier of the newly created plan.</param>
+/// <param name="memberId">The identifier of the member who owns the plan.</param>
+/// <param name="planName">The display name of the plan.</param>
+/// <param name="target">The numeric target of the plan.</param>
 /// <param name="unit">The unit of measurement.</param>
 /// <param name="startDateLocal">The local start date as an ISO string.</param>
 /// <param name="endDateLocal">The local end date as an ISO string.</param>
@@ -17,10 +18,10 @@ namespace PlanthorWebApi.Domain.Shared.Goals.Events;
 /// <param name="clock">
 /// The system clock used to timestamp when this event occurred.
 /// </param>
-public sealed class GoalCreatedEvent(
-    Guid goalId,
+public sealed class PlanCreatedEvent(
+    Guid planId,
     Guid memberId,
-    string goalName,
+    string planName,
     float target,
     string unit,
     string startDateLocal,
@@ -28,48 +29,47 @@ public sealed class GoalCreatedEvent(
     string timezone,
     IClock clock) : DomainEvent(clock)
 {
-
     /// <summary>
-    /// Gets the unique identifier of the goal that was created.
+    /// Gets the unique identifier of the plan that was created.
     /// </summary>
-    public Guid GoalId { get; } = goalId;
+    public Guid PlanId { get; } = planId;
 
     /// <summary>
-    /// Gets the identifier of the member who owns this goal.
+    /// Gets the identifier of the member who owns this plan.
     /// </summary>
     public Guid MemberId { get; } = memberId;
 
     /// <summary>
-    /// Gets the name of the goal.
+    /// Gets the name of the plan.
     /// Included so consumers do not need to re-fetch the aggregate
     /// for simple notification or logging purposes.
     /// </summary>
-    public string GoalName { get; } = goalName;
+    public string PlanName { get; } = planName;
 
     /// <summary>
-    /// Gets the numeric target this goal aims to reach.
+    /// Gets the numeric target this plan aims to reach.
     /// </summary>
     public float Target { get; } = target;
 
     /// <summary>
-    /// Gets the unit of measurement for this goal.
+    /// Gets the unit of measurement for this plan.
     /// </summary>
     public string Unit { get; } = unit;
 
     /// <summary>
-    /// Gets the local start date of the goal period as an ISO date string.
+    /// Gets the local start date of the plan period as an ISO date string.
     /// </summary>
     /// <example>2026-01-01</example>
     public string StartDateLocal { get; } = startDateLocal;
 
     /// <summary>
-    /// Gets the local end date of the goal period as an ISO date string.
+    /// Gets the local end date of the plan period as an ISO date string.
     /// </summary>
     /// <example>2026-12-31</example>
     public string EndDateLocal { get; } = endDateLocal;
 
     /// <summary>
-    /// Gets the IANA timezone identifier snapshotted at goal creation time.
+    /// Gets the IANA timezone identifier snapshotted at plan creation time.
     /// </summary>
     /// <example>Asia/Ho_Chi_Minh</example>
     public string Timezone { get; } = timezone;

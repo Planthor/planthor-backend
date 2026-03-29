@@ -1,29 +1,30 @@
 ﻿using System;
 using NodaTime;
+using PlanthorWebApi.Domain.Shared;
 
-namespace PlanthorWebApi.Domain.Shared.Goals.Events;
+namespace PlanthorWebApi.Domain.Plans.Events;
 
 /// <summary>
-/// Domain event raised when a member successfully links a goal
-/// to their personal profile via a new <see cref="PersonalGoal"/>.
+/// Domain event raised when a member successfully links a plan
+/// to their personal profile via a new <see cref="PersonalPlan"/>.
 /// </summary>
-/// <param name="personalGoalId">
-/// The identifier of the newly created <see cref="PersonalGoal"/> aggregate.
+/// <param name="personalPlanId">
+/// The identifier of the newly created <see cref="PersonalPlan"/> aggregate.
 /// </param>
 /// <param name="memberId">
-/// The identifier of the member who owns this personal goal.
+/// The identifier of the member who owns this personal plan.
 /// </param>
-/// <param name="goalId">
-/// The identifier of the underlying <c>Goal</c> aggregate being linked.
+/// <param name="planId">
+/// The identifier of the underlying <c>Plan</c> aggregate being linked.
 /// </param>
 /// <param name="displayOnProfile">
-/// Whether this goal should appear on the member's public profile.
+/// Whether this plan should appear on the member's public profile.
 /// </param>
 /// <param name="prioritize">
 /// The display priority on the member's profile. Range: 0–99.
 /// </param>
 /// <param name="linkUserAdapter">
-/// Whether Strava activity sync is enabled for this personal goal.
+/// Whether Strava activity sync is enabled for this personal plan.
 /// </param>
 /// <param name="clock">
 /// The system clock used to timestamp when this event occurred.
@@ -33,35 +34,35 @@ namespace PlanthorWebApi.Domain.Shared.Goals.Events;
 /// <exception cref="ArgumentNullException">
 /// Thrown when <paramref name="clock"/> is null.
 /// </exception>
-public sealed class PersonalGoalCreatedEvent(
-    Guid personalGoalId,
+public sealed class PersonalPlanCreatedEvent(
+    Guid personalPlanId,
     Guid memberId,
-    Guid goalId,
+    Guid planId,
     bool displayOnProfile,
     int prioritize,
     bool linkUserAdapter,
     IClock clock) : DomainEvent(clock)
 {
     /// <summary>
-    /// Gets the unique identifier of the <see cref="PersonalGoal"/>
+    /// Gets the unique identifier of the <see cref="PersonalPlan"/>
     /// aggregate that was created.
     /// </summary>
-    public Guid PersonalGoalId { get; } = personalGoalId;
+    public Guid PersonalPlanId { get; } = personalPlanId;
 
     /// <summary>
-    /// Gets the identifier of the member who claimed this goal
-    /// as their personal goal.
+    /// Gets the identifier of the member who claimed this plan
+    /// as their personal plan.
     /// </summary>
     public Guid MemberId { get; } = memberId;
 
     /// <summary>
-    /// Gets the identifier of the underlying <c>Goal</c> aggregate
-    /// that this personal goal is linked to.
+    /// Gets the identifier of the underlying <c>Plan</c> aggregate
+    /// that this personal plan is linked to.
     /// </summary>
-    public Guid GoalId { get; } = goalId;
+    public Guid PlanId { get; } = planId;
 
     /// <summary>
-    /// Gets whether this personal goal will be displayed on the
+    /// Gets whether this personal plan will be displayed on the
     /// member's public profile.
     /// </summary>
     /// <remarks>
@@ -71,18 +72,18 @@ public sealed class PersonalGoalCreatedEvent(
     public bool DisplayOnProfile { get; } = displayOnProfile;
 
     /// <summary>
-    /// Gets the display priority of this goal on the member's profile.
+    /// Gets the display priority of this plan on the member's profile.
     /// Lower values indicate higher priority. Range: 0–99.
     /// </summary>
     public int Prioritize { get; } = prioritize;
 
     /// <summary>
-    /// Gets whether Strava activity sync is enabled for this personal goal.
+    /// Gets whether Strava activity sync is enabled for this personal plan.
     /// </summary>
     /// <remarks>
     /// When <c>true</c>, the Strava sync handler should begin attributing
-    /// incoming Strava activities to this goal if they fall within the
-    /// goal's period boundary and sport type filters.
+    /// incoming Strava activities to this plan if they fall within the
+    /// plan's period boundary and sport type filters.
     /// When <c>false</c>, no automatic attribution occurs.
     /// </remarks>
     public bool LinkUserAdapter { get; } = linkUserAdapter;

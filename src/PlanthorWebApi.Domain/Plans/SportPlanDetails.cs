@@ -1,32 +1,31 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using PlanthorWebApi.Domain.Shared;
-using PlanthorWebApi.Domain.Shared.Goals;
 
-namespace PlanthorWebApi.Domain;
+namespace PlanthorWebApi.Domain.Plans;
 
 /// <summary>
-/// Represents a sport-specific extension of a <see cref="Goal"/>.
+/// Represents a sport-specific extension of a <see cref="Plan"/>.
 /// </summary>
 /// <remarks>
 /// Modelled as an owned entity (not a separate aggregate) since it has
-/// no meaningful existence outside of its parent <see cref="Goal"/>.
+/// no meaningful existence outside of its parent <see cref="Plan"/>.
 /// <para>
 /// Assumption: <c>sportType</c> stores Strava sport type identifiers
 /// as a list. An empty list means ALL sport types are accepted.
 /// </para>
 /// </remarks>
-public sealed class SportGoalDetails : ValueObject
+public sealed class SportPlanDetails : ValueObject
 {
     /// <summary>
-    /// Initialises sport goal details accepting all sport types.
+    /// Initializes sport plan details accepting all sport types.
     /// </summary>
-    public SportGoalDetails() : this("kilometer", []) { }
+    public SportPlanDetails() : this("km", []) { }
 
     /// <summary>
-    /// Initialises sport goal details with specific sport types.
+    /// Initializes sport plan details with specific sport types.
     /// </summary>
-    public SportGoalDetails(string unit, IReadOnlyList<string> sportTypes)
+    public SportPlanDetails(string unit, IReadOnlyList<string> sportTypes)
     {
         if (string.IsNullOrWhiteSpace(unit))
         {
