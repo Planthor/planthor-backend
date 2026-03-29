@@ -122,7 +122,7 @@ public class Plan : AggregateRoot<Guid>
 
     /// <summary>
     /// Gets the total number of likes on this plan.
-    /// Denormalised for fast read — incremented and decremented
+    /// Denormalized for fast read — incremented and decremented
     /// by the <see cref="Like"/> aggregate via domain events.
     /// </summary>
     public int LikeCount { get; private set; }
@@ -191,7 +191,8 @@ public class Plan : AggregateRoot<Guid>
             startDateLocal,
             endDateLocal,
             timezone,
-            clock));
+            clock,
+            $"{nameof(Plan)} / {nameof(Create)}"));
 
         return plan;
     }
@@ -235,13 +236,22 @@ public class Plan : AggregateRoot<Guid>
         IClock clock)
     {
         var plan = Create(
-            memberId, name, unit, target,
-            from, to, startDateLocal, endDateLocal, timezone,
-            enableActivityLog, clock);
+            memberId,
+            name,
+            unit,
+            target,
+            from,
+            to,
+            startDateLocal,
+            endDateLocal,
+            timezone,
+            enableActivityLog,
+            clock);
 
         plan.SportPlanDetails = sportPlanDetails ?? throw new ArgumentNullException(nameof(sportPlanDetails));
         return plan;
     }
+
 
     public override ValidationResult Validate()
     {

@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using PlanthorWebApi.Application.Dtos;
 using PlanthorWebApi.Application.Shared;
 
-namespace PlanthorWebApi.Application.Members.Queries.PersonalGoalDetailsQuery;
+namespace PlanthorWebApi.Application.Members.Queries.PersonalGoalDetails;
 
-public sealed record PersonalGoalDetailsQuery(Guid MemberId, Guid GoalId) : IQuery<PersonalGoalDto>;
+public sealed record PersonalGoalDetailsQuery(Guid MemberId, Guid GoalId) : IQuery<PersonalPlanDto>;

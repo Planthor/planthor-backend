@@ -23,4 +23,9 @@ public interface IDomainEvent
     /// Gets the UTC timestamp of when this domain event occurred.
     /// </summary>
     Instant OccurredAt { get; }
+
+    /// <summary>
+    /// Gets the name or identifier entity that make the event occurred.
+    /// </summary>
+    string OccurredBy { get; }
 }

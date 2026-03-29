@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using NodaTime;
+using PlanthorWebApi.Domain.ExternalConnections;
 using PlanthorWebApi.Domain.Shared;
 
 namespace PlanthorWebApi.Domain.Plans;
@@ -33,10 +34,11 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
     public Instant CompletedDate { get; private set; }
 
     /// <summary>
-    /// Gets the linked Strava activity log ID, if this log originated from Strava.
+    /// Gets the provider and external ID of the source activity,
+    /// if this log originated from an external service.
     /// <c>null</c> for manually recorded entries.
     /// </summary>
-    public Guid? StravaActivityLogId { get; private set; }
+    public ExternalActivitySource? ExternalSource { get; private set; }
 
     /// <inheritdoc/>
     public Instant CreatedAt { get; private set; }
@@ -54,7 +56,7 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
         Guid planId,
         float value,
         string activityLocalDate,
-        Guid? stravaActivityLogId,
+        ExternalActivitySource? externalActivitySource,
         Guid createdBy,
         IClock clock)
     {
@@ -67,7 +69,7 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
             Value = value,
             ActivityLocalDate = activityLocalDate,
             CompletedDate = now,
-            StravaActivityLogId = stravaActivityLogId,
+            ExternalSource = externalActivitySource,
             CreatedAt = now,
             CreatedBy = createdBy,
             LastUpdatedAt = now,

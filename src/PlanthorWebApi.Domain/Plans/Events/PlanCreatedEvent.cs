@@ -15,9 +15,7 @@ namespace PlanthorWebApi.Domain.Plans.Events;
 /// <param name="startDateLocal">The local start date as an ISO string.</param>
 /// <param name="endDateLocal">The local end date as an ISO string.</param>
 /// <param name="timezone">The IANA timezone identifier.</param>
-/// <param name="clock">
-/// The system clock used to timestamp when this event occurred.
-/// </param>
+/// <param name="clock"> The system clock used to timestamp when this event occurred.</param>
 public sealed class PlanCreatedEvent(
     Guid planId,
     Guid memberId,
@@ -27,7 +25,8 @@ public sealed class PlanCreatedEvent(
     string startDateLocal,
     string endDateLocal,
     string timezone,
-    IClock clock) : DomainEvent(clock)
+    IClock clock,
+    string occurredBy) : DomainEvent(clock, occurredBy)
 {
     /// <summary>
     /// Gets the unique identifier of the plan that was created.

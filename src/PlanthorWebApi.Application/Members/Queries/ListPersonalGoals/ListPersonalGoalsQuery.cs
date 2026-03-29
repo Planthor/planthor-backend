@@ -5,4 +5,4 @@ using PlanthorWebApi.Application.Shared;
 
 namespace PlanthorWebApi.Application.Members.Queries.ListPersonalGoals;
 
-public sealed record ListPersonalGoalsQuery(Guid MemberId) : IQuery<IEnumerable<PersonalGoalDto>>;
+public sealed record ListPersonalGoalsQuery(Guid MemberId) : IQuery<IEnumerable<PersonalPlanDto>>;

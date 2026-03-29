@@ -10,9 +10,9 @@ using PlanthorWebApi.Application.Dtos;
 using PlanthorWebApi.Application.Members.Commands.CreateGoal;
 using PlanthorWebApi.Application.Members.Commands.UpdateGoal;
 using PlanthorWebApi.Application.Members.Queries.ListPersonalGoals;
-using PlanthorWebApi.Application.Members.Queries.PersonalGoalDetailsQuery;
+using PlanthorWebApi.Application.Members.Queries.PersonalGoalDetails;
 
-namespace PlanthorWebApi.Api.Controllers;
+namespace PlanthorWebApi.Api.Controllers.v1;
 
 /// <summary>
 /// Controller for manipulating Personal Goals.
@@ -108,7 +108,7 @@ public class PersonalGoalsController(
     /// <param name="token">A cancellation token.</param>
     /// <returns></returns>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PersonalGoalDto>>> Read(
+    public async Task<ActionResult<IEnumerable<PersonalPlanDto>>> Read(
         [FromRoute] Guid memberId,
         CancellationToken token)
     {
@@ -124,15 +124,15 @@ public class PersonalGoalsController(
     /// <param name="memberId">The ID of the member that owns the goal.</param>
     /// <param name="goalId">The ID of the personal goal to retrieve.</param>
     /// <param name="token">A cancellation token.</param>
-    /// <returns>An IActionResult containing a <see cref="PersonalGoalDto"/> object with member details on success, otherwise an appropriate error code.</returns>
-    /// <response code="200">Returns a <see cref="PersonalGoalDto"/> object containing goal details.</response>
+    /// <returns>An IActionResult containing a <see cref="PersonalPlanDto"/> object with member details on success, otherwise an appropriate error code.</returns>
+    /// <response code="200">Returns a <see cref="PersonalPlanDto"/> object containing goal details.</response>
     /// <response code="400">If query validation fails.</response>
     /// <response code="404">If the member with the specified ID is not found.</response>
     [HttpGet("{goalId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<PersonalGoalDto>> Read(
+    public async Task<ActionResult<PersonalPlanDto>> Read(
         [FromRoute] Guid memberId,
         [FromRoute] Guid goalId,
         CancellationToken token)

@@ -93,7 +93,8 @@ public class PersonalPlan(
                 displayOnProfile,
                 prioritize,
                 linkUserAdapter,
-                clock));
+                clock,
+                $"{nameof(PersonalPlan)} / {nameof(Create)}"));
 
         return personalPlan;
     }

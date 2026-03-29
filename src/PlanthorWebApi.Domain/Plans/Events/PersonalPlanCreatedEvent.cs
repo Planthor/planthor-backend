@@ -23,13 +23,14 @@ namespace PlanthorWebApi.Domain.Plans.Events;
 /// <param name="prioritize">
 /// The display priority on the member's profile. Range: 0–99.
 /// </param>
-/// <param name="linkUserAdapter">
+/// <param name="linkUserAdapters">
 /// Whether Strava activity sync is enabled for this personal plan.
 /// </param>
 /// <param name="clock">
 /// The system clock used to timestamp when this event occurred.
-/// Injected from the aggregate — never resolved internally —
-/// to keep time controllable in tests and time-travel scenarios.
+/// </param>
+/// <param name="occurredBy">
+/// Gets the component identifier that makes the event occurred.
 /// </param>
 /// <exception cref="ArgumentNullException">
 /// Thrown when <paramref name="clock"/> is null.
@@ -40,8 +41,9 @@ public sealed class PersonalPlanCreatedEvent(
     Guid planId,
     bool displayOnProfile,
     int prioritize,
-    bool linkUserAdapter,
-    IClock clock) : DomainEvent(clock)
+    bool linkUserAdapters,
+    IClock clock,
+    string occurredBy) : DomainEvent(clock, occurredBy)
 {
     /// <summary>
     /// Gets the unique identifier of the <see cref="PersonalPlan"/>
@@ -86,5 +88,5 @@ public sealed class PersonalPlanCreatedEvent(
     /// plan's period boundary and sport type filters.
     /// When <c>false</c>, no automatic attribution occurs.
     /// </remarks>
-    public bool LinkUserAdapter { get; } = linkUserAdapter;
+    public bool LinkUserAdapters { get; } = linkUserAdapters;
 }
