@@ -156,6 +156,6 @@ public class PersonalGoalsController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public Task<IActionResult> Patch(Guid memberId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException("Preserved for updated custom Personal Goals Ordering, bulk goal updates");
+        throw new NotSupportedException("Preserved for updated custom Personal Goals Ordering, bulk goal updates");
     }
 }
