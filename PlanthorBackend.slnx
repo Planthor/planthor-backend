@@ -1,5 +1,7 @@
-﻿<Solution>
+<Solution>
   <Folder Name="/src/">
+    <Project Path="src/Backend.Adapters/Abstraction/Backend.Adapters.Abstraction.csproj" />
+    <Project Path="src/Backend.Adapters/Strava/Backend.Adapters.Strava.csproj" />
     <Project Path="src/Backend.Api/Backend.Api.csproj" />
     <Project Path="src/Backend.Application/Backend.Application.csproj" />
     <Project Path="src/Backend.Domain/Backend.Domain.csproj" />
