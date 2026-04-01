@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Backend.Domain.ExternalConnections;
@@ -26,6 +26,7 @@ public class Member(
     string preferredTimezone) : AggregateRoot<Guid>
 {
     private readonly List<ExternalConnection> _externalConnections = [];
+    private readonly List<PersonalPlan> _personalPlans = [];
 
     /// <summary>
     /// Gets the first name of the member.
@@ -62,6 +63,11 @@ public class Member(
     /// Gets all external service connections owned by this member.
     /// </summary>
     public IReadOnlyList<ExternalConnection> ExternalConnections => _externalConnections.AsReadOnly();
+
+    /// <summary>
+    /// Gets all personal plan subscriptions owned by this member.
+    /// </summary>
+    public IReadOnlyList<PersonalPlan> PersonalPlans => _personalPlans.AsReadOnly();
 
     /// <summary>
     /// Establishes a new connection to an external service provider.
@@ -154,6 +160,76 @@ public class Member(
     {
         return _externalConnections
             .Any(c => c.Provider.Id == provider.Id && c.Status == ConnectionStatus.Active);
+    }
+
+    /// <summary>
+    /// Subscribes this member to a plan, creating a new <see cref="PersonalPlan"/> entity.
+    /// </summary>
+    /// <param name="planId">The identifier of the plan to subscribe to.</param>
+    /// <param name="displayOnProfile">Whether the plan appears on the member's public profile.</param>
+    /// <param name="prioritize">Display priority on the member's profile. Range: 0–999.</param>
+    /// <param name="linkUserAdapter">Whether Strava activity sync is enabled for this plan.</param>
+    /// <param name="clock">The system clock providing the current UTC instant.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the member is already subscribed to the specified plan.
+    /// </exception>
+    public void SubscribeToPlan(
+        Guid planId,
+        bool displayOnProfile,
+        int prioritize,
+        bool linkUserAdapter,
+        IClock clock)
+    {
+        if (_personalPlans.Any(p => p.PlanId == planId))
+        {
+            throw new InvalidOperationException(
+                $"Member is already subscribed to plan '{planId}'.");
+        }
+
+        var personalPlan = PersonalPlan.Create(
+            Id,
+            planId,
+            displayOnProfile,
+            prioritize,
+            linkUserAdapter,
+            clock);
+
+        _personalPlans.Add(personalPlan);
+
+        StampUpdatedAudit(Id, clock);
+
+        RaiseDomainEvent(new MemberSubscribedToPlanEvent(
+            Id,
+            personalPlan.Id,
+            planId,
+            displayOnProfile,
+            prioritize,
+            linkUserAdapter,
+            clock,
+            $"{nameof(Member)} / {nameof(SubscribeToPlan)}"));
+    }
+
+    /// <summary>
+    /// Removes the member's subscription to a plan.
+    /// </summary>
+    /// <param name="planId">The identifier of the plan to unsubscribe from.</param>
+    /// <param name="clock">The system clock providing the current UTC instant.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the member is not currently subscribed to the specified plan.
+    /// </exception>
+    public void UnsubscribeFromPlan(Guid planId, IClock clock)
+    {
+        var personalPlan = _personalPlans.FirstOrDefault(p => p.PlanId == planId);
+
+        if (personalPlan is null)
+        {
+            throw new InvalidOperationException(
+                $"Member is not subscribed to plan '{planId}'.");
+        }
+
+        _personalPlans.Remove(personalPlan);
+
+        StampUpdatedAudit(Id, clock);
     }
 
     /// <inheritdoc/>

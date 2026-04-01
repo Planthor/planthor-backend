@@ -15,7 +15,6 @@ public class Plan : AggregateRoot<Guid>
     private readonly List<ActivityLog> _activityLogs = [];
 
     private Plan(
-        Guid memberId,
         string name,
         string unit,
         float target,
@@ -30,7 +29,6 @@ public class Plan : AggregateRoot<Guid>
         PlanStatus status,
         int likeCount)
     {
-        MemberId = memberId;
         Name = name;
         Unit = unit;
         Target = target;
@@ -45,12 +43,6 @@ public class Plan : AggregateRoot<Guid>
         Status = status;
         LikeCount = likeCount;
     }
-
-    /// <summary>
-    /// Gets the identifier of the member who owns this plan.
-    /// A plan always belongs to exactly one member.
-    /// </summary>
-    public Guid MemberId { get; private set; }
 
     /// <summary>
     /// Gets the display name of this plan.
@@ -141,7 +133,6 @@ public class Plan : AggregateRoot<Guid>
     /// Creates a new generic <see cref="Plan"/>.
     /// </summary>
     public static Plan Create(
-        Guid memberId,
         string name,
         string unit,
         float target,
@@ -151,10 +142,10 @@ public class Plan : AggregateRoot<Guid>
         string endDateLocal,
         string timezone,
         bool enableActivityLog,
-        IClock clock)
+        IClock clock,
+        Guid createUserId)
     {
         var plan = new Plan(
-            memberId,
             name,
             unit,
             target,
@@ -173,7 +164,7 @@ public class Plan : AggregateRoot<Guid>
             Id = Guid.NewGuid(),
         };
 
-        plan.StampCreatedAudit(memberId, clock);
+        plan.StampCreatedAudit(createUserId, clock);
 
         var result = plan.Validate();
         if (!result.IsValid)
@@ -183,7 +174,6 @@ public class Plan : AggregateRoot<Guid>
 
         plan.RaiseDomainEvent(new PlanCreatedEvent(
             plan.Id,
-            memberId,
             name,
             target,
             unit,
@@ -199,7 +189,6 @@ public class Plan : AggregateRoot<Guid>
     /// <summary>
     /// Creates a new sport-specific <see cref="Plan"/> for a member.
     /// </summary>
-    /// <param name="memberId">The identifier of the member who owns this plan.</param>
     /// <param name="name">The display name of the plan.</param>
     /// <param name="unit">The unit of measurement.</param>
     /// <param name="target">The numeric target. Must be greater than zero.</param>
@@ -221,7 +210,6 @@ public class Plan : AggregateRoot<Guid>
     /// Thrown when any invariant is violated.
     /// </exception>
     public static Plan CreateSportPlan(
-        Guid memberId,
         string name,
         string unit,
         float target,
@@ -232,10 +220,10 @@ public class Plan : AggregateRoot<Guid>
         string timezone,
         bool enableActivityLog,
         SportPlanDetails sportPlanDetails,
-        IClock clock)
+        IClock clock,
+        Guid createUserId)
     {
         var plan = Create(
-            memberId,
             name,
             unit,
             target,
@@ -245,7 +233,8 @@ public class Plan : AggregateRoot<Guid>
             endDateLocal,
             timezone,
             enableActivityLog,
-            clock);
+            clock,
+            createUserId);
 
         plan.SportPlanDetails = sportPlanDetails ?? throw new ArgumentNullException(nameof(sportPlanDetails));
         return plan;
@@ -255,12 +244,6 @@ public class Plan : AggregateRoot<Guid>
     public override ValidationResult Validate()
     {
         var errors = new List<ValidationError>();
-
-        if (MemberId == Guid.Empty)
-        {
-            errors.Add(new ValidationError(
-                "memberId", "Member ID is required.", "REQUIRED_MEMBER_ID"));
-        }
 
         if (string.IsNullOrWhiteSpace(Name))
         {

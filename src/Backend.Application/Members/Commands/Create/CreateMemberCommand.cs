@@ -4,7 +4,7 @@ using Backend.Application.Shared;
 namespace Backend.Application.Members.Commands.Create;
 
 /// <summary>
-///
+/// 
 /// </summary>
 /// <param name="IdentifyName"></param>
 /// <param name="FirstName"></param>

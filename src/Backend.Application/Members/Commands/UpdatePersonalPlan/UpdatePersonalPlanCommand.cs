@@ -2,11 +2,11 @@
 using System.Text.Json.Serialization;
 using Backend.Application.Shared;
 
-namespace Backend.Application.Members.Commands.UpdateGoal;
+namespace Backend.Application.Members.Commands.UpdatePersonalPlan;
 
-public record UpdateGoalCommand(
+public record UpdatePlanCommand(
     [property: JsonIgnore] Guid MemberId,
-    [property: JsonIgnore] Guid GoalId,
+    [property: JsonIgnore] Guid PlanId,
     string Unit,
     double Target,
     double Current,

@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Backend.Api.Controllers.v1.Resources;
 
 /// <summary>
-/// Controller for manipulating Members.
+/// Controller for interacting with Members.
 /// </summary>
 /// <param name="sender">The mediator used to send commands and queries.</param>
 /// <param name="createMemberCommandValidator">The validator for <see cref="CreateMemberCommand"/>.</param>

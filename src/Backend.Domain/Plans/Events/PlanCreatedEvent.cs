@@ -8,7 +8,6 @@ namespace Backend.Domain.Plans.Events;
 /// Initializes a new instance of <see cref="PlanCreatedEvent"/>.
 /// </summary>
 /// <param name="planId">The identifier of the newly created plan.</param>
-/// <param name="memberId">The identifier of the member who owns the plan.</param>
 /// <param name="planName">The display name of the plan.</param>
 /// <param name="target">The numeric target of the plan.</param>
 /// <param name="unit">The unit of measurement.</param>
@@ -18,7 +17,6 @@ namespace Backend.Domain.Plans.Events;
 /// <param name="clock"> The system clock used to timestamp when this event occurred.</param>
 public sealed class PlanCreatedEvent(
     Guid planId,
-    Guid memberId,
     string planName,
     float target,
     string unit,
@@ -32,11 +30,6 @@ public sealed class PlanCreatedEvent(
     /// Gets the unique identifier of the plan that was created.
     /// </summary>
     public Guid PlanId { get; } = planId;
-
-    /// <summary>
-    /// Gets the identifier of the member who owns this plan.
-    /// </summary>
-    public Guid MemberId { get; } = memberId;
 
     /// <summary>
     /// Gets the name of the plan.

@@ -1,7 +1,7 @@
 ﻿using System;
 using Backend.Application.Shared;
 
-namespace Backend.Application.Members.Commands.CreateGoal;
+namespace Backend.Application.Members.Commands.CreatePersonalPlan;
 
 /// <summary>
 ///
@@ -12,13 +12,11 @@ namespace Backend.Application.Members.Commands.CreateGoal;
 /// <param name="ToDate"></param>
 /// <param name="Target"></param>
 /// <param name="Current"></param>
-/// <param name="PeriodType"></param>
-public record CreateGoalCommand(
+public record CreatePlanCommand(
     Guid MemberId,
     string Unit,
     double Target,
     double Current,
     DateTimeOffset FromDate,
-    DateTimeOffset ToDate,
-    string PeriodType
+    DateTimeOffset ToDate
 ) : ICommand<Guid>;
