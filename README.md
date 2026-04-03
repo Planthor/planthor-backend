@@ -31,7 +31,7 @@ git clone https://github.com/Planthor/PlanthorWebApi.git
 dotnet test --results-directory ./tests/CodeCoverageResults --collect:"XPlat Code Coverage;Format=lcov,opencover"
 ```
 
-## Start the Planthor Web Api application in local development
+## Start the Planthor Api application in local development
 
 ### For Windows
 
