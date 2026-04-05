@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Domain.ExternalConnections;
+namespace Domain.Members;
 
 /// <summary>
 /// Represents the lifecycle status of an external service connection.

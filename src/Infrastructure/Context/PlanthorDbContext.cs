@@ -18,7 +18,6 @@ namespace Infrastructure.Context;
 public class PlanthorDbContext(DbContextOptions options, IPublisher publisher) : DbContext(options)
 {
     public DbSet<Member> Members => Set<Member>();
-    public DbSet<Plan> Plans => Set<Plan>();
 
     /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

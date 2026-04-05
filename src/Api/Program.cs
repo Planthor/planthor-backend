@@ -1,10 +1,6 @@
 ﻿using System;
-using Application.Members.Commands.Create;
-using Application.Members.Commands.Update;
-using Application.Members.Queries.Details;
-using FluentValidation;
+using Application;
 using Infrastructure;
-using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,22 +23,12 @@ try
     builder.Host.UseSerilog();
 
     builder.Services.AddSingleton<IClock>(SystemClock.Instance);
-    builder.Services.AddMediatR(cfg =>
-    {
-        // TODO (Trung) : Use Environment Variable to get LicenseKey Mediatr.
-        cfg.LicenseKey = "";
-        cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-    });
-
-    builder.Services.AddScoped<IRequestHandler<CreateMemberCommand, Guid>, CreateMemberCommandHandler>();
-
-    builder.Services.AddScoped<IValidator<CreateMemberCommand>, CreateMemberCommandValidator>();
-    builder.Services.AddScoped<IValidator<UpdateMemberCommand>, UpdateMemberCommandValidator>();
-    builder.Services.AddScoped<IValidator<MemberDetailsQuery>, MemberDetailsQueryValidator>();
 
     builder.Services.AddPlanthorDbContext(
         builder.Configuration.GetConnectionString("PlanthorDbContext")
             ?? throw new InvalidOperationException("PlanthorDbContext is not set in the configuration file."));
+
+    builder.Services.AddApplicationServices(builder.Configuration);
 
     // API Client
     builder.Services.AddControllers();

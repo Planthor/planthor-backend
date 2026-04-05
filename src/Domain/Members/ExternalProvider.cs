@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Domain.ExternalConnections;
+namespace Domain.Members;
 
 /// <summary>
 /// Represents an external service provider that can be linked to a member's account.
@@ -39,11 +39,11 @@ public class ExternalProvider
     /// </summary>
     public string I18NKey { get; }
 
-    private ExternalProvider(string id, string name, string descriptionI18nKey)
+    private ExternalProvider(string id, string name, string i18nKey)
     {
         Id = id;
         Name = name;
-        I18NKey = descriptionI18nKey;
+        I18NKey = i18nKey;
     }
 
     /// <summary>

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Domain.Members;
 using Domain.Shared;
 using NodaTime;
 
-namespace Domain.ExternalConnections;
+namespace Domain.Members;
 
 /// <summary>
 /// Entity representing a member's authenticated link to an external service.

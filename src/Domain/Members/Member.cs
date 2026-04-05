@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Domain.ExternalConnections;
 using Domain.Members.Events;
 using Domain.Shared;
 using NodaTime;

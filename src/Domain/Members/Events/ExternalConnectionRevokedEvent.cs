@@ -1,5 +1,4 @@
 ﻿using System;
-using Domain.ExternalConnections;
 using Domain.Shared;
 using NodaTime;
 
