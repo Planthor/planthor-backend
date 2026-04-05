@@ -53,7 +53,7 @@ public class Member(
     public string Description { get; private set; } = description;
 
     /// <summary>
-    /// Gets the path or URL to the member's avatar image. Can be empty.
+    /// Gets the path or URL to the member's avatar image in PlanthorDb.
     /// </summary>
     public string? PathAvatar { get; private set; }
 

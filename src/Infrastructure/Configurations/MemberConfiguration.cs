@@ -15,6 +15,7 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.ToCollection("members");
 
         builder.HasKey(m => m.Id);
+        builder.HasIndex(m => m.IdentifyName).IsUnique();
         builder.OwnsMany(m => m.ExternalConnections, navigationBuilder =>
         {
             navigationBuilder.Property(ec => ec.Id).ValueGeneratedNever();

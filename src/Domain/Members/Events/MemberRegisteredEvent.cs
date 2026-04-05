@@ -7,8 +7,8 @@ namespace Domain.Members.Events;
 public sealed class MemberRegisteredEvent(
     Guid memberId,
     string? initialAvatarPath,
-    IClock OccurredOn,
-    string occurredBy) : DomainEvent(OccurredOn, occurredBy)
+    IClock occurredOn,
+    string occurredBy) : DomainEvent(occurredOn, occurredBy)
 {
     /// <summary>
     /// Gets the identifier of the member who subscribed to the plan.
