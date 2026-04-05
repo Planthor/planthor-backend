@@ -1,6 +1,8 @@
 ﻿using System;
+using Api.Filters;
 using Application;
 using Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,8 +32,21 @@ try
 
     builder.Services.AddApplicationServices(builder.Configuration);
 
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.Authority = "http://localhost:8180/realms/planthor";
+            options.Audience = "planthor-backend";
+            options.RequireHttpsMetadata = false; // For localhost testing
+        });
+
     // API Client
-    builder.Services.AddControllers();
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<MemberSessionFilter>();
+    });
+
     builder.Services.AddEndpointsApiExplorer();
 
     // OpenAPI + Scalar

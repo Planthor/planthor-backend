@@ -5,9 +5,9 @@ using MediatR;
 
 namespace Application.Members.Commands.UploadAvatar;
 
-public class UploadAvatarCommandHandler : IRequestHandler<UploadAvatarCommand, string>
+public class UploadMemberAvatarCommandHandler : IRequestHandler<UploadMemberAvatarCommand, string>
 {
-    public Task<string> Handle(UploadAvatarCommand request, CancellationToken cancellationToken)
+    public Task<string> Handle(UploadMemberAvatarCommand request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

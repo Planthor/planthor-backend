@@ -2,6 +2,6 @@
 using Application.Dtos;
 using Application.Shared;
 
-namespace Application.Members.Queries.Lists;
+namespace Application.Members.Queries.List;
 
 public sealed record ListMembersQuery : IQuery<IEnumerable<MemberDto>>;

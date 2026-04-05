@@ -2,4 +2,4 @@
 
 namespace Application.Members.Commands.UploadAvatar;
 
-public record UploadAvatarCommand : ICommand<string>;
+public record UploadMemberAvatarCommand : ICommand<string>;

@@ -6,7 +6,7 @@ using Application.Dtos;
 using Application.Members.Commands.Create;
 using Application.Members.Commands.Update;
 using Application.Members.Queries.Details;
-using Application.Members.Queries.Lists;
+using Application.Members.Queries.List;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
