@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +9,7 @@ using Application.Members.Queries.ListPersonalPlans;
 using Application.Members.Queries.PersonalPlanDetails;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,7 @@ namespace Api.Controllers.v1.Resources;
 /// <param name="updatePlanCommandValidator">The validator for <see cref="UpdatePlanCommand"/>.</param>
 /// <param name="personalPlansQueryValidator">The validator for <see cref="ListPersonalPlansQuery"/>.</param>
 /// <param name="personalPlanDetailsQueryValidator">The validator for <see cref="PersonalPlanDetailsQuery"/>.</param>
+[Authorize]
 [ApiController]
 [Route("members/{memberId}/[controller]")]
 public class PersonalPlansController(

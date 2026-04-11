@@ -1,4 +1,6 @@
-﻿using Domain.Members;
+﻿using Application.Shared;
+using Infrastructure.BackgroundJobClient;
+using Domain.Members;
 using Infrastructure.Context;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +30,7 @@ public static class ServiceCollectionExtension
 
         // Register your specific aggregate repositories (Manual DI)
         services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<IBackgroundJobClient, QuartzBackgroundJobClient>();
 
         return services;
     }

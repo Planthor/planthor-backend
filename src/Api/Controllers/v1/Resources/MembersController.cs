@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +9,7 @@ using Application.Members.Queries.Details;
 using Application.Members.Queries.List;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,7 @@ namespace Api.Controllers.v1.Resources;
 /// <param name="updateMemberCommandValidator">The validator for <see cref="UpdateMemberCommand"/>.</param>
 /// <param name="memberDetailsQueryValidator">The validator for <see cref="MemberDetailsQuery"/>.</param>
 /// <exception cref="ArgumentNullException">Thrown when sender is null.</exception>
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class MembersController(
@@ -122,6 +124,4 @@ public class MembersController(
         var query = new ListMembersQuery();
         return Ok(await _sender.Send(query, token));
     }
-
-
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Api.Filters;
 using Application;
 using Infrastructure;
@@ -41,6 +41,8 @@ try
             options.RequireHttpsMetadata = false; // For localhost testing
         });
 
+    builder.Services.AddAuthorization();
+
     // API Client
     builder.Services.AddControllers(options =>
     {
@@ -67,6 +69,9 @@ try
             options.DefaultHttpClient = new(ScalarTarget.Swift, ScalarClient.HttpClient);
         });
     }
+
+    app.UseAuthentication();
+    app.UseAuthorization();
 
     app.MapControllers();
 
