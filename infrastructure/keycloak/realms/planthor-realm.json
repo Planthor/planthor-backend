@@ -1349,6 +1349,7 @@
       "showInAccountConsole" : "ALWAYS",
       "filteredByClaim" : "false",
       "syncMode" : "IMPORT",
+      // TODO - Trung - We need to hide this clientSecret
       "clientSecret" : "855bfb12f72f274bf1e3fdff77ac66ca",
       "caseSensitiveOriginalUsername" : "false",
       "fetchedFields" : "picture",
