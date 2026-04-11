@@ -1,6 +1,7 @@
 ﻿using Application.Shared;
-using Infrastructure.BackgroundJobClient;
+using Quartz;
 using Domain.Members;
+using Infrastructure.BackgroundJobClient;
 using Infrastructure.Context;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,13 @@ public static class ServiceCollectionExtension
         // Register your specific aggregate repositories (Manual DI)
         services.AddScoped<IMemberRepository, MemberRepository>();
         services.AddScoped<IBackgroundJobClient, QuartzBackgroundJobClient>();
+
+        // Register Quartz.NET
+        services.AddQuartz();
+        services.AddQuartzHostedService(options =>
+        {
+            options.WaitForJobsToComplete = true;
+        });
 
         return services;
     }

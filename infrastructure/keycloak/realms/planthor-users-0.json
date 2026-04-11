@@ -1,0 +1,21 @@
+{
+  "realm" : "planthor",
+  "users" : [ {
+    "id" : "c4abc0d6-18a0-4ff5-831a-f8c6ca83b998",
+    "username" : "service-account-planthor-backend",
+    "emailVerified" : false,
+    "enabled" : true,
+    "createdTimestamp" : 1775395093056,
+    "totp" : false,
+    "serviceAccountClientId" : "planthor-backend",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-planthor" ],
+    "clientRoles" : {
+      "planthor-backend" : [ "uma_protection" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}

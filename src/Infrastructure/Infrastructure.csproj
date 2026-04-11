@@ -2,6 +2,7 @@
   <ItemGroup>
     <PackageReference Include="MongoDB.EntityFrameworkCore" Version="10.0.1" />
     <PackageReference Include="Quartz" Version="3.17.1" />
+    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.17.1" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
