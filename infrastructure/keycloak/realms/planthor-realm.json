@@ -537,7 +537,8 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "secret" : "vdJE3xF82ViPw7l0nBBFzC6hWadiTTX2",
+    // TODO - Trung - make sure its not a hard-coded secret.
+    "secret" : "<Input the Secret>",
     "redirectUris" : [ "/*" ],
     "webOrigins" : [ "/*" ],
     "notBefore" : 0,
@@ -1349,7 +1350,8 @@
       "showInAccountConsole" : "ALWAYS",
       "filteredByClaim" : "false",
       "syncMode" : "IMPORT",
-      "clientSecret" : "855bfb12f72f274bf1e3fdff77ac66ca",
+      // TODO - Trung - We need to hide this clientSecret
+      "clientSecret" : "<Input the Secret>",
       "caseSensitiveOriginalUsername" : "false",
       "fetchedFields" : "picture",
       "defaultScope" : "openid email"
