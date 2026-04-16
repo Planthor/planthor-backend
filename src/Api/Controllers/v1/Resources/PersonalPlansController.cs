@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +25,7 @@ namespace Api.Controllers.v1.Resources;
 /// <param name="personalPlanDetailsQueryValidator">The validator for <see cref="PersonalPlanDetailsQuery"/>.</param>
 [Authorize]
 [ApiController]
-[Route("members/{memberId}/[controller]")]
+[Route("v1/members/{memberId}/[controller]")]
 public class PersonalPlansController(
     ISender sender,
     IValidator<CreatePlanCommand> createPlanCommandValidator,

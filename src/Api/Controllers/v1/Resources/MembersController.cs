@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +25,7 @@ namespace Api.Controllers.v1.Resources;
 /// <exception cref="ArgumentNullException">Thrown when sender is null.</exception>
 [Authorize]
 [ApiController]
-[Route("[controller]")]
+[Route("v1/[controller]")]
 public class MembersController(
     ISender sender,
     IValidator<CreateMemberCommand> createMemberCommandValidator,
