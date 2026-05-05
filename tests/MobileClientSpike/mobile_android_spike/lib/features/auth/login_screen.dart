@@ -10,7 +10,7 @@ class LoginScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
+    final authState = ref.watch(authProvider);
     final isLoading = authState is AsyncLoading;
 
     return Scaffold(
@@ -84,7 +84,7 @@ class LoginScreen extends ConsumerWidget {
                     onPressed: isLoading
                         ? null
                         : () => ref
-                            .read(authNotifierProvider.notifier)
+                            .read(authProvider.notifier)
                             .login(),
                     icon: isLoading
                         ? const SizedBox(

@@ -10,7 +10,7 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
+    final authState = ref.watch(authProvider);
 
     return MaterialApp(
       title: 'Planthor Spike',
@@ -25,7 +25,7 @@ class App extends ConsumerWidget {
         ),
         error: (e, _) => LoginScreen(error: e.toString()),
         data: (status) => switch (status) {
-          AuthStatus.authenticated => const HomeScreen(),
+          AuthStatus.authenticated   => const HomeScreen(),
           AuthStatus.unauthenticated => const LoginScreen(),
         },
       ),

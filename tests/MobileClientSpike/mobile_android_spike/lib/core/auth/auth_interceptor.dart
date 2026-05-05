@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'auth_service.dart';
 import 'token_storage.dart';
 
-class AuthInterceptor extends Interceptor {
+class AuthInterceptor extends QueuedInterceptor {
   AuthInterceptor(this._storage, this._authService, this._dio);
 
   final TokenStorage _storage;
