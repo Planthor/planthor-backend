@@ -22,6 +22,7 @@ class AuthInterceptor extends QueuedInterceptor {
         await _authService.refresh();
       } catch (_) {
         /* handled on 401 */
+        _isRefreshing = false;
       }
     }
 

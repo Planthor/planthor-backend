@@ -22,6 +22,7 @@ class AuthService {
         AppConfig.redirectUri,
         serviceConfiguration: _serviceConfig,
         scopes: AppConfig.scopes,
+        allowInsecureConnections: true,
         // AppAuth generates the PKCE verifier + S256 challenge automatically
       ),
     );
@@ -45,6 +46,7 @@ class AuthService {
         serviceConfiguration: _serviceConfig,
         refreshToken: refreshToken,
         scopes: AppConfig.scopes,
+        allowInsecureConnections: true,
       ),
     );
 
@@ -68,6 +70,7 @@ class AuthService {
           idTokenHint: idToken, // signals Keycloak which session
           postLogoutRedirectUrl: AppConfig.postLogoutUri,
           serviceConfiguration: _serviceConfig,
+          allowInsecureConnections: true,
         ),
       );
     }

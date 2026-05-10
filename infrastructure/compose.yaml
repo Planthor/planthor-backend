@@ -104,7 +104,7 @@ services:
       KC_DB_USERNAME: ${KC_DB_USER:-keycloak}
       KC_DB_PASSWORD: ${KC_DB_PASSWORD:-Planthor_123}
       # Hostname (adjust for production)
-      KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
+      # KC_HOSTNAME: ${KC_HOSTNAME:-localhost}
       KC_HOSTNAME_PORT: ${KC_PORT:-8180}
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
