@@ -1,4 +1,4 @@
-{
+﻿{
   "id" : "fb9e0d73-c22f-42e0-966e-3f83db9a6605",
   "realm" : "planthor",
   "displayName" : "Planthor",
@@ -537,8 +537,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    // TODO - Trung - make sure its not a hard-coded secret.
-    "secret" : "<Input the Secret>",
+    "secret" : "THISISNOTSECRET",
     "redirectUris" : [ "/*" ],
     "webOrigins" : [ "/*" ],
     "notBefore" : 0,
@@ -1350,8 +1349,7 @@
       "showInAccountConsole" : "ALWAYS",
       "filteredByClaim" : "false",
       "syncMode" : "IMPORT",
-      // TODO - Trung - We need to hide this clientSecret
-      "clientSecret" : "<Input the Secret>",
+      "clientSecret" : "THISISNOTSECRET",
       "caseSensitiveOriginalUsername" : "false",
       "fetchedFields" : "picture",
       "defaultScope" : "openid email"
