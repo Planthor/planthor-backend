@@ -1,5 +1,5 @@
-abstract final class AppConfig {
-  static const keycloakBase = 'http://10.0.2.2:8180/realms/planthor';
+﻿abstract final class AppConfig {
+  static const keycloakBase = 'http://localhost:8180/realms/planthor';
   static const authEndpoint = '$keycloakBase/protocol/openid-connect/auth';
   static const tokenEndpoint = '$keycloakBase/protocol/openid-connect/token';
   static const endSessionUrl = '$keycloakBase/protocol/openid-connect/logout';
