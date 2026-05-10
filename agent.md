@@ -8,17 +8,17 @@
 - Auth provider for local/dev flow: Keycloak (JWT bearer).
 
 ## Solution layout
-- `/home/runner/work/planthor-backend/planthor-backend/src/Api`  
+- `src/Api`  
   HTTP controllers, auth setup, filters, OpenAPI/Scalar setup.
-- `/home/runner/work/planthor-backend/planthor-backend/src/Application`  
+- `src/Application`  
   Commands, queries, handlers, validators (MediatR + FluentValidation).
-- `/home/runner/work/planthor-backend/planthor-backend/src/Domain`  
+- `src/Domain`  
   Business entities/events/value objects.
-- `/home/runner/work/planthor-backend/planthor-backend/src/Infrastructure`  
+- `src/Infrastructure`  
   Mongo EF context, repositories, Quartz job client.
-- `/home/runner/work/planthor-backend/planthor-backend/src/Adapters`  
+- `src/Adapters`  
   Provider-facing adapter modules.
-- `/home/runner/work/planthor-backend/planthor-backend/tests`  
+- `tests`  
   Unit + integration tests.
 
 ## API overview (current)
@@ -31,18 +31,18 @@
 
 ## Local development quick start
 1. Start infrastructure:
-   - `docker compose -f /home/runner/work/planthor-backend/planthor-backend/infrastructure/compose.yaml up -d`
+   - `docker compose -f infrastructure/compose.yaml up -d`
 2. Configure API connection string (`ConnectionStrings:PlanthorDbContext`).
-3. Run API from `/home/runner/work/planthor-backend/planthor-backend/src/Api`.
+3. Run API from `src/Api`.
 4. In development, OpenAPI and Scalar docs are enabled.
 
 ## Testing and CI
 - Local tests:
   - `dotnet test --results-directory ./tests/CodeCoverageResults --collect:"XPlat Code Coverage;Format=lcov,opencover"`
 - CI workflows:
-  - `/home/runner/work/planthor-backend/planthor-backend/.github/workflows/dotnet-ci.yml`
-  - `/home/runner/work/planthor-backend/planthor-backend/.github/workflows/qac.yml`
-  - `/home/runner/work/planthor-backend/planthor-backend/.github/workflows/docker-build.yml`
+  - `.github/workflows/dotnet-ci.yml`
+  - `.github/workflows/qac.yml`
+  - `.github/workflows/docker-build.yml`
 
 ## Observed notes / follow-up candidates
 - Runtime target is .NET 10, but one CI workflow currently uses .NET 8.
