@@ -71,3 +71,9 @@ lib/
         ├── home_notifier.dart        # Calls protected API, handles 401
         └── home_screen.dart
 
+###
+Reverse port 8180 for keycloak authentication (adb from Android Emulator)
+
+```
+.\adb reverse tcp:8180 tcp:8180
+```

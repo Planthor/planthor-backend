@@ -75,9 +75,29 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               error: (e, _) => Card(
+                color: Theme.of(context).colorScheme.errorContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text('Token error: $e'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Token Retrieval Error',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        e.toString(),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               data: (info) => Card(
@@ -93,44 +113,44 @@ class HomeScreen extends ConsumerWidget {
                               color: Theme.of(context).colorScheme.secondary),
                           const SizedBox(width: 8),
                           Text(
-                            'Token Info',
+                            'Token Debug Info',
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
-                          const Spacer(),
-                          if (info.accessToken != null)
-                            IconButton(
-                              icon: const Icon(Icons.copy, size: 18),
-                              tooltip: 'Copy full token',
-                              onPressed: () {
-                                Clipboard.setData(
-                                    ClipboardData(text: info.accessToken!));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Token copied to clipboard'),
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              },
-                            ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        info.truncatedToken,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontFamily: 'monospace',
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
+                      const SizedBox(height: 12),
+                      _TokenRow(
+                        label: 'Access Token',
+                        value: info.accessToken,
+                        displayValue: info.truncateToken(info.accessToken),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Expires: ${info.expiryDisplay}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
+                      const Divider(height: 24),
+                      _TokenRow(
+                        label: 'Refresh Token',
+                        value: info.refreshToken,
+                        displayValue: info.truncateToken(info.refreshToken),
+                      ),
+                      const Divider(height: 24),
+                      _TokenRow(
+                        label: 'ID Token',
+                        value: info.idToken,
+                        displayValue: info.truncateToken(info.idToken),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.timer_outlined, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Expires: ${info.expiryDisplay}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -185,6 +205,66 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TokenRow extends StatelessWidget {
+  const _TokenRow({
+    required this.label,
+    required this.value,
+    required this.displayValue,
+  });
+
+  final String label;
+  final String? value;
+  final String displayValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            if (value != null)
+              SizedBox(
+                height: 24,
+                width: 24,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.copy, size: 16),
+                  tooltip: 'Copy $label',
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: value!));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('$label copied to clipboard'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          displayValue,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontFamily: 'monospace',
+                color: Theme.of(context).colorScheme.outline,
+              ),
+        ),
+      ],
     );
   }
 }
