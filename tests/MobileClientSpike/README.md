@@ -45,7 +45,7 @@ android/app/src/main/AndroidManifest.xml — AppAuth handles the intent filter a
 ```
 
 ### Project Structure
-
+```
 lib/
 ├── main.dart
 ├── app.dart
@@ -70,6 +70,7 @@ lib/
     └── home/
         ├── home_notifier.dart        # Calls protected API, handles 401
         └── home_screen.dart
+```
 
 ###
 Reverse port 8180 for keycloak authentication (adb from Android Emulator)

@@ -228,20 +228,16 @@ dotnet out/PlanthorBackend.dll
 
 ### Configuration via Environment Variables
 
-The application reads configuration from:
+The application is designed to be cloud-native and can be fully configured via environment variables. This is the recommended approach for production deployments.
 
-1. **Environment Variables** (highest priority)
-2. **appsettings.json** (default values)
-3. **appsettings.Development.json** (development overrides)
-
-Key environment variables:
-
-| Variable | Example | Required |
+| Variable | Description | Example |
 |---|---|---|
-| `ConnectionStrings__PlanthorDbContext` | `mongodb://admin:pass@localhost:27017/` | ✅ |
-| `Authentication__Authority` | `http://localhost:8180/realms/planthor-realm` | ✅ (with auth) |
-| `Authentication__Audience` | `planthor-backend` | ✅ (with auth) |
-| `Authentication__RequireHttpsMetadata` | `false` (local dev), `true` (prod) | ❌ (default: true) |
+| `ConnectionStrings__PlanthorDbContext` | MongoDB connection string | `mongodb://admin:pass@localhost:27017/` |
+| `Authentication__Authority` | Keycloak Issuer URL | `https://auth.example.com/realms/planthor-realm` |
+| `Authentication__Audience` | Token Audience | `planthor-backend` |
+| `Authentication__RequireHttpsMetadata` | Require HTTPS for metadata | `true` (prod), `false` (dev) |
+| `ASPNETCORE_ENVIRONMENT` | Application Environment | `Production`, `Development` |
+| `ASPNETCORE_URLS` | Binding URLs | `http://+:8080` |
 
 ---
 
@@ -347,21 +343,30 @@ See [Adapters README](src/Adapters/README.md) for detailed setup.
 
 ### Docker Build & Run
 
-Build a production Docker image:
+Build a production-ready Docker image:
 
 ```bash
 docker build -t planthor-backend:latest .
 ```
 
-Run the container:
+Run the container using environment variables. You can pass them directly or use an `.env` file:
 
 ```bash
+# Using direct environment variables
 docker run -d \
-  -e ConnectionStrings__PlanthorDbContext="mongodb://admin:pass@mongodb:27017/" \
+  --name planthor-api \
+  -e ConnectionStrings__PlanthorDbContext="mongodb://admin:Planthor_123@mongodb:27017/" \
   -e Authentication__Authority="https://auth.example.com/realms/planthor-realm" \
   -e Authentication__Audience="planthor-backend" \
   -e Authentication__RequireHttpsMetadata="true" \
-  -p 5001:5001 \
+  -p 8080:8080 \
+  planthor-backend:latest
+
+# Using an .env file
+docker run -d \
+  --name planthor-api \
+  --env-file .env \
+  -p 8080:8080 \
   planthor-backend:latest
 ```
 
