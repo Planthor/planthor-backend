@@ -5,4 +5,4 @@ using Application.Shared;
 
 namespace Application.Members.Queries.ListPersonalPlans;
 
-public sealed record ListPersonalPlansQuery(Guid MemberId) : IQuery<IEnumerable<PersonalPlanDto>>;
+public sealed record ListPersonalPlansQuery(string IdentifyName) : IQuery<IEnumerable<PersonalPlanDto>>;

@@ -6,14 +6,14 @@ namespace Application.Members.Commands.CreatePersonalPlan;
 /// <summary>
 ///
 /// </summary>
-/// <param name="MemberId"></param>
+/// <param name="IdentifyName"></param>
 /// <param name="Unit"></param>
 /// <param name="FromDate"></param>
 /// <param name="ToDate"></param>
 /// <param name="Target"></param>
 /// <param name="Current"></param>
 public record CreatePlanCommand(
-    Guid MemberId,
+    string IdentifyName,
     string Unit,
     double Target,
     double Current,

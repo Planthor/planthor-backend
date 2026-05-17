@@ -5,7 +5,7 @@ using Application.Shared;
 namespace Application.Members.Commands.UpdatePersonalPlan;
 
 public record UpdatePlanCommand(
-    [property: JsonIgnore] Guid MemberId,
+    [property: JsonIgnore] string IdentifyName,
     [property: JsonIgnore] Guid PlanId,
     string Unit,
     double Target,
