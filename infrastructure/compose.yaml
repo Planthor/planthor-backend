@@ -14,7 +14,7 @@ services:
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
-      # - ./mongo/init:/docker-entrypoint-initdb.d:ro
+      - ./mongodb:/docker-entrypoint-initdb.d:ro
     networks:
       - app_network
     healthcheck:
