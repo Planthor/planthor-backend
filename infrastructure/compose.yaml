@@ -10,7 +10,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-Planthor_123}
       MONGO_INITDB_DATABASE: ${MONGO_DB:-planthordb}
     ports:
-      - 27017:27017
+      - ${MONGO_PORT:-27017}:27017
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
@@ -38,7 +38,7 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER:-mexpress}
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-Planthor_123}
     ports:
-      - 8081:8081
+      - ${MONGO_EXPRESS_PORT:-8081}:8081
     networks:
       - app_network
 
@@ -50,7 +50,7 @@ services:
       POSTGRES_USER: ${KC_DB_USER:-keycloak}
       POSTGRES_PASSWORD: ${KC_DB_PASSWORD:-Planthor_123}
     ports:
-      - 5432:5432
+      - ${KC_DB_PORT:-5432}:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -75,7 +75,7 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     ports:
-      - "5050:80"
+      - "${PGADMIN_PORT:-5050}:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
@@ -111,7 +111,7 @@ services:
       # Log level
       KC_LOG_LEVEL: ${KC_LOG_LEVEL:-INFO}
     ports:
-      - "8180:8180"
+      - "${KC_PORT:-8180}:8180"
     volumes:
       # Realm JSON files placed here are auto-imported on startup
       - ./keycloak/realms:/opt/keycloak/data/import:ro

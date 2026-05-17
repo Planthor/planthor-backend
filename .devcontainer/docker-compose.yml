@@ -1,4 +1,4 @@
-﻿version: '3.8'
+version: '3.8'
 name: planthor-webapi-ws
 
 services:
@@ -10,30 +10,9 @@ services:
       - ..:/workspace/planthorwebapi:cached
     command: sleep infinity
     user: vscode
-    depends_on:
-      - mongodb
-  mongodb:
-    image: mongo:7
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=Planthor_123
-      - MONGO_INITDB_DATABASE=planthordb
-    ports:
-      - 27017:27017
-    volumes:
-      - ./mongodb/create_db.js:/docker-entrypoint-initdb.d/create_db.js:ro
-      - mongodb-data:/data/db
+    networks:
+      - app_network
 
-  mongo-express:
-    image: mongo-express:latest
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=Planthor_123
-      - ME_CONFIG_MONGODB_URL=mongodb://admin:${ME_CONFIG_MONGODB_ADMINPASSWORD}@mongodb:27017/
-    ports:
-      - 8081:8081
-    depends_on:
-      - mongodb
-
-volumes:
-    mongodb-data:
+networks:
+  app_network:
+    driver: bridge
