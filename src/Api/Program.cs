@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Api.Filters;
 using Application;
 using Infrastructure;
@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using NodaTime;
 using Scalar.AspNetCore;
 using Serilog;
@@ -36,9 +37,18 @@ try
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
-            options.Authority = "http://localhost:8180/realms/planthor";
-            options.Audience = "planthor-backend";
-            options.RequireHttpsMetadata = false; // For localhost testing
+            options.Authority = builder.Configuration["Authentication:Keycloak:Authority"] ?? "http://localhost:8180/realms/planthor";
+            options.Audience = builder.Configuration["Authentication:Keycloak:Audience"] ?? "planthor-backend";
+            options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = builder.Configuration["Authentication:Keycloak:Authority"] ?? "http://localhost:8180/realms/planthor",
+                ValidateAudience = true,
+                ValidAudience = builder.Configuration["Authentication:Keycloak:Audience"] ?? "planthor-backend",
+                ValidateLifetime = true,
+            };
         });
 
     builder.Services.AddAuthorization();

@@ -77,3 +77,7 @@ Reverse port 8180 for keycloak authentication (adb from Android Emulator)
 ```
 .\adb reverse tcp:8180 tcp:8180
 ```
+
+```
+.\adb reverse tcp:5008 tcp:5008
+```

@@ -14,5 +14,5 @@
 
   // Resource API — matches launchSettings.json "http://localhost:5008"
   // 10.0.2.2 is the Android emulator alias for host machine's localhost
-  static const apiBase = 'http://10.0.2.2:5008';
+  static const apiBase = 'http://localhost:5008';
 }
