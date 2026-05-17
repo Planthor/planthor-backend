@@ -9,11 +9,12 @@ class AuthService {
   final FlutterAppAuth _appAuth;
   final TokenStorage _storage;
 
-  static final _serviceConfig = AuthorizationServiceConfiguration(
-    authorizationEndpoint: AppConfig.authEndpoint,
-    tokenEndpoint: AppConfig.tokenEndpoint,
-    endSessionEndpoint: AppConfig.endSessionUrl,
-  );
+  static AuthorizationServiceConfiguration get _serviceConfig =>
+      AuthorizationServiceConfiguration(
+        authorizationEndpoint: AppConfig.authEndpoint,
+        tokenEndpoint: AppConfig.tokenEndpoint,
+        endSessionEndpoint: AppConfig.endSessionUrl,
+      );
 
   Future<void> login() async {
     final result = await _appAuth.authorizeAndExchangeCode(
@@ -22,7 +23,7 @@ class AuthService {
         AppConfig.redirectUri,
         serviceConfiguration: _serviceConfig,
         scopes: AppConfig.scopes,
-        allowInsecureConnections: true,
+        allowInsecureConnections: AppConfig.allowInsecureConnections,
         // AppAuth generates the PKCE verifier + S256 challenge automatically
       ),
     );
@@ -46,7 +47,7 @@ class AuthService {
         serviceConfiguration: _serviceConfig,
         refreshToken: refreshToken,
         scopes: AppConfig.scopes,
-        allowInsecureConnections: true,
+        allowInsecureConnections: AppConfig.allowInsecureConnections,
       ),
     );
 
@@ -70,7 +71,7 @@ class AuthService {
           idTokenHint: idToken, // signals Keycloak which session
           postLogoutRedirectUrl: AppConfig.postLogoutUri,
           serviceConfiguration: _serviceConfig,
-          allowInsecureConnections: true,
+          allowInsecureConnections: AppConfig.allowInsecureConnections,
         ),
       );
     }
