@@ -10,16 +10,22 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace Api.Filters;
 
 /// <summary>
-///
+/// An action filter that ensures a member session exists for the authenticated user.
+/// If the user is authenticated but does not exist in the Planthor system,
+/// this filter triggers a Just-In-Time (JIT) provisioning process.
 /// </summary>
+/// <remarks>
+/// This filter delegates actual authentication checks to the default [Authorize] filter.
+/// It only acts if the user is already authenticated by the identity provider (e.g., Keycloak).
+/// </remarks>
 public class MemberSessionFilter : IAsyncActionFilter
 {
     private readonly ISender _sender;
 
     /// <summary>
-    ///
+    /// Initializes a new instance of the <see cref="MemberSessionFilter"/> class.
     /// </summary>
-    /// <param name="sender"></param>
+    /// <param name="sender">The MediatR sender used to dispatch provisioning commands.</param>
     public MemberSessionFilter(ISender sender)
     {
         ArgumentNullException.ThrowIfNull(sender);

@@ -4,6 +4,7 @@ using Domain.Members;
 using Infrastructure.BackgroundJobClient;
 using Infrastructure.Context;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,9 +33,17 @@ public static class ServiceCollectionExtension
         // Register your specific aggregate repositories (Manual DI)
         services.AddScoped<IMemberRepository, MemberRepository>();
         services.AddScoped<IBackgroundJobClient, QuartzBackgroundJobClient>();
+        services.AddScoped<IAvatarStorageService, AzureBlobAvatarStorageService>();
+
+        services.AddHttpClient();
 
         // Register Quartz.NET
-        services.AddQuartz();
+        services.AddQuartz(q =>
+        {
+            var jobKey = new JobKey("DownloadAvatar");
+            q.AddJob<DownloadAvatarJob>(opts => opts.WithIdentity(jobKey).StoreDurably());
+        });
+
         services.AddQuartzHostedService(options =>
         {
             options.WaitForJobsToComplete = true;

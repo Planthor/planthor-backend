@@ -299,19 +299,24 @@ public class Member(
     }
 
     /// <summary>
-    ///
+    /// Updates the member's avatar path and raises a <see cref="MemberAvatarUpdatedEvent"/>.
     /// </summary>
-    /// <param name="pathAvatar"></param>
-    /// <param name="clock"></param>
+    /// <param name="pathAvatar">The new path or URI for the member's avatar.</param>
+    /// <param name="clock">The system clock providing the current UTC instant for audit and event timing.</param>
     public void UpdateAvatar(string pathAvatar, IClock clock)
     {
-        var oldAvatarPath = PathAvatar;
+        Uri? oldAvatarUri = null;
+        if (!string.IsNullOrEmpty(PathAvatar))
+        {
+            Uri.TryCreate(PathAvatar, UriKind.Absolute, out oldAvatarUri);
+        }
+
         PathAvatar = pathAvatar;
         StampUpdatedAudit(Id, clock);
 
         RaiseDomainEvent(new MemberAvatarUpdatedEvent(
             Id,
-            new Uri(oldAvatarPath),
+            oldAvatarUri,
             new Uri(pathAvatar),
             clock,
             $"{nameof(Member)} / {nameof(UpdateAvatar)}"));
