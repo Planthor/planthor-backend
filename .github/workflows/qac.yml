@@ -1,4 +1,4 @@
-name: Code Analysis
+﻿name: Code Analysis
 
 on:
   push:
@@ -100,6 +100,7 @@ jobs:
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.exclusions="src/*/wwwroot/lib" \
+          /d:sonar.sources="./src" \
           /d:sonar.cs.opencover.reportsPaths=coverage-report/**/coverage.opencover.xml
           dotnet restore
           dotnet build --no-incremental

@@ -1,9 +1,9 @@
-﻿# Build Stage
+# Build Stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 COPY . .
-RUN dotnet restore
-RUN dotnet publish "src/Api/Api.csproj" -c Release -o /app/publish
+RUN dotnet restore "src/Api/Api.csproj"
+RUN dotnet publish "src/Api/Api.csproj" -c Release -o /app/publish --no-restore
 
 # Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
@@ -12,7 +12,9 @@ EXPOSE 8080
 
 # Production Configuration Placeholders
 # Overridable via environment variables or .env file
+ENV ASPNETCORE_ENVIRONMENT="Production"
 ENV ConnectionStrings__PlanthorDbContext=""
+ENV MediatR__LicenseKey=""
 ENV Authentication__Authority=""
 ENV Authentication__Audience="planthor-backend"
 ENV Authentication__RequireHttpsMetadata="true"

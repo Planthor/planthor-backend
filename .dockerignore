@@ -51,3 +51,7 @@ TestResults/
 *.csproj.vspscc
 *.csproj.vssscc
 *.csproj.suo
+
+# Ignore tests and large data folders
+tests/
+.gemini/
