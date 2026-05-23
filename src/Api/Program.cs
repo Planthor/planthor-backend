@@ -83,7 +83,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.MapHealthChecks("/healthz");
+    app.MapHealthChecks("/healthz").AllowAnonymous();
     app.MapControllers();
 
     Log.Information("The app started.");
