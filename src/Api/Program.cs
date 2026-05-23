@@ -54,6 +54,8 @@ try
 
     builder.Services.AddAuthorization();
 
+    builder.Services.AddHealthChecks();
+
     // API Client
     builder.Services.AddControllers();
 
@@ -81,6 +83,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
+    app.MapHealthChecks("/healthz");
     app.MapControllers();
 
     Log.Information("The app started.");
