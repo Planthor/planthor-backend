@@ -20,4 +20,5 @@ ENV Authentication__Keycloak__Audience="planthor-backend"
 ENV Authentication__RequireHttpsMetadata="true"
 
 COPY --from=build /app/publish .
+HEALTHCHECK CMD wget -qO- http://localhost:8080/healthz || exit 1
 ENTRYPOINT ["dotnet", "Api.dll"]
