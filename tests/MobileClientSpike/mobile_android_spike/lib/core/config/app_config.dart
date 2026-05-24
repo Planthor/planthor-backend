@@ -8,7 +8,7 @@ abstract final class AppConfig {
   static bool get isProduction => _env == 'prod';
 
   // ── Keycloak ──────────────────────────────────────────────────────────
-  static const _keycloakDev = 'https://auth.planthor.space/realms/planthor';
+  static const _keycloakDev = 'http://localhost:8180/realms/planthor';
   static const _keycloakProd = 'https://auth.planthor.space/realms/planthor';
   static String get keycloakBase => isProduction ? _keycloakProd : _keycloakDev;
 
@@ -34,7 +34,7 @@ abstract final class AppConfig {
 
   // ── Resource API ──────────────────────────────────────────────────────
   // Dev: 10.0.2.2 is the Android emulator alias for host machine's localhost
-  static const _apiDev = 'http://fgfdg.myddns.me:5008';
+  static const _apiDev = 'http://localhost:5008';
   // Prod: update this when you have a deployed backend URL
   static const _apiProd = 'https://api.planthor.space';
   static String get apiBase => isProduction ? _apiProd : _apiDev;
