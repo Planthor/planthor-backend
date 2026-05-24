@@ -6,6 +6,7 @@ using Application.Shared;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
@@ -14,7 +15,7 @@ namespace Infrastructure.Services;
 /// Provides functionality for uploading and deleting member avatar images.
 /// </summary>
 /// <param name="configuration">The application configuration used to retrieve storage connection strings.</param>
-public class AzureBlobAvatarStorageService(IConfiguration configuration) : IAvatarStorageService
+public class AzureBlobAvatarStorageService(IConfiguration configuration, ILogger<AzureBlobAvatarStorageService> logger) : IAvatarStorageService
 {
     private const string ContainerName = "avatars";
     private readonly string _connectionString = configuration.GetConnectionString("AzureStorage")
