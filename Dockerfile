@@ -10,14 +10,13 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 EXPOSE 8080
 
-# Production Configuration Placeholders
-# Overridable via environment variables or .env file
+# Production defaults. Override via orchestration env vars (K8s, ECS, docker-compose).
 ENV ASPNETCORE_ENVIRONMENT="Production"
 ENV ConnectionStrings__PlanthorDbContext=""
 ENV MediatR__LicenseKey=""
-ENV Authentication__Keycloak__Authority=""
+ENV Authentication__Keycloak__Authority="https://auth.planthor.space/realms/planthor"
 ENV Authentication__Keycloak__Audience="planthor-backend"
-ENV Authentication__RequireHttpsMetadata="true"
+ENV Authentication__Keycloak__RequireHttpsMetadata="true"
 
 COPY --from=build /app/publish .
 HEALTHCHECK CMD wget -qO- http://localhost:8080/healthz || exit 1
