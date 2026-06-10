@@ -34,20 +34,27 @@ try
     builder.Services.AddScoped<MemberSessionFilter>();
     builder.Services.AddApplicationServices(builder.Configuration);
 
+    var keycloakAuthority = builder.Configuration["Authentication:Keycloak:Authority"];
+    if (string.IsNullOrWhiteSpace(keycloakAuthority))
+        throw new InvalidOperationException("Authentication:Keycloak:Authority is not configured.");
+
+    var keycloakAudience = builder.Configuration["Authentication:Keycloak:Audience"];
+    if (string.IsNullOrWhiteSpace(keycloakAudience))
+        throw new InvalidOperationException("Authentication:Keycloak:Audience is not configured.");
+
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
-            options.Authority = builder.Configuration["Authentication:Keycloak:Authority"] ?? "http://localhost:8180/realms/planthor";
-            options.Audience = builder.Configuration["Authentication:Keycloak:Audience"] ?? "planthor-backend";
-            options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+            options.Authority = keycloakAuthority;
+            options.Audience = keycloakAudience;
+            options.RequireHttpsMetadata = builder.Configuration
+                .GetValue<bool>("Authentication:Keycloak:RequireHttpsMetadata", !builder.Environment.IsDevelopment());
 
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidIssuer = builder.Configuration["Authentication:Keycloak:Authority"] ?? "http://localhost:8180/realms/planthor",
                 ValidateAudience = true,
-                ValidAudience = builder.Configuration["Authentication:Keycloak:Audience"] ?? "planthor-backend",
                 ValidateLifetime = true,
             };
         });
