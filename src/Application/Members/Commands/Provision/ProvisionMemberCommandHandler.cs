@@ -14,21 +14,31 @@ public class ProvisionMemberCommandHandler(
 {
     public async Task<Guid> Handle(ProvisionMemberCommand request, CancellationToken cancellationToken)
     {
-        // Reuses Domain logic to ensure consistency
+        var existing = await memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken);
+
+        if (existing is not null)
+        {
+            if (existing.PathAvatar is null && request.AvatarUrl is not null)
+            {
+                await backgroundJobClient.EnqueueAvatarDownloadAsync(existing.Id, request.AvatarUrl, cancellationToken);
+            }
+
+            return existing.Id;
+        }
+
         var member = Member.Create(
             request.IdentifyName,
             request.FirstName,
-            "", // MiddleName
+            "",
             request.LastName,
             "JIT Provisioned",
-            "UTC", // Default timezone
+            "UTC",
             clock);
-
 
         await memberRepository.AddAsync(member, cancellationToken);
         await memberRepository.SaveChangesAsync(cancellationToken);
 
-        if (request.AvatarUrl != null)
+        if (request.AvatarUrl is not null)
         {
             await backgroundJobClient.EnqueueAvatarDownloadAsync(member.Id, request.AvatarUrl, cancellationToken);
         }

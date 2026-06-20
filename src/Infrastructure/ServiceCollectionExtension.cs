@@ -1,3 +1,4 @@
+using System;
 using Application.Shared;
 using Quartz;
 using Domain.Members;
@@ -6,6 +7,7 @@ using Infrastructure.Context;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure;
@@ -20,10 +22,12 @@ public static class ServiceCollectionExtension
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <param name="connectionString">The connection string of the database.</param>
+    /// <param name="configuration">The application configuration.</param>
     /// <returns>The same service collection so that multiple calls can be chained.</returns>
     public static IServiceCollection AddPlanthorDbContext(
         this IServiceCollection services,
-        string connectionString)
+        string connectionString,
+        IConfiguration configuration)
     {
         services.AddDbContext<PlanthorDbContext>(options =>
         {
@@ -34,7 +38,12 @@ public static class ServiceCollectionExtension
         services.AddScoped<IMemberRepository, MemberRepository>();
         services.AddScoped<IReadOnlyContext, ReadOnlyContext>();
         services.AddScoped<IBackgroundJobClient, QuartzBackgroundJobClient>();
-        services.AddScoped<IAvatarStorageService, AzureBlobAvatarStorageService>();
+
+        var storageProvider = configuration.GetConnectionString("StorageProvider") ?? "Azure";
+        if (storageProvider.Equals("Google", StringComparison.OrdinalIgnoreCase))
+            services.AddScoped<IAvatarStorageService, GoogleCloudAvatarStorageService>();
+        else
+            services.AddScoped<IAvatarStorageService, AzureBlobAvatarStorageService>();
 
         services.AddHttpClient();
 
