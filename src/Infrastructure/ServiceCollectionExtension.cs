@@ -41,9 +41,13 @@ public static class ServiceCollectionExtension
 
         var storageProvider = configuration.GetConnectionString("StorageProvider") ?? "Azure";
         if (storageProvider.Equals("Google", StringComparison.OrdinalIgnoreCase))
+        {
             services.AddScoped<IAvatarStorageService, GoogleCloudAvatarStorageService>();
+        }
         else
+        {
             services.AddScoped<IAvatarStorageService, AzureBlobAvatarStorageService>();
+        }
 
         services.AddHttpClient();
 

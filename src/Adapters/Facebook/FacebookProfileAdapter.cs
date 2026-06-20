@@ -18,13 +18,17 @@ public class FacebookProfileAdapter(IHttpClientFactory httpClientFactory) : ISoc
 
         var response = await client.GetAsync(externalPath, cancellationToken);
         if (response.IsSuccessStatusCode)
+        {
             return await response.Content.ReadAsStreamAsync(cancellationToken);
+        }
 
         response.Dispose();
 
         var fallback = await client.GetAsync(DefaultAvatarUrl, cancellationToken);
         if (fallback.IsSuccessStatusCode)
+        {
             return await fallback.Content.ReadAsStreamAsync(cancellationToken);
+        }
 
         fallback.Dispose();
         return null;
