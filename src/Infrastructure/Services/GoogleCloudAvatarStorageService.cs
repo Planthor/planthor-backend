@@ -9,14 +9,24 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
-public class GoogleCloudAvatarStorageService(IConfiguration configuration, ILogger<GoogleCloudAvatarStorageService> logger) : IAvatarStorageService
+public class GoogleCloudAvatarStorageService : IAvatarStorageService
 {
     private const string ContainerName = "avatars";
-    private readonly string _bucketName = configuration.GetConnectionString("GcsBucketName")
-        ?? throw new InvalidOperationException("ConnectionStrings:GcsBucketName is not configured.");
+    private readonly string _bucketName;
+    private readonly StorageClient _storageClient;
+    private readonly ILogger<GoogleCloudAvatarStorageService> _logger;
+
+    public GoogleCloudAvatarStorageService(IConfiguration configuration, ILogger<GoogleCloudAvatarStorageService> logger)
+        : this(configuration, logger, StorageClient.Create()) { }
 
     // Resolved once at construction using ADC — safe on Cloud Run (credentials fetched lazily on first request)
-    private readonly StorageClient _storageClient = StorageClient.Create();
+    internal GoogleCloudAvatarStorageService(IConfiguration configuration, ILogger<GoogleCloudAvatarStorageService> logger, StorageClient storageClient)
+    {
+        _bucketName = configuration.GetConnectionString("GcsBucketName")
+            ?? throw new InvalidOperationException("ConnectionStrings:GcsBucketName is not configured.");
+        _logger = logger;
+        _storageClient = storageClient;
+    }
 
     public async Task<string> UploadAvatarAsync(
         Guid memberId,
@@ -26,15 +36,10 @@ public class GoogleCloudAvatarStorageService(IConfiguration configuration, ILogg
     {
         var objectName = $"{ContainerName}/{memberId}/{Guid.NewGuid()}.{GetExtension(contentType)}";
 
-        var obj = new Google.Apis.Storage.v1.Data.Object
-        {
-            Bucket = _bucketName,
-            Name = objectName,
-            ContentType = contentType
-        };
-
         await _storageClient.UploadObjectAsync(
-            obj,
+            _bucketName,
+            objectName,
+            contentType,
             fileStream,
             new UploadObjectOptions { PredefinedAcl = PredefinedObjectAcl.PublicRead },
             cancellationToken);
@@ -47,7 +52,7 @@ public class GoogleCloudAvatarStorageService(IConfiguration configuration, ILogg
         var prefix = $"https://storage.googleapis.com/{_bucketName}/";
         if (!objectUri.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogWarning("URI '{Uri}' does not belong to bucket '{Bucket}'. Skipping delete.", objectUri, _bucketName);
+            _logger.LogWarning("URI '{Uri}' does not belong to bucket '{Bucket}'. Skipping delete.", objectUri, _bucketName);
             return;
         }
 
