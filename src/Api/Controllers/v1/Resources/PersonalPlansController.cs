@@ -118,10 +118,25 @@ public class PersonalPlansController(
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PersonalPlanDto>>> Read(
         [FromRoute] string identifier,
-        CancellationToken token)
+        [FromQuery] string[]? status,
+        [FromQuery] int limit = 10,
+        [FromQuery] Guid? cursor = null,
+        CancellationToken token = default)
     {
         var targetIdentifyName = ResolveIdentifier(identifier);
-        var query = new ListPersonalPlansQuery(targetIdentifyName!);
+
+        if (string.IsNullOrEmpty(targetIdentifyName))
+        {
+            return Unauthorized();
+        }
+
+        var query = new ListPersonalPlansQuery(
+            IdentifyName: targetIdentifyName,
+            Limit: limit,
+            Cursor: cursor,
+            Statuses: status
+        );
+
         await personalPlansQueryValidator.ValidateAndThrowAsync(query, token);
         var personalPlanDtos = await _sender.Send(query, token);
         return Ok(personalPlanDtos);
@@ -143,7 +158,11 @@ public class PersonalPlansController(
         CancellationToken token)
     {
         var targetIdentifyName = ResolveIdentifier(identifier);
-        var query = new PersonalPlanDetailsQuery(targetIdentifyName!, planId);
+        if (string.IsNullOrEmpty(targetIdentifyName))
+        {
+            return Unauthorized();
+        }
+        var query = new PersonalPlanDetailsQuery(targetIdentifyName, planId);
         await personalPlanDetailsQueryValidator.ValidateAndThrowAsync(query, token);
         var personalPlanDto = await _sender.Send(query, token);
         return Ok(personalPlanDto);
