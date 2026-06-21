@@ -26,5 +26,5 @@ public interface IAvatarStorageService
     /// <param name="blobUri"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task DeleteAvatarAsync(string blobUri, CancellationToken cancellationToken);
+    Task DeleteAvatarAsync(Uri blobUri, CancellationToken cancellationToken);
 }

@@ -47,16 +47,19 @@ public class GoogleCloudAvatarStorageService : IAvatarStorageService
         return $"https://storage.googleapis.com/{_bucketName}/{objectName}";
     }
 
-    public async Task DeleteAvatarAsync(string objectUri, CancellationToken cancellationToken)
+    public async Task DeleteAvatarAsync(Uri blobUri, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(blobUri);
+
         var prefix = $"https://storage.googleapis.com/{_bucketName}/";
-        if (!objectUri.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        var uriString = blobUri.AbsoluteUri;
+        if (!uriString.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogWarning("URI '{Uri}' does not belong to bucket '{Bucket}'. Skipping delete.", objectUri, _bucketName);
+            _logger.LogWarning("URI '{Uri}' does not belong to bucket '{Bucket}'. Skipping delete.", blobUri, _bucketName);
             return;
         }
 
-        var objectName = objectUri[prefix.Length..];
+        var objectName = uriString[prefix.Length..];
         await _storageClient.DeleteObjectAsync(_bucketName, objectName, cancellationToken: cancellationToken);
     }
 

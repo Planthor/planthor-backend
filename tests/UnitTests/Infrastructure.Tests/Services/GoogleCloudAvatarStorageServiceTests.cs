@@ -104,7 +104,7 @@ public class GoogleCloudAvatarStorageServiceTests
         const string objectPath = "avatars/some-member-id/file.jpg";
         var uri = $"https://storage.googleapis.com/{BucketName}/{objectPath}";
 
-        await service.DeleteAvatarAsync(uri, CancellationToken.None);
+        await service.DeleteAvatarAsync(new Uri(uri), CancellationToken.None);
 
         mockClient.Verify(s => s.DeleteObjectAsync(
             BucketName, objectPath, It.IsAny<DeleteObjectOptions>(), It.IsAny<CancellationToken>()),
@@ -117,7 +117,7 @@ public class GoogleCloudAvatarStorageServiceTests
         var (mockClient, service) = Create();
 
         await service.DeleteAvatarAsync(
-            $"https://storage.googleapis.com/wrong-bucket/avatars/file.jpg",
+            new Uri("https://storage.googleapis.com/wrong-bucket/avatars/file.jpg"),
             CancellationToken.None);
 
         mockClient.Verify(s => s.DeleteObjectAsync(

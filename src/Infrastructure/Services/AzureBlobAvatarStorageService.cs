@@ -22,9 +22,10 @@ public class AzureBlobAvatarStorageService(IConfiguration configuration, ILogger
         ?? throw new InvalidOperationException("AzureStorage connection string is not configured.");
 
     /// <inheritdoc/>
-    public async Task DeleteAvatarAsync(string blobUri, CancellationToken cancellationToken)
+    public async Task DeleteAvatarAsync(Uri blobUri, CancellationToken cancellationToken)
     {
-        var blobClient = new BlobClient(new Uri(blobUri));
+        ArgumentNullException.ThrowIfNull(blobUri);
+        var blobClient = new BlobClient(blobUri);
         await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: cancellationToken);
     }
 
