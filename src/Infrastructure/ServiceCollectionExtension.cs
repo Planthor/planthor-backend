@@ -39,15 +39,7 @@ public static class ServiceCollectionExtension
         services.AddScoped<IReadOnlyContext, ReadOnlyContext>();
         services.AddScoped<IBackgroundJobClient, QuartzBackgroundJobClient>();
 
-        var storageProvider = configuration.GetConnectionString("StorageProvider") ?? "Azure";
-        if (storageProvider.Equals("Google", StringComparison.OrdinalIgnoreCase))
-        {
-            services.AddScoped<IAvatarStorageService, GoogleCloudAvatarStorageService>();
-        }
-        else
-        {
-            services.AddScoped<IAvatarStorageService, AzureBlobAvatarStorageService>();
-        }
+        AddAvatarStorage(services, configuration);
 
         services.AddHttpClient();
 
@@ -64,5 +56,27 @@ public static class ServiceCollectionExtension
         });
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers the avatar storage implementation selected by <c>Storage:Provider</c>.
+    /// One provider per environment — no need to support multiple simultaneously.
+    /// </summary>
+    private static void AddAvatarStorage(IServiceCollection services, IConfiguration configuration)
+    {
+        var provider = Enum.TryParse<StorageProviderType>(
+            configuration["Storage:Provider"], ignoreCase: true, out var parsed)
+            ? parsed
+            : StorageProviderType.Azure;
+
+        switch (provider)
+        {
+            case StorageProviderType.Google:
+                services.AddScoped<IAvatarStorageService, GoogleCloudAvatarStorageService>();
+                break;
+            default:
+                services.AddScoped<IAvatarStorageService, AzureBlobAvatarStorageService>();
+                break;
+        }
     }
 }

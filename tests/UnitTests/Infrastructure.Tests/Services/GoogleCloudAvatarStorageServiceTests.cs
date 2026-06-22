@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -18,12 +19,14 @@ public class GoogleCloudAvatarStorageServiceTests
 
     private static IConfiguration CreateConfig(string? bucketName)
     {
-        var section = new Mock<IConfigurationSection>();
-        section.Setup(s => s[It.IsAny<string>()]).Returns(bucketName);
+        var values = new Dictionary<string, string?>
+        {
+            ["Storage:Gcs:BucketName"] = bucketName
+        };
 
-        var config = new Mock<IConfiguration>();
-        config.Setup(c => c.GetSection("ConnectionStrings")).Returns(section.Object);
-        return config.Object;
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(values)
+            .Build();
     }
 
     private static (Mock<StorageClient> client, GoogleCloudAvatarStorageService service) Create(string? bucketName = BucketName)

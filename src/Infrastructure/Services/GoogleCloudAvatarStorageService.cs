@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
-public class GoogleCloudAvatarStorageService : IAvatarStorageService
+public partial class GoogleCloudAvatarStorageService : IAvatarStorageService
 {
     private const string ContainerName = "avatars";
     private readonly string _bucketName;
@@ -22,8 +22,8 @@ public class GoogleCloudAvatarStorageService : IAvatarStorageService
     // Resolved once at construction using ADC — safe on Cloud Run (credentials fetched lazily on first request)
     internal GoogleCloudAvatarStorageService(IConfiguration configuration, ILogger<GoogleCloudAvatarStorageService> logger, StorageClient storageClient)
     {
-        _bucketName = configuration.GetConnectionString("GcsBucketName")
-            ?? throw new InvalidOperationException("ConnectionStrings:GcsBucketName is not configured.");
+        _bucketName = configuration["Storage:Gcs:BucketName"]
+            ?? throw new InvalidOperationException("Storage:Gcs:BucketName is not configured.");
         _logger = logger;
         _storageClient = storageClient;
     }
@@ -34,7 +34,7 @@ public class GoogleCloudAvatarStorageService : IAvatarStorageService
         string contentType,
         CancellationToken cancellationToken)
     {
-        var objectName = $"{ContainerName}/{memberId}/{Guid.NewGuid()}.{GetExtension(contentType)}";
+        var objectName = $"{ContainerName}/{memberId}/{Guid.NewGuid()}.{AvatarFileExtensions.GetExtension(contentType)}";
 
         await _storageClient.UploadObjectAsync(
             _bucketName,
@@ -47,15 +47,19 @@ public class GoogleCloudAvatarStorageService : IAvatarStorageService
         return $"https://storage.googleapis.com/{_bucketName}/{objectName}";
     }
 
-    public async Task DeleteAvatarAsync(Uri blobUri, CancellationToken cancellationToken)
+    public Task DeleteAvatarAsync(Uri blobUri, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(blobUri);
+        return DeleteAvatarInternalAsync(blobUri, cancellationToken);
+    }
 
+    private async Task DeleteAvatarInternalAsync(Uri blobUri, CancellationToken cancellationToken)
+    {
         var prefix = $"https://storage.googleapis.com/{_bucketName}/";
         var uriString = blobUri.AbsoluteUri;
         if (!uriString.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogWarning("URI '{Uri}' does not belong to bucket '{Bucket}'. Skipping delete.", blobUri, _bucketName);
+            LogUriNotInBucket(blobUri, _bucketName);
             return;
         }
 
@@ -63,12 +67,9 @@ public class GoogleCloudAvatarStorageService : IAvatarStorageService
         await _storageClient.DeleteObjectAsync(_bucketName, objectName, cancellationToken: cancellationToken);
     }
 
-    private static string GetExtension(string contentType) => contentType switch
-    {
-        "image/jpeg" => "jpg",
-        "image/png"  => "png",
-        "image/gif"  => "gif",
-        "image/webp" => "webp",
-        _            => "jpg"
-    };
+    [LoggerMessage(
+        EventId = 1,
+        Level = LogLevel.Warning,
+        Message = "URI '{Uri}' does not belong to bucket '{Bucket}'. Skipping delete.")]
+    private partial void LogUriNotInBucket(Uri uri, string bucket);
 }
