@@ -51,6 +51,23 @@ public class FacebookProfileAdapterTests
     }
 
     [Fact]
+    public async Task GetProfilePictureStreamAsync_NullConfigUrl_UsesDefaultFallback()
+    {
+        var emptyConfig = new ConfigurationBuilder().Build();
+        var (handler, factory) = CreateFactory();
+        SetupUrl(handler, "https://example.com/photo.jpg", HttpStatusCode.NotFound);
+
+        // Default fallback is ui-avatars — set it up to succeed
+        const string defaultFallback = "https://ui-avatars.com/api/?name=Planthor+User&background=random&size=200";
+        SetupUrl(handler, defaultFallback, HttpStatusCode.OK, "fallback-data");
+
+        var adapter = new FacebookProfileAdapter(factory, emptyConfig);
+        var stream = await adapter.GetProfilePictureStreamAsync("https://example.com/photo.jpg", CancellationToken.None);
+
+        Assert.NotNull(stream);
+    }
+
+    [Fact]
     public async Task GetProfilePictureStreamAsync_PrimarySucceeds_ReturnsStream()
     {
         var (handler, factory) = CreateFactory();

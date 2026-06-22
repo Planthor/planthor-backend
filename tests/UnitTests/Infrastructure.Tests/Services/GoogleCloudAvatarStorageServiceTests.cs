@@ -115,6 +115,15 @@ public class GoogleCloudAvatarStorageServiceTests
     }
 
     [Fact]
+    public async Task DeleteAvatarAsync_NullUri_ThrowsArgumentNullException()
+    {
+        var (_, service) = Create();
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.DeleteAvatarAsync(null!, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task DeleteAvatarAsync_UriNotMatchingBucket_SkipsDelete()
     {
         var (mockClient, service) = Create();
