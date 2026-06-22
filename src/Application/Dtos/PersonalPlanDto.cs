@@ -29,6 +29,6 @@ public record PersonalPlanDto(
     double ProgressPercentage = 0,
     bool Completed = false,
     string Status = "",
-    DateTimeOffset FromDate = default,
-    DateTimeOffset ToDate = default
+    DateTimeOffset? FromDate = null,
+    DateTimeOffset? ToDate = null
 );

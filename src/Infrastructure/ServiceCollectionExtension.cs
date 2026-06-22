@@ -64,10 +64,10 @@ public static class ServiceCollectionExtension
     /// </summary>
     private static void AddAvatarStorage(IServiceCollection services, IConfiguration configuration)
     {
-        var provider = Enum.TryParse<StorageProviderType>(
-            configuration["Storage:Provider"], ignoreCase: true, out var parsed)
-            ? parsed
-            : StorageProviderType.Azure;
+        var providerValue = configuration["Storage:Provider"];
+        if (!Enum.TryParse<StorageProviderType>(providerValue, ignoreCase: true, out var provider))
+            throw new InvalidOperationException(
+                $"Storage:Provider '{providerValue}' is not a valid value. Expected: {string.Join(", ", Enum.GetNames<StorageProviderType>())}.");
 
         switch (provider)
         {

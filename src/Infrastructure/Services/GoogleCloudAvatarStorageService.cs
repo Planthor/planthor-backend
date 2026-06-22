@@ -41,8 +41,7 @@ public partial class GoogleCloudAvatarStorageService : IAvatarStorageService
             objectName,
             contentType,
             fileStream,
-            new UploadObjectOptions { PredefinedAcl = PredefinedObjectAcl.PublicRead },
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         return $"https://storage.googleapis.com/{_bucketName}/{objectName}";
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using Adapters.Abstraction;
 using Adapters.Facebook;
+using Api.ExceptionHandling;
 using Api.Filters;
 using Application;
 using Infrastructure;
@@ -65,6 +66,11 @@ try
 
     builder.Services.AddAuthorization();
 
+    builder.Services.AddProblemDetails();
+    builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+    builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
     builder.Services.AddHealthChecks();
 
     // API Client
@@ -91,6 +97,7 @@ try
         });
     }
 
+    app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();
 
