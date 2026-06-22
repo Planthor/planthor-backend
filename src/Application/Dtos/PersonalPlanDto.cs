@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Application.Dtos;
 
@@ -21,5 +21,14 @@ public record PersonalPlanDto(
     Guid MemberId,
     bool DisplayOnProfile,
     int Prioritize,
-    bool LinkUserAdapters
+    bool LinkUserAdapters,
+    string PlanName = "",
+    string Unit = "",
+    float Target = 0,
+    float CurrentValue = 0,
+    double ProgressPercentage = 0,
+    bool Completed = false,
+    string Status = "",
+    DateTimeOffset FromDate = default,
+    DateTimeOffset ToDate = default
 );
