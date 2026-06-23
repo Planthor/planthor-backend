@@ -57,7 +57,7 @@ public class MembersController(
     {
         var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(identifyName))
-            return Unauthorized();
+        { return Unauthorized(); }
 
         command = command with { IdentifyName = identifyName };
         await createMemberCommandValidator.ValidateAndThrowAsync(command, token);

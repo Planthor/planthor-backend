@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Application.Shared;
 using Quartz;
 using Domain.Members;
@@ -65,10 +65,10 @@ public static class ServiceCollectionExtension
     private static void AddAvatarStorage(IServiceCollection services, IConfiguration configuration)
     {
         var providerValue = configuration["Storage:Provider"];
-        if (!Enum.TryParse<StorageProviderType>(providerValue, ignoreCase: true, out var provider))
+        if (!Enum.TryParse<StorageProviderType>(providerValue, ignoreCase: true, out var provider)) {
             throw new InvalidOperationException(
                 $"Storage:Provider '{providerValue}' is not a valid value. Expected: {string.Join(", ", Enum.GetNames<StorageProviderType>())}.");
-
+        }
         switch (provider)
         {
             case StorageProviderType.Google:

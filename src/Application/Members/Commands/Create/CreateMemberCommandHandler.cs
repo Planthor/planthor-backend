@@ -26,9 +26,9 @@ public class CreateMemberCommandHandler(
     private async Task<Guid> HandleAsync(CreateMemberCommand request, CancellationToken cancellationToken)
     {
         var existing = await memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken);
-        if (existing is not null)
+        if (existing is not null){
             return existing.Id;
-
+        }
         var member = Member.Create(
             request.IdentifyName,
             request.FirstName,

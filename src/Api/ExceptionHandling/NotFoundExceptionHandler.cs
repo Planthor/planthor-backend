@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +16,7 @@ internal sealed class NotFoundExceptionHandler : IExceptionHandler
         CancellationToken cancellationToken)
     {
         if (exception is not KeyNotFoundException && !IsEntityNotFoundException(exception))
-            return false;
+        { return false; }
 
         var problem = new ProblemDetails
         {
@@ -38,7 +38,7 @@ internal sealed class NotFoundExceptionHandler : IExceptionHandler
         {
             if (type.IsGenericType &&
                 type.GetGenericTypeDefinition().FullName == "Domain.Shared.Exceptions.EntityNotFoundException`2")
-                return true;
+            { return true; }
             type = type.BaseType;
         }
         return false;
