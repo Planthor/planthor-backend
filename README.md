@@ -50,7 +50,7 @@ Planthor follows a **Clean Architecture** pattern with clear separation of conce
 ### Architecture Layers
 
 | Layer | Responsibility | Location |
-|-------|---|---|
+| ------- | --- | --- |
 | **API** | HTTP controllers, request/response handling, JWT authentication | `src/Api/Controllers/` |
 | **Application** | Business logic using CQRS pattern (Commands/Queries via MediatR) | `src/Application/` |
 | **Domain** | Core entities, domain events, value objects, business rules | `src/Domain/` |
@@ -60,7 +60,7 @@ Planthor follows a **Clean Architecture** pattern with clear separation of conce
 ### Technology Stack
 
 | Component | Technology |
-|---|---|
+| --- | --- |
 | **Framework** | .NET 10 with ASP.NET Core |
 | **Database** | MongoDB 8.2 |
 | **Authentication** | Keycloak 26.5 + JWT |
@@ -117,11 +117,9 @@ git clone https://github.com/Planthor/PlanthorWebApi.git
 cd PlanthorWebApi
 ```
 
-### Windows
-
 #### Step 1: Start Infrastructure Services
 
-Open **PowerShell** and navigate to the project directory:
+Open **PowerShell** or **Bash** and navigate to the project directory:
 
 ```powershell
 cd .\infrastructure\
@@ -130,60 +128,29 @@ cd ..
 ```
 
 This starts:
+
 - **MongoDB** (port 27017)
 - **Mongo Express** (port 8081) — database UI
 - **Keycloak** (port 8180) — authentication server
 - **PostgreSQL** (port 5432) — Keycloak database
 - **pgAdmin** (port 5050) — PostgreSQL UI
 
-#### Step 2: Set MongoDB Connection String
+#### Step 2: Set Dotnet Secret to replace appsetting.json value
 
 In PowerShell, set the connection string environment variable:
 
 ```powershell
-$env:ConnectionStrings__PlanthorDbContext = "mongodb://admin:Planthor_123@localhost:27017/"
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:PlanthorDbContext" "[INPUT ConnectionString]"
+dotnet user-secrets set "ConnectionStrings:AzureStorage" "[INPUT Azure Primary Url]"
+dotnet user-secrets set "MediatR:LicenseKey" "[INPUT License Key for MediatR]"
 ```
+
+Please do not push User Secret in .csproj
 
 #### Step 3: Build & Run the Application
 
 ```powershell
-dotnet build
-dotnet run --project src/Api/Api.csproj
-```
-
-The API will start at `https://localhost:5001`. You'll see:
-```
-The app started.
-```
-
-#### Step 4: Access the API
-
-- **Scalar UI (API Docs):** `https://localhost:5001/scalar/v1` *(development only)*
-- **OpenAPI JSON:** `https://localhost:5001/openapi/v1.json`
-
----
-
-### macOS & Linux
-
-#### Step 1: Start Infrastructure Services
-
-Open your terminal and navigate to the project directory:
-
-```bash
-cd infrastructure/
-docker compose up --build -d
-cd ..
-```
-
-#### Step 2: Set MongoDB Connection String
-
-```bash
-export ConnectionStrings__PlanthorDbContext="mongodb://admin:Planthor_123@localhost:27017/"
-```
-
-#### Step 3: Build & Run the Application
-
-```bash
 dotnet build
 dotnet run --project src/Api/Api.csproj
 ```
@@ -192,8 +159,10 @@ The API will start at `https://localhost:5001`.
 
 #### Step 4: Access the API
 
-- **Scalar UI (API Docs):** `https://localhost:5001/scalar/v1`
+- **Scalar UI (API Docs):** `https://localhost:5001/scalar/v1` *(development only)*
 - **OpenAPI JSON:** `https://localhost:5001/openapi/v1.json`
+
+---scm-history-item:%5Chome%5Cplt%5Cprojects%5Cplanthor-backend?%7B%22repositoryId%22%3A%22scm0%22%2C%22historyItemId%22%3A%22eb6b21038d5cb0cc74d740e77c957fd4a14c96b6%22%2C%22historyItemParentId%22%3A%222f37eaacf63e229fffe1e714106907c46ba2e3e0%22%2C%22historyItemDisplayId%22%3A%22eb6b210%22%7D
 
 ---
 
@@ -231,7 +200,7 @@ dotnet out/PlanthorBackend.dll
 The application is designed to be cloud-native and can be fully configured via environment variables. This is the recommended approach for production deployments.
 
 | Variable | Description | Example |
-|---|---|---|
+| --- | --- | --- |
 | `ConnectionStrings__PlanthorDbContext` | MongoDB connection string | `mongodb://admin:pass@localhost:27017/` |
 | `Authentication__Authority` | Keycloak Issuer URL | `https://auth.example.com/realms/planthor-realm` |
 | `Authentication__Audience` | Token Audience | `planthor-backend` |
@@ -319,14 +288,13 @@ The Strava adapter syncs activities and processes webhook events in real-time.
 **Local Development Note:** Strava webhooks require a publicly accessible URL. For localhost development:
 
 1. Use **Cloudflare Tunnel** to expose your local API:
+
    ```bash
    cloudflared tunnel run --url http://localhost:5001
    ```
 
 2. Register the tunnel URL with Strava as the webhook callback:
-   ```
-   https://<tunnel-id>.trycloudflare.com/v1/webhooks/strava
-   ```
+   `https://<tunnel-id>.trycloudflare.com/v1/webhooks/strava`
 
 ### Facebook Integration
 
@@ -434,6 +402,7 @@ sudo apt install ca-certificates libc6 libgcc-s1 libicu74 liblttng-ust1 libssl3 
 ### Development Workflow
 
 1. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/my-feature
    ```
@@ -448,6 +417,7 @@ sudo apt install ca-certificates libc6 libgcc-s1 libicu74 liblttng-ust1 libssl3 
 4. **Write integration tests** for API endpoints
 
 5. **Run tests locally:**
+
    ```bash
    dotnet test
    ```
@@ -487,6 +457,7 @@ dotnet watch run
 **Error:** `Unable to connect to MongoDB`
 
 **Solution:**
+
 1. Verify Docker containers are running: `docker ps`
 2. Check MongoDB is healthy: `docker logs mongodb`
 3. Verify connection string: `ConnectionStrings__PlanthorDbContext`
@@ -497,6 +468,7 @@ dotnet watch run
 **Error:** `Invalid Authority or Audience`
 
 **Solution:**
+
 1. Verify Keycloak is running: `http://localhost:8180`
 2. Check realm configuration: `infrastructure/keycloak/realms/planthor-realm.json`
 3. Ensure `Authentication:Authority` and `Authentication:Audience` are correct
@@ -507,6 +479,7 @@ dotnet watch run
 **Error:** `Webhook callback not responding`
 
 **Solution:**
+
 1. Localhost is not publicly accessible; use Cloudflare Tunnel
 2. Verify tunnel is running: `cloudflared tunnel run --url http://localhost:5001`
 3. Register tunnel URL with Strava webhook configuration
@@ -517,13 +490,16 @@ dotnet watch run
 **Error:** `Address already in use`
 
 **Solution:**
+
 1. Find process using the port (Windows):
+
    ```powershell
    netstat -ano | findstr :5001
    taskkill /PID <pid> /F
    ```
 
 2. macOS/Linux:
+
    ```bash
    lsof -i :5001
    kill -9 <pid>
