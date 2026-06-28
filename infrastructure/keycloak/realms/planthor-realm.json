@@ -1,4 +1,4 @@
-﻿{
+{
   "id" : "fb9e0d73-c22f-42e0-966e-3f83db9a6605",
   "realm" : "planthor",
   "displayName" : "Planthor",
@@ -1351,7 +1351,7 @@
       "syncMode" : "IMPORT",
       "clientSecret" : "THISISNOTSECRET",
       "caseSensitiveOriginalUsername" : "false",
-      "fetchedFields" : "picture",
+      "fetchedFields" : "id,name,email,picture",
       "defaultScope" : "openid email"
     },
     "types" : [ ]
