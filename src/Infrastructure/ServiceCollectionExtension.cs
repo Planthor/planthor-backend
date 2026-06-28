@@ -65,7 +65,8 @@ public static class ServiceCollectionExtension
     private static void AddAvatarStorage(IServiceCollection services, IConfiguration configuration)
     {
         var providerValue = configuration["Storage:Provider"];
-        if (!Enum.TryParse<StorageProviderType>(providerValue, ignoreCase: true, out var provider)) {
+        if (!Enum.TryParse<StorageProviderType>(providerValue, ignoreCase: true, out var provider))
+        {
             throw new InvalidOperationException(
                 $"Storage:Provider '{providerValue}' is not a valid value. Expected: {string.Join(", ", Enum.GetNames<StorageProviderType>())}.");
         }
@@ -74,7 +75,7 @@ public static class ServiceCollectionExtension
             case StorageProviderType.Google:
                 services.AddScoped<IAvatarStorageService, GoogleCloudAvatarStorageService>();
                 break;
-            default:
+            case StorageProviderType.Azure:
                 services.AddScoped<IAvatarStorageService, AzureBlobAvatarStorageService>();
                 break;
         }

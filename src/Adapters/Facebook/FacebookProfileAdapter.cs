@@ -3,19 +3,14 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Adapters.Abstraction;
 using Microsoft.Extensions.Configuration;
 
 namespace Adapters.Facebook;
 
-public class FacebookProfileAdapter(IHttpClientFactory httpClientFactory, IConfiguration configuration) : ISocialProfileAdapter
+public class FacebookProfileAdapter(IHttpClientFactory httpClientFactory, IConfiguration configuration) : IFacebookAdapter
 {
-    private const string DefaultFallbackAvatarUrl = "https://ui-avatars.com/api/?name=Planthor+User&background=random&size=200";
-
-    private readonly Uri _fallbackAvatarUri = new(
-        configuration["SocialProfile:Facebook:FallbackAvatarUrl"] ?? DefaultFallbackAvatarUrl);
-
-    public string ProviderId => "Facebook";
+    private readonly Uri? _fallbackAvatarUri =
+        configuration["SocialProfile:Facebook:FallbackAvatarUrl"] is { } url ? new Uri(url) : null;
 
     public async Task<Stream?> GetProfilePictureStreamAsync(string externalPath, CancellationToken cancellationToken)
     {
@@ -28,6 +23,11 @@ public class FacebookProfileAdapter(IHttpClientFactory httpClientFactory, IConfi
         }
 
         response.Dispose();
+
+        if (_fallbackAvatarUri is null)
+        {
+            return null;
+        }
 
         var fallback = await client.GetAsync(_fallbackAvatarUri, cancellationToken);
         if (fallback.IsSuccessStatusCode)

@@ -1,5 +1,4 @@
 ﻿using System;
-using Adapters.Abstraction;
 using Adapters.Facebook;
 using Api.ExceptionHandling;
 using Api.Filters;
@@ -35,7 +34,7 @@ try
             ?? throw new InvalidOperationException("PlanthorDbContext is not set in the configuration file."),
         builder.Configuration);
 
-    builder.Services.AddScoped<ISocialProfileAdapter, FacebookProfileAdapter>();
+    builder.Services.AddScoped<IFacebookAdapter, FacebookProfileAdapter>();
     builder.Services.AddScoped<MemberSessionFilter>();
     builder.Services.AddApplicationServices(builder.Configuration);
 
