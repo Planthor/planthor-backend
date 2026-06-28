@@ -78,6 +78,8 @@ public static class ServiceCollectionExtension
             case StorageProviderType.Azure:
                 services.AddScoped<IAvatarStorageService, AzureBlobAvatarStorageService>();
                 break;
+            default:
+                throw new InvalidOperationException($"No IAvatarStorageService registered for provider '{provider}'.");
         }
     }
 }

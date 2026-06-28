@@ -60,6 +60,8 @@ public class DomainEventNotificationHandlerTests
         var empty = new DomainEventNotificationHandler<IDomainEvent>(new List<IDomainEventHandler<IDomainEvent>>());
         var notification = new DomainEventNotification<IDomainEvent>(new Mock<IDomainEvent>().Object);
 
-        await empty.Handle(notification, CancellationToken.None);
+        var exception = await Record.ExceptionAsync(() => empty.Handle(notification, CancellationToken.None));
+
+        Assert.Null(exception);
     }
 }
