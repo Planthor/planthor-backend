@@ -14,7 +14,7 @@ EXPOSE 8080
 ENV ASPNETCORE_ENVIRONMENT="Production"
 ENV ConnectionStrings__PlanthorDbContext=""
 ENV MediatR__LicenseKey=""
-ENV Authentication__Keycloak__Authority="https://auth.planthor.space/realms/planthor"
+ENV Authentication__Keycloak__Authority=""
 ENV Authentication__Keycloak__Audience="planthor-backend"
 ENV Authentication__Keycloak__RequireHttpsMetadata="true"
 

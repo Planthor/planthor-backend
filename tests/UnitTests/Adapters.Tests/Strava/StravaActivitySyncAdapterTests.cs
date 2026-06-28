@@ -55,7 +55,7 @@ public class StravaActivitySyncAdapterTests
         var since = Instant.FromUtc(2026, 4, 1, 0, 0, 0);
 
         // Act
-        var result = await _adapter.FetchActivitiesAsync(memberId, since);
+        var result = await _adapter.FetchActivitiesAsync(memberId, since, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);

@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -91,17 +93,31 @@ jobs:
           name: coverage-report
           path: ./coverage-report
 
+      - name: Set Sonar PR params
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          echo "SONAR_PR_PARAMS=/d:sonar.pullrequest.key=$PR_NUMBER /d:sonar.pullrequest.branch=$HEAD_REF /d:sonar.pullrequest.base=$BASE_REF" >> $GITHUB_ENV
+
       - name: Sonar Analytics
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet tool install --global dotnet-sonarscanner
           dotnet sonarscanner begin \
           /k:"Planthor_PlanthorWebApi" \
           /o:"planthor" \
-          /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+          /d:sonar.token="$SONAR_TOKEN" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.exclusions="src/*/wwwroot/lib" \
-          /d:sonar.sources="./src/*" \
-          /d:sonar.cs.opencover.reportsPaths=coverage-report/**/coverage.opencover.xml
+          /d:sonar.sources="./src" \
+          /d:sonar.tests="./tests" \
+          /d:sonar.exclusions="**/wwwroot/lib/**,**/obj/**,**/bin/**" \
+          /d:sonar.test.exclusions="**/wwwroot/lib/**" \
+          /d:sonar.cs.opencover.reportsPaths="coverage-report/**/coverage.opencover.xml" \
+          $SONAR_PR_PARAMS
           dotnet restore
           dotnet build --no-incremental
-          dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"

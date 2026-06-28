@@ -1,4 +1,6 @@
 ﻿using System;
+using Adapters.Facebook;
+using Api.ExceptionHandling;
 using Api.Filters;
 using Application;
 using Infrastructure;
@@ -29,8 +31,10 @@ try
 
     builder.Services.AddPlanthorDbContext(
         builder.Configuration.GetConnectionString("PlanthorDbContext")
-            ?? throw new InvalidOperationException("PlanthorDbContext is not set in the configuration file."));
+            ?? throw new InvalidOperationException("PlanthorDbContext is not set in the configuration file."),
+        builder.Configuration);
 
+    builder.Services.AddScoped<IFacebookAdapter, FacebookProfileAdapter>();
     builder.Services.AddScoped<MemberSessionFilter>();
     builder.Services.AddApplicationServices(builder.Configuration);
 
@@ -61,6 +65,11 @@ try
 
     builder.Services.AddAuthorization();
 
+    builder.Services.AddProblemDetails();
+    builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+    builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
     builder.Services.AddHealthChecks();
 
     // API Client
@@ -87,6 +96,7 @@ try
         });
     }
 
+    app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();
 

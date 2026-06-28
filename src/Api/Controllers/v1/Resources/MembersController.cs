@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
@@ -54,6 +55,11 @@ public class MembersController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Guid>> Create([FromBody] CreateMemberCommand command, CancellationToken token)
     {
+        var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(identifyName))
+        { return Unauthorized(); }
+
+        command = command with { IdentifyName = identifyName };
         await createMemberCommandValidator.ValidateAndThrowAsync(command, token);
         var newMemberGuid = await _sender.Send(command, token);
         return Ok(newMemberGuid);

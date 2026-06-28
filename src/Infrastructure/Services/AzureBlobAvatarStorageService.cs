@@ -6,7 +6,6 @@ using Application.Shared;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
@@ -15,16 +14,22 @@ namespace Infrastructure.Services;
 /// Provides functionality for uploading and deleting member avatar images.
 /// </summary>
 /// <param name="configuration">The application configuration used to retrieve storage connection strings.</param>
-public class AzureBlobAvatarStorageService(IConfiguration configuration, ILogger<AzureBlobAvatarStorageService> logger) : IAvatarStorageService
+public class AzureBlobAvatarStorageService(IConfiguration configuration) : IAvatarStorageService
 {
     private const string ContainerName = "avatars";
-    private readonly string _connectionString = configuration.GetConnectionString("AzureStorage")
-        ?? throw new InvalidOperationException("AzureStorage connection string is not configured.");
+    private readonly string _connectionString = configuration["Storage:Azure:ConnectionString"]
+        ?? throw new InvalidOperationException("Storage:Azure:ConnectionString is not configured.");
 
     /// <inheritdoc/>
-    public async Task DeleteAvatarAsync(string blobUri, CancellationToken cancellationToken)
+    public Task DeleteAvatarAsync(Uri blobUri, CancellationToken cancellationToken)
     {
-        var blobClient = new BlobClient(new Uri(blobUri));
+        ArgumentNullException.ThrowIfNull(blobUri);
+        return DeleteAvatarInternalAsync(blobUri, cancellationToken);
+    }
+
+    private static async Task DeleteAvatarInternalAsync(Uri blobUri, CancellationToken cancellationToken)
+    {
+        var blobClient = new BlobClient(blobUri);
         await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: cancellationToken);
     }
 
@@ -40,7 +45,7 @@ public class AzureBlobAvatarStorageService(IConfiguration configuration, ILogger
 
         await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob, cancellationToken: cancellationToken);
 
-        var blobName = $"{memberId}/{Guid.NewGuid()}.{GetExtension(contentType)}";
+        var blobName = $"{memberId}/{Guid.NewGuid()}.{AvatarFileExtensions.GetExtension(contentType)}";
         var blobClient = containerClient.GetBlobClient(blobName);
 
         var headers = new BlobHttpHeaders
@@ -51,18 +56,6 @@ public class AzureBlobAvatarStorageService(IConfiguration configuration, ILogger
         await blobClient.UploadAsync(fileStream, new BlobUploadOptions { HttpHeaders = headers }, cancellationToken);
 
         return blobClient.Uri.ToString();
-    }
-
-    private static string GetExtension(string contentType)
-    {
-        return contentType switch
-        {
-            "image/jpeg" => "jpg",
-            "image/png" => "png",
-            "image/gif" => "gif",
-            "image/webp" => "webp",
-            _ => "jpg"
-        };
     }
 }
 

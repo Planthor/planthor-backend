@@ -23,20 +23,15 @@ public class CheckMemberExistsQueryHandlerTests
     [Fact]
     public async Task Handle_WhenMemberDoesNotExist_ReturnsFalse()
     {
-        // Arrange
-        var identifyName = "nonexistent_user";
-        var query = new CheckMemberExistsQuery(identifyName);
-
+        var query = new CheckMemberExistsQuery("nonexistent_user");
         _mockReadOnlyContext
             .Setup(c => c.AnyAsync<Member>(
                 It.IsAny<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
-        // Assert
         Assert.False(result);
         _mockReadOnlyContext.Verify(
             c => c.AnyAsync<Member>(
@@ -48,21 +43,16 @@ public class CheckMemberExistsQueryHandlerTests
     [Fact]
     public async Task Handle_PassesCancellationTokenToRepository()
     {
-        // Arrange
-        var identifyName = "testuser";
-        var query = new CheckMemberExistsQuery(identifyName);
+        var query = new CheckMemberExistsQuery("testuser");
         var cancellationToken = new CancellationToken();
-
         _mockReadOnlyContext
             .Setup(c => c.AnyAsync<Member>(
                 It.IsAny<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        // Act
         _ = await _handler.Handle(query, cancellationToken);
 
-        // Assert
         _mockReadOnlyContext.Verify(
             c => c.AnyAsync<Member>(
                 It.IsAny<Func<IQueryable<Member>, IQueryable<Member>>>(),
@@ -71,27 +61,18 @@ public class CheckMemberExistsQueryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_CallsRepositoryWithQueryIdentifyName()
+    public async Task Handle_WhenMemberExists_ReturnsTrue()
     {
-        // Arrange
-        var identifyName = "testuser123";
-        var query = new CheckMemberExistsQuery(identifyName);
-
+        var query = new CheckMemberExistsQuery("testuser123");
         _mockReadOnlyContext
             .Setup(c => c.AnyAsync<Member>(
                 It.IsAny<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        // Act
-        await _handler.Handle(query, CancellationToken.None);
+        var result = await _handler.Handle(query, CancellationToken.None);
 
-        // Assert - verify the context was called once
-        _mockReadOnlyContext.Verify(
-            c => c.AnyAsync<Member>(
-                It.IsAny<Func<IQueryable<Member>, IQueryable<Member>>>(),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
+        Assert.True(result);
     }
 }
 
