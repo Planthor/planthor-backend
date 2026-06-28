@@ -5,10 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
 using Application.Dtos;
-using Application.Members.Commands.CreatePersonalPlan;
-using Application.Members.Commands.UpdatePersonalPlan;
-using Application.Members.Queries.ListPersonalPlans;
-using Application.Members.Queries.PersonalPlanDetails;
+using Application.Members.PersonalPlans.Commands.Create;
+using Application.Members.PersonalPlans.Commands.Update;
+using Application.Members.PersonalPlans.Queries.Details;
+using Application.Members.PersonalPlans.Queries.List;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -65,12 +65,18 @@ public class PersonalPlansController(
         CancellationToken token)
     {
         var targetIdentifyName = ResolveIdentifier(identifier);
+        
+        if (string.IsNullOrEmpty(targetIdentifyName))
+        {
+            return Unauthorized();
+        }
+        
         if (targetIdentifyName != CurrentUserIdentifyName)
         {
             return Forbid();
         }
 
-        var createPlanCommand = command with { IdentifyName = targetIdentifyName! };
+        var createPlanCommand = command with { IdentifyName = targetIdentifyName };
         await createPlanCommandValidator.ValidateAndThrowAsync(createPlanCommand, token);
         var newPlanGuid = await _sender.Send(createPlanCommand, token);
         return Ok(newPlanGuid);

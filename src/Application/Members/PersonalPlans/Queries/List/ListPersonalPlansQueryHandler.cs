@@ -8,7 +8,7 @@ using Application.Shared;
 using Domain.Members;
 using Domain.Plans;
 
-namespace Application.Members.Queries.ListPersonalPlans;
+namespace Application.Members.PersonalPlans.Queries.List;
 
 /// <summary>
 /// Handler for listing personal plans of a member with progress and cursor pagination.
