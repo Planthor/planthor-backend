@@ -7,7 +7,7 @@ using Application.Dtos;
 using Application.Shared;
 using Domain.Members;
 
-namespace Application.Members.Queries.PersonalPlanDetails;
+namespace Application.Members.PersonalPlans.Queries.Details;
 
 /// <summary>
 /// Handler for retrieving details of a specific personal plan.

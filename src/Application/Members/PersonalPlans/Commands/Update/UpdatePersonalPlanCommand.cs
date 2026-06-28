@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 using Application.Shared;
 
-namespace Application.Members.Commands.UpdatePersonalPlan;
+namespace Application.Members.PersonalPlans.Commands.Update;
 
 public record UpdatePlanCommand(
     [property: JsonIgnore] string IdentifyName,

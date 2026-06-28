@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Application.Members.Queries.ListPersonalPlans;
+using Application.Members.PersonalPlans.Queries.List;
 using Application.Shared;
 using Domain.Members;
 using Domain.Plans;

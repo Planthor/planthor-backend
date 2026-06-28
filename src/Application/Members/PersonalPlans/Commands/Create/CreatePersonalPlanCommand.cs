@@ -1,7 +1,7 @@
 ﻿using System;
 using Application.Shared;
 
-namespace Application.Members.Commands.CreatePersonalPlan;
+namespace Application.Members.PersonalPlans.Commands.Create;
 
 /// <summary>
 ///
