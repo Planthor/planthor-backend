@@ -8,6 +8,7 @@ using Application.Members.Queries.PersonalPlanDetails;
 using Application.Shared;
 using Domain.Members;
 using Moq;
+using NodaTime;
 
 namespace Application.Tests.Members.Queries.PersonalPlanDetails;
 
@@ -78,5 +79,29 @@ public class PersonalPlanDetailsQueryHandlerTests
                 It.IsAny<Func<IQueryable<Member>, IQueryable<PersonalPlanDto?>>>(),
                 cancellationToken),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ExecutesQueryLambda_ProjectsToDto()
+    {
+        var clock = Mock.Of<IClock>(c => c.GetCurrentInstant() == Instant.FromUtc(2026, 1, 1, 0, 0));
+        var member = Member.Create("alice", "Alice", "", "Smith", "desc", "UTC", clock);
+        var planId = Guid.NewGuid();
+        member.SubscribeToPlan(planId, true, 1, false, clock);
+
+        _mockContext
+            .Setup(c => c.FirstOrDefaultAsync<Member, PersonalPlanDto?>(
+                It.IsAny<Func<IQueryable<Member>, IQueryable<PersonalPlanDto?>>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns<Func<IQueryable<Member>, IQueryable<PersonalPlanDto?>>, CancellationToken>((query, ct) =>
+                Task.FromResult(query(new[] { member }.AsQueryable()).FirstOrDefault()));
+
+        var result = await _handler.Handle(new PersonalPlanDetailsQuery("alice", planId), CancellationToken.None);
+
+        Assert.Equal(planId, result.PlanId);
+        Assert.Equal(member.Id, result.MemberId);
+        Assert.True(result.DisplayOnProfile);
+        Assert.Equal(1, result.Prioritize);
+        Assert.False(result.LinkUserAdapters);
     }
 }

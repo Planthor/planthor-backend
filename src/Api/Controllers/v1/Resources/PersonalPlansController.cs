@@ -113,6 +113,9 @@ public class PersonalPlansController(
     /// Gets all personal plans of a member.
     /// </summary>
     /// <param name="identifier">The identifier of the member ("me" or their identity name).</param>
+    /// <param name="status">Optional status filters.</param>
+    /// <param name="limit">Maximum number of results to return.</param>
+    /// <param name="cursor">Pagination cursor (last seen plan ID).</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>A collection of personal plans.</returns>
     [HttpGet]
