@@ -2,6 +2,7 @@
 
 ## Export Keycloak full realm and users
 
+- From `infrastructure` folder.
 - Stop the main Keycloak container to prevent database locks:
 
 ```bash
