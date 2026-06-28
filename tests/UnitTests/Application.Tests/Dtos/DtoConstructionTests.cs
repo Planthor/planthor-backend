@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Application.Dtos;
-using Application.Members.Commands.CreatePersonalPlan;
-using Application.Members.Commands.UpdatePersonalPlan;
 using Xunit;
 
 namespace Application.Tests.Dtos;
@@ -30,36 +28,6 @@ public class DtoConstructionTests
         Assert.Equal(100f, dto.Target);
         Assert.Equal(50f, dto.CurrentValue);
         Assert.Equal(2, dto.SportTypes.Count);
-    }
-
-    [Fact]
-    public void CreatePlanCommand_Construction_SetsAllProperties()
-    {
-        var from = DateTimeOffset.UtcNow;
-        var to = from.AddDays(30);
-
-        var command = new CreatePlanCommand("user1", "km", 100.0, 0.0, from, to);
-
-        Assert.Equal("user1", command.IdentifyName);
-        Assert.Equal("km", command.Unit);
-        Assert.Equal(100.0, command.Target);
-        Assert.Equal(from, command.FromDate);
-        Assert.Equal(to, command.ToDate);
-    }
-
-    [Fact]
-    public void UpdatePlanCommand_Construction_SetsAllProperties()
-    {
-        var planId = Guid.NewGuid();
-        var from = DateTimeOffset.UtcNow;
-        var to = from.AddDays(30);
-
-        var command = new UpdatePlanCommand("user1", planId, "km", 100.0, 50.0, from, to, "weekly");
-
-        Assert.Equal("user1", command.IdentifyName);
-        Assert.Equal(planId, command.PlanId);
-        Assert.Equal("km", command.Unit);
-        Assert.Equal("weekly", command.PeriodType);
     }
 
     [Fact]

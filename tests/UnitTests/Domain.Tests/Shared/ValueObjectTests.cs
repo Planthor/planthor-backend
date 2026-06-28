@@ -162,19 +162,23 @@ public class ValueObjectTests
     [Fact]
     public void EqualityOperator_BothNull_ReturnsTrue()
     {
+#pragma warning disable CS8604
         TestValueObject? left = null;
         TestValueObject? right = null;
 
         Assert.True(left == right);
+#pragma warning restore CS8604
     }
 
     [Fact]
     public void EqualityOperator_LeftNull_ReturnsFalse()
     {
+#pragma warning disable CS8604
         TestValueObject? left = null;
         var right = new TestValueObject { Value = 1 };
 
         Assert.False(left == right);
+#pragma warning restore CS8604
     }
 
     private class TestValueObject : ValueObject
