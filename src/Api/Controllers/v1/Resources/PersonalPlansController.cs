@@ -65,12 +65,18 @@ public class PersonalPlansController(
         CancellationToken token)
     {
         var targetIdentifyName = ResolveIdentifier(identifier);
+        
+        if (string.IsNullOrEmpty(targetIdentifyName))
+        {
+            return Unauthorized();
+        }
+        
         if (targetIdentifyName != CurrentUserIdentifyName)
         {
             return Forbid();
         }
 
-        var createPlanCommand = command with { IdentifyName = targetIdentifyName! };
+        var createPlanCommand = command with { IdentifyName = targetIdentifyName };
         await createPlanCommandValidator.ValidateAndThrowAsync(createPlanCommand, token);
         var newPlanGuid = await _sender.Send(createPlanCommand, token);
         return Ok(newPlanGuid);

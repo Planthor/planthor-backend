@@ -45,6 +45,7 @@ android/app/src/main/AndroidManifest.xml — AppAuth handles the intent filter a
 ```
 
 ### Project Structure
+
 ```
 lib/
 ├── main.dart
@@ -73,12 +74,13 @@ lib/
 ```
 
 ###
+
 Reverse port 8180 for keycloak authentication (adb from Android Emulator)
 
-```
+```bash
 .\adb reverse tcp:8180 tcp:8180
 ```
 
-```
+```bash
 .\adb reverse tcp:5008 tcp:5008
 ```

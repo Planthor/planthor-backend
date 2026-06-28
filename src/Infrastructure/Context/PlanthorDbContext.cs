@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
 using Domain.Members;
-using Domain.Plans;
 using Domain.Shared;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
