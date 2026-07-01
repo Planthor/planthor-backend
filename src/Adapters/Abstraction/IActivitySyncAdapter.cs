@@ -21,5 +21,5 @@ public interface IActivitySyncAdapter
     Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
         Guid memberId,
         Instant since,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken = default);
 }
