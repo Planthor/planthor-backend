@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
@@ -15,13 +15,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.Controllers.v1.Resources;
+namespace Api.Controllers.v1;
 
 /// <summary>
 /// Controller for manipulating Personal Plans using a flexible /me or member identifier pattern.
 /// </summary>
 /// <param name="sender">The mediator used to send commands and queries.</param>
-/// <param name="createPlanCommandValidator">The validator for <see cref="CreatePlanCommand"/>.</param>
+/// <param name="createPersonalPlanCommandValidator">The validator for <see cref="CreatePersonalPlanCommand"/>.</param>
 /// <param name="updatePlanCommandValidator">The validator for <see cref="UpdatePlanCommand"/>.</param>
 /// <param name="personalPlansQueryValidator">The validator for <see cref="ListPersonalPlansQuery"/>.</param>
 /// <param name="personalPlanDetailsQueryValidator">The validator for <see cref="PersonalPlanDetailsQuery"/>.</param>
@@ -31,7 +31,7 @@ namespace Api.Controllers.v1.Resources;
 [Route("v1/members/{identifier}/[controller]")]
 public class PersonalPlansController(
     ISender sender,
-    IValidator<CreatePlanCommand> createPlanCommandValidator,
+    IValidator<CreatePersonalPlanCommand> createPersonalPlanCommandValidator,
     IValidator<UpdatePlanCommand> updatePlanCommandValidator,
     IValidator<ListPersonalPlansQuery> personalPlansQueryValidator,
     IValidator<PersonalPlanDetailsQuery> personalPlanDetailsQueryValidator)
@@ -61,7 +61,7 @@ public class PersonalPlansController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<Guid>> Create(
         [FromRoute] string identifier,
-        [FromBody] CreatePlanCommand command,
+        [FromBody] CreatePersonalPlanCommand command,
         CancellationToken token)
     {
         var targetIdentifyName = ResolveIdentifier(identifier);
@@ -77,7 +77,7 @@ public class PersonalPlansController(
         }
 
         var createPlanCommand = command with { IdentifyName = targetIdentifyName };
-        await createPlanCommandValidator.ValidateAndThrowAsync(createPlanCommand, token);
+        await createPersonalPlanCommandValidator.ValidateAndThrowAsync(createPlanCommand, token);
         var newPlanGuid = await _sender.Send(createPlanCommand, token);
         return Ok(newPlanGuid);
     }

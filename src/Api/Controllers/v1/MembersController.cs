@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.Controllers.v1.Resources;
+namespace Api.Controllers.v1;
 
 /// <summary>
 /// Controller for interacting with Members.
