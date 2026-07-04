@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
 using Domain.Members;
+using Domain.Plans;
 using Domain.Shared;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ namespace Infrastructure.Context;
 public class PlanthorDbContext(DbContextOptions options, IPublisher publisher) : DbContext(options)
 {
     public DbSet<Member> Members => Set<Member>();
+    public DbSet<Plan> Plans => Set<Plan>();
 
     /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

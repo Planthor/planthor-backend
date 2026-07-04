@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using Application.Shared;
 using Quartz;
 using Domain.Members;
+using Domain.Plans;
 using Infrastructure.BackgroundJobClient;
 using Infrastructure.Context;
 using Infrastructure.Repositories;
@@ -36,6 +37,7 @@ public static class ServiceCollectionExtension
 
         // Register your specific aggregate repositories (Manual DI)
         services.AddScoped<IMemberRepository, MemberRepository>();
+        services.AddScoped<IPlanRepository, PlanRepository>();
         services.AddScoped<IReadOnlyContext, ReadOnlyContext>();
         services.AddScoped<IBackgroundJobClient, QuartzBackgroundJobClient>();
 
