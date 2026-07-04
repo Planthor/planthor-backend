@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Domain.Plans.Events;
 using Domain.Shared;
@@ -13,6 +13,9 @@ namespace Domain.Plans;
 public class Plan : AggregateRoot<Guid>
 {
     private readonly List<ActivityLog> _activityLogs = [];
+
+    // Required by EF Core
+    private Plan() { }
 
     private Plan(
         string name,

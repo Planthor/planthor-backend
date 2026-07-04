@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -38,6 +38,9 @@ public class ExternalProvider
     /// Gets the localization key used by the i18n service to fetch the translated description.
     /// </summary>
     public string I18NKey { get; }
+
+    // Required by EF Core
+    private ExternalProvider() : this(default!, default!, default!) { }
 
     private ExternalProvider(string id, string name, string i18nKey)
     {

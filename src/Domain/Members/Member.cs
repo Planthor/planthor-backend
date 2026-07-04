@@ -24,6 +24,9 @@ public class Member(
     string description,
     string preferredTimezone) : AggregateRoot<Guid>
 {
+    // Required by EF Core
+    private Member() : this(default!, default!, default!, default!, default!, default!) { }
+
     private readonly List<ExternalConnection> _externalConnections = [];
     private readonly List<PersonalPlan> _personalPlans = [];
 

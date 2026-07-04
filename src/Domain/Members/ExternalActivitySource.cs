@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Domain.Shared;
 
 namespace Domain.Members;
@@ -16,6 +16,9 @@ namespace Domain.Members;
 /// </param>
 public sealed class ExternalActivitySource(ExternalProvider provider, string externalActivityId) : ValueObject
 {
+    // Required by EF Core
+    private ExternalActivitySource() : this(default!, default!) { }
+
     /// <summary>
     /// Gets the external provider that produced this activity.
     /// </summary>

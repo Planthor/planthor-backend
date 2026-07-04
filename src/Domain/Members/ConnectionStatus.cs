@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -43,6 +43,9 @@ public class ConnectionStatus
     /// Gets the localization key used by the i18n service to fetch the translated description.
     /// </summary>
     public string I18NKey { get; }
+
+    // Required by EF Core
+    private ConnectionStatus() : this(default!, default!, default!) { }
 
     private ConnectionStatus(string id, string name, string i18nKey)
     {
