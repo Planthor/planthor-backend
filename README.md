@@ -140,7 +140,6 @@ In PowerShell, set the connection string environment variable:
 
 ```powershell
 dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:PlanthorDbContext" "[INPUT ConnectionString]"
 dotnet user-secrets set "ConnectionStrings:AzureStorage" "[INPUT Azure Primary Url]"
 dotnet user-secrets set "MediatR:LicenseKey" "[INPUT License Key for MediatR]"
 ```
