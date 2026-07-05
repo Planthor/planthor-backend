@@ -243,7 +243,6 @@ public class Plan : AggregateRoot<Guid>
         return plan;
     }
 
-
     public override ValidationResult Validate()
     {
         var errors = new List<ValidationError>();
