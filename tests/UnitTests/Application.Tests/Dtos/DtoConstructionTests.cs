@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Application.Dtos;
-using Xunit;
 
 namespace Application.Tests.Dtos;
 

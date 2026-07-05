@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Application.Shared;
 using Domain.Shared;
 using Moq;
-using Xunit;
 
 namespace Application.Tests.Shared;
 

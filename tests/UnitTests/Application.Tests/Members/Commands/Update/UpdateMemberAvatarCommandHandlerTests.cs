@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.Commands.Update;
-using Application.Shared;
 using Domain.Members;
 using Moq;
 using NodaTime;

@@ -5,7 +5,6 @@ using Application.Members.EventHandler;
 using Domain.Members.Events;
 using Moq;
 using NodaTime;
-using Xunit;
 
 namespace Application.Tests.Members.EventHandlers;
 

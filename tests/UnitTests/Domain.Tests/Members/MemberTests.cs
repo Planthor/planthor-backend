@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using Domain.Members;
-using Domain.Shared;
 using NodaTime;
 using Xunit;
 

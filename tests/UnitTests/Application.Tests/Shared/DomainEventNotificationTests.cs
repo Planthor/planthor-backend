@@ -2,7 +2,6 @@ using System;
 using Application.Shared;
 using Domain.Shared;
 using Moq;
-using Xunit;
 
 namespace Application.Tests.Shared;
 

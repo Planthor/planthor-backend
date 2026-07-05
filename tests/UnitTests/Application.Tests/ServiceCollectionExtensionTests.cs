@@ -1,7 +1,5 @@
-using Application;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
 
 namespace Application.Tests;
 

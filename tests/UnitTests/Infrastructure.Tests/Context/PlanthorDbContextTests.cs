@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 using Moq;
-using Xunit;
 
 namespace Infrastructure.Tests.Context;
 
