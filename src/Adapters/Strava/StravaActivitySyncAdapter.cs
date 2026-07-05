@@ -1,4 +1,4 @@
-﻿using Adapters.Abstraction;
+using Adapters.Abstraction;
 using Adapters.Strava.Client;
 using NodaTime;
 
@@ -20,7 +20,7 @@ public sealed class StravaActivitySyncAdapter(StravaApiClient client) : IActivit
     public async Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
         Guid memberId,
         Instant since,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(client);
         await Task.CompletedTask;

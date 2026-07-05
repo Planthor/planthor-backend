@@ -77,7 +77,10 @@ public class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
         foreach (var pp in paginatedPersonalPlans)
         {
             var plan = plans.FirstOrDefault(p => p.Id == pp.PlanId);
-            if (plan == null) continue; // Skip if filtered out by status
+            if (plan == null)
+            {
+                continue; // Skip if filtered out by status
+            }
 
             dtos.Add(new PersonalPlanDto(
                 pp.PlanId,

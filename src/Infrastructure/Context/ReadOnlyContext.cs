@@ -19,7 +19,7 @@ public class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContext
     /// <inheritdoc />
     public async Task<List<TResult>> QueryAsync<TEntity, TResult>(
         Func<IQueryable<TEntity>, IQueryable<TResult>> queryBuilder,
-        CancellationToken cancellationToken = default) where TEntity : class
+        CancellationToken cancellationToken) where TEntity : class
     {
         var query = _context.Set<TEntity>().AsNoTracking();
         return await queryBuilder(query).ToListAsync(cancellationToken);
@@ -28,7 +28,7 @@ public class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContext
     /// <inheritdoc />
     public async Task<TResult?> FirstOrDefaultAsync<TEntity, TResult>(
         Func<IQueryable<TEntity>, IQueryable<TResult>> queryBuilder,
-        CancellationToken cancellationToken = default) where TEntity : class
+        CancellationToken cancellationToken) where TEntity : class
     {
         var query = _context.Set<TEntity>().AsNoTracking();
         return await queryBuilder(query).FirstOrDefaultAsync(cancellationToken);
@@ -37,7 +37,7 @@ public class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContext
     /// <inheritdoc />
     public async Task<bool> AnyAsync<TEntity>(
         Func<IQueryable<TEntity>, IQueryable<TEntity>> queryBuilder,
-        CancellationToken cancellationToken = default) where TEntity : class
+        CancellationToken cancellationToken) where TEntity : class
     {
         var query = _context.Set<TEntity>().AsNoTracking();
         return await queryBuilder(query).AnyAsync(cancellationToken);

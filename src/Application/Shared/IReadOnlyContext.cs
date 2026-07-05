@@ -12,23 +12,37 @@ namespace Application.Shared;
 public interface IReadOnlyContext
 {
     /// <summary>
-    /// Executes a query and returns a list of projected results.
+    /// Executes a query with a cancellation token and returns a list of projected results.
     /// </summary>
+    /// <typeparam name="TEntity">The type of the domain entity.</typeparam>
+    /// <typeparam name="TResult">The type of the projected result.</typeparam>
+    /// <param name="queryBuilder">A function to build the query from the entity queryable.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation, returning a list of projected results.</returns>
     Task<List<TResult>> QueryAsync<TEntity, TResult>(
         Func<IQueryable<TEntity>, IQueryable<TResult>> queryBuilder,
-        CancellationToken cancellationToken = default) where TEntity : class;
+        CancellationToken cancellationToken) where TEntity : class;
 
     /// <summary>
-    /// Executes a query and returns the first projected result or null.
+    /// Executes a query with a cancellation token and returns the first projected result or null.
     /// </summary>
+    /// <typeparam name="TEntity">The type of the domain entity.</typeparam>
+    /// <typeparam name="TResult">The type of the projected result.</typeparam>
+    /// <param name="queryBuilder">A function to build the query from the entity queryable.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation, returning the first projected result or null.</returns>
     Task<TResult?> FirstOrDefaultAsync<TEntity, TResult>(
         Func<IQueryable<TEntity>, IQueryable<TResult>> queryBuilder,
-        CancellationToken cancellationToken = default) where TEntity : class;
+        CancellationToken cancellationToken) where TEntity : class;
 
     /// <summary>
-    /// Checks if any elements satisfy the defined query.
+    /// Checks with a cancellation token if any elements satisfy the defined query.
     /// </summary>
+    /// <typeparam name="TEntity">The type of the domain entity.</typeparam>
+    /// <param name="queryBuilder">A function to build the query from the entity queryable.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation, returning true if any elements satisfy the query; otherwise, false.</returns>
     Task<bool> AnyAsync<TEntity>(
         Func<IQueryable<TEntity>, IQueryable<TEntity>> queryBuilder,
-        CancellationToken cancellationToken = default) where TEntity : class;
+        CancellationToken cancellationToken) where TEntity : class;
 }

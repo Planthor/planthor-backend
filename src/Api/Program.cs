@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Adapters.Facebook;
 using Api.ExceptionHandling;
 using Api.Filters;
@@ -40,11 +40,15 @@ try
 
     var keycloakAuthority = builder.Configuration["Authentication:Keycloak:Authority"];
     if (string.IsNullOrWhiteSpace(keycloakAuthority))
+    {
         throw new InvalidOperationException("Authentication:Keycloak:Authority is not configured.");
+    }
 
     var keycloakAudience = builder.Configuration["Authentication:Keycloak:Audience"];
     if (string.IsNullOrWhiteSpace(keycloakAudience))
+    {
         throw new InvalidOperationException("Authentication:Keycloak:Audience is not configured.");
+    }
 
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

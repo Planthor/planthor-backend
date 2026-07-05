@@ -128,9 +128,9 @@ public class PersonalPlansController(
     public async Task<ActionResult<IEnumerable<PersonalPlanDto>>> Read(
         [FromRoute] string identifier,
         [FromQuery] string[]? status,
-        [FromQuery] int limit = 10,
-        [FromQuery] Guid? cursor = null,
-        CancellationToken token = default)
+        [FromQuery] int? limit,
+        [FromQuery] Guid? cursor,
+        CancellationToken token)
     {
         var targetIdentifyName = ResolveIdentifier(identifier);
 
@@ -141,7 +141,7 @@ public class PersonalPlansController(
 
         var query = new ListPersonalPlansQuery(
             IdentifyName: targetIdentifyName,
-            Limit: limit,
+            Limit: limit ?? 10,
             Cursor: cursor,
             Statuses: status
         );

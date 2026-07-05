@@ -1,4 +1,4 @@
-﻿using NodaTime;
+using NodaTime;
 
 namespace Adapters.Abstraction;
 
@@ -15,11 +15,15 @@ public interface IActivitySyncAdapter
     string ProviderId { get; }
 
     /// <summary>
-    /// Fetches activities for a member that occurred after <paramref name="since"/>.
+    /// Fetches activities for a member that occurred after <paramref name="since"/>, with support for cancellation.
     /// Returns an empty list if the member has no active connection for this provider.
     /// </summary>
+    /// <param name="memberId">The unique identifier of the member.</param>
+    /// <param name="since">The start instant from which to fetch activities.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task representing the asynchronous operation, returning a read-only list of activity DTOs.</returns>
     Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
         Guid memberId,
         Instant since,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }
