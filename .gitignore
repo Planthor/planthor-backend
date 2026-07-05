@@ -744,8 +744,6 @@ FodyWeavers.xsd
 # CI reports
 coverage-report/
 
-.agents
-
 ### Android ###
 # Gradle files
 .gradle/
