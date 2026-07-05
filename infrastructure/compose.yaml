@@ -2,50 +2,89 @@ name: planthor-webapi-infrastructure
 
 services:
 
-  mongodb:
-    image: mongo:8.2
-    container_name: mongodb
-    command: |
-      bash -c "
-      if [ ! -f /data/db/replica.key ]; then
-        openssl rand -base64 756 > /data/db/replica.key
-        chmod 400 /data/db/replica.key
-        chown 999:999 /data/db/replica.key || true
-      fi
-      exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --keyFile /data/db/replica.key
-      "
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-Planthor_123}
-      MONGO_INITDB_DATABASE: ${MONGO_DB:-planthordb}
+  mongodb1:
+    image: mongo:8.3
+    container_name: mongodb1
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
-      - ${MONGO_PORT:-27017}:27017
+      - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
-      - ./mongodb:/docker-entrypoint-initdb.d:ro
+      - mongodb1_data:/data/db
     networks:
       - app_network
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --username ${MONGO_ROOT_USER:-admin} --password ${MONGO_ROOT_PASSWORD:-Planthor_123} --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok }\""]
-      interval: 10s
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 10s
+
+  mongodb2:
+    image: mongo:8.3
+    container_name: mongodb2
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb2_data:/data/db
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  mongodb3-arbiter:
+    image: mongo:8.3
+    container_name: mongodb3-arbiter
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27019:27017"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ---------------------------------------------------------
+  # NOTE: The mongo-setup service is designed to run ONCE and exit.
+  # It initializes the MongoDB replica set if it hasn't been already.
+  # The `restart: "no"` directive ensures it doesn't stay running.
+  # Seeing this container in an "Exited (0)" state is EXPECTED and HEALTHY.
+  # ---------------------------------------------------------
+  mongo-setup:
+    image: mongo:8.3
+    depends_on:
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3-arbiter:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: "no"
+    volumes:
+      - ./mongo-setup.js:/mongo-setup.js:ro
+    entrypoint: ["mongosh", "--host", "mongodb1:27017", "--file", "/mongo-setup.js"]
 
   mongo-express:
     image: mongo-express:latest
-    container_name: mongo-express
     depends_on:
-      mongodb:
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
         condition: service_healthy
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER:-admin}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-Planthor_123}
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-Planthor_123}@mongodb:27017/?replicaSet=rs0
-      ME_CONFIG_BASICAUTH: "true"
-      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER:-mexpress}
-      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-Planthor_123}
+      ME_CONFIG_MONGODB_SERVER: mongodb1
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb1:27017,mongodb2:27017/?replicaSet=rs0
+      ME_CONFIG_BASICAUTH: "false"
     ports:
       - ${MONGO_EXPRESS_PORT:-8081}:8081
     networks:
@@ -123,7 +162,7 @@ services:
       - "${KC_PORT:-8180}:8180"
     volumes:
       # Realm JSON files placed here are auto-imported on startup
-      - ./keycloak/realms:/opt/keycloak/data/import:ro
+      - ./keycloak/processed_realms:/opt/keycloak/data/import:ro
       # Optional: custom themes
       # - ./keycloak/themes:/opt/keycloak/themes:ro
     networks:
@@ -136,9 +175,9 @@ services:
       start_period: 60s
 
 volumes:
-  mongodb_data:
+  mongodb1_data:
     driver: local
-  mongodb_config:
+  mongodb2_data:
     driver: local
   postgres_data:
     driver: local

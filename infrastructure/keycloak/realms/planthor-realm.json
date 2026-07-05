@@ -1,4 +1,4 @@
-﻿{
+{
   "id" : "fb9e0d73-c22f-42e0-966e-3f83db9a6605",
   "realm" : "planthor",
   "displayName" : "Planthor",
@@ -539,7 +539,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "secret" : "${env.PLANTHOR_BACKEND_SECRET}",
+    "secret" : "${PLANTHOR_BACKEND_SECRET}",
     "redirectUris" : [ "/*" ],
     "webOrigins" : [ "/*" ],
     "notBefore" : 0,
@@ -1403,7 +1403,7 @@
       "showInAccountConsole" : "ALWAYS",
       "filteredByClaim" : "false",
       "syncMode" : "IMPORT",
-      "clientSecret" : "${env.FACEBOOK_CLIENT_SECRET}",
+      "clientSecret" : "${FACEBOOK_CLIENT_SECRET}",
       "caseSensitiveOriginalUsername" : "false",
       "fetchedFields" : "picture",
       "defaultScope" : "openid email"

@@ -122,9 +122,8 @@ cd PlanthorWebApi
 Open **PowerShell** or **Bash** and navigate to the project directory:
 
 ```powershell
-cd .\infrastructure\
-docker compose up --build -d
-cd ..
+az login
+./start-infra.sh
 ```
 
 This starts:

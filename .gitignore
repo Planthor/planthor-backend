@@ -1049,4 +1049,4 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 
-gemini.md
+infrastructure/keycloak/processed_realms
