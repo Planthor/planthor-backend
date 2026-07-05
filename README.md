@@ -62,7 +62,7 @@ Planthor follows a **Clean Architecture** pattern with clear separation of conce
 | Component | Technology |
 | --- | --- |
 | **Framework** | .NET 10 with ASP.NET Core |
-| **Database** | MongoDB 8.2 |
+| **Database** | MongoDB 8.2 with ReplicaSet |
 | **Authentication** | Keycloak 26.5 + JWT |
 | **Identity DB** | PostgreSQL 16 |
 | **Patterns** | CQRS (MediatR), Clean Architecture, Domain-Driven Design |

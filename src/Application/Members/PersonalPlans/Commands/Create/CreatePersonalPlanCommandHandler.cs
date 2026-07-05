@@ -54,9 +54,7 @@ public class CreatePersonalPlanCommandHandler(
             clock);
 
         await planRepository.AddAsync(plan, cancellationToken);
-
-        await planRepository.SaveChangesAsync(cancellationToken);
-        await memberRepository.SaveChangesAsync(cancellationToken);
+        await planRepository.SaveChangesAsync(cancellationToken); // Already cover Member, Plan, Personal Plan
 
         return plan.Id;
     }

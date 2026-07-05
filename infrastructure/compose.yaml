@@ -1,10 +1,19 @@
-﻿name: planthor-webapi-infrastructure
+name: planthor-webapi-infrastructure
 
 services:
 
   mongodb:
     image: mongo:8.2
     container_name: mongodb
+    command: |
+      bash -c "
+      if [ ! -f /data/db/replica.key ]; then
+        openssl rand -base64 756 > /data/db/replica.key
+        chmod 400 /data/db/replica.key
+        chown 999:999 /data/db/replica.key || true
+      fi
+      exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --keyFile /data/db/replica.key
+      "
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-Planthor_123}
@@ -18,7 +27,7 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      test: ["CMD-SHELL", "mongosh --username ${MONGO_ROOT_USER:-admin} --password ${MONGO_ROOT_PASSWORD:-Planthor_123} --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok }\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +42,7 @@ services:
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER:-admin}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-Planthor_123}
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-Planthor_123}@mongodb:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-Planthor_123}@mongodb:27017/?replicaSet=rs0
       ME_CONFIG_BASICAUTH: "true"
       ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER:-mexpress}
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-Planthor_123}
