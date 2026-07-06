@@ -27,6 +27,37 @@ class HomeNotifier extends _$HomeNotifier {
       }
     });
   }
+
+  Future<void> createPersonalPlan() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final dio = ref.read(apiClientProvider);
+      try {
+        final payload = {
+          "IdentifyName": "me",
+          "Name": "Flutter Spike Plan",
+          "Unit": "km",
+          "Target": 100.0,
+          "FromDate": DateTime.now().toUtc().toIso8601String(),
+          "ToDate": DateTime.now().add(const Duration(days: 30)).toUtc().toIso8601String(),
+          "StartDateLocal": "2026-07-04",
+          "EndDateLocal": "2026-08-04",
+          "Timezone": "UTC",
+          "EnableActivityLog": true,
+          "DisplayOnProfile": true,
+          "Prioritize": 1,
+          "LinkUserAdapter": false
+        };
+        final response = await dio.post('/v1/members/me/PersonalPlans', data: payload);
+        return 'Status: ${response.statusCode}\n\n${response.data}';
+      } on DioException catch (e) {
+        if (e.response != null) {
+          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        }
+        rethrow;
+      }
+    });
+  }
 }
 
 /// Exposes token info for debugging the PKCE flow.

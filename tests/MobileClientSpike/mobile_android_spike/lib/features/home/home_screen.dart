@@ -179,6 +179,27 @@ class HomeScreen extends ConsumerWidget {
               label: const Text('Call Protected API (GET /v1/Members)'),
             ),
             const SizedBox(height: 16),
+            
+            // Create Personal Plan button
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => ref
+                      .read(homeProvider.notifier)
+                      .createPersonalPlan(),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.add_task),
+              label: const Text('Create Personal Plan (POST)'),
+            ),
+            const SizedBox(height: 16),
 
             // API response
             Card(
