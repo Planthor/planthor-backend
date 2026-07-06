@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
+using Application.Members.ActivityLogs.Commands.Create;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -14,11 +16,15 @@ namespace Api.Controllers.v1;
 /// Controller for manipulating Activity Logs associated with a Plan.
 /// TODO - Trung: Update details
 /// </summary>
+/// <param name="sender">The mediator used to send commands and queries.</param>
+/// <param name="createActivityLogCommandValidator">The validator for <see cref="CreateActivityLogCommand"/>.</param>
 [Authorize]
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/plans/{planId}/[controller]")]
-public class ActivityLogsController(ISender sender)
+public class ActivityLogsController(
+    ISender sender,
+    IValidator<CreateActivityLogCommand> createActivityLogCommandValidator)
     : ControllerBase
 {
     private readonly ISender _sender = sender ?? throw new ArgumentNullException(nameof(sender));
@@ -31,6 +37,10 @@ public class ActivityLogsController(ISender sender)
     /// <summary>
     /// Creates a new activity log for a specific plan.
     /// </summary>
+    /// <param name="planId">The unique identifier of the plan to add the activity log to.</param>
+    /// <param name="command">The command containing activity log creation details.</param>
+    /// <param name="token">A cancellation token.</param>
+    /// <returns>An IActionResult containing the newly created activity log's ID on success.</returns>
     /// <remarks>
     /// Note: Creating an Activity Log is typically handled by the Strava Adapter. 
     /// This endpoint is primarily preserved here for testing purposes.
@@ -39,15 +49,22 @@ public class ActivityLogsController(ISender sender)
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<Guid>> Create()
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<Guid>> Create(
+        [FromRoute] Guid planId,
+        [FromBody] CreateActivityLogCommand command,
+        CancellationToken token)
     {
         var identifyName = CurrentUserIdentifyName;
-        if (identifyName == null)
+        if (string.IsNullOrEmpty(identifyName))
         {
             return Unauthorized();
         }
 
-        return Ok();
+        var createLogCommand = command with { PlanId = planId, IdentifyName = identifyName };
+        await createActivityLogCommandValidator.ValidateAndThrowAsync(createLogCommand, token);
+        var newLogGuid = await _sender.Send(createLogCommand, token);
+        return Ok(newLogGuid);
     }
 
     /// <summary>

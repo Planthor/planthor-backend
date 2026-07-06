@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Domain.Members;
 using Domain.Plans.Events;
 using Domain.Shared;
 using Domain.Shared.Exceptions;
@@ -243,6 +245,55 @@ public class Plan : AggregateRoot<Guid>
         return plan;
     }
 
+    /// <summary>
+    /// Adds an activity log to this plan and recalculates the current value.
+    /// </summary>
+    /// <param name="value">The recorded value for the activity.</param>
+    /// <param name="activityLocalDate">The local date on which the activity was completed.</param>
+    /// <param name="externalSource">The provider and external ID if this log originated from an external service.</param>
+    /// <param name="clock">The system clock to get the current time.</param>
+    /// <param name="createUserId">The ID of the user creating the log.</param>
+    /// <returns>The created <see cref="ActivityLog"/> instance.</returns>
+    public ActivityLog AddActivityLog(
+        float value,
+        string activityLocalDate,
+        ExternalActivitySource? externalSource,
+        IClock clock,
+        Guid createUserId)
+    {
+        var activityLog = ActivityLog.Create(
+            Id,
+            value,
+            activityLocalDate,
+            externalSource,
+            createUserId,
+            clock);
+
+        _activityLogs.Add(activityLog);
+
+        RecalculateCurrentValue();
+
+        // Inform other parts of the system (if any) that an activity log was added.
+        // E.g., RaiseDomainEvent(new ActivityLogAddedDomainEvent(Id, activityLog.Id, value));
+
+        return activityLog;
+    }
+
+    /// <summary>
+    /// Recalculates the current value based on all associated activity logs.
+    /// Auto-completes the plan if the target is reached.
+    /// </summary>
+    private void RecalculateCurrentValue()
+    {
+        CurrentValue = _activityLogs.Sum(log => log.Value);
+
+        if (!Completed && CurrentValue >= Target)
+        {
+            Completed = true;
+        }
+    }
+
+    /// <inheritdoc/>
     public override ValidationResult Validate()
     {
         var errors = new List<ValidationError>();
