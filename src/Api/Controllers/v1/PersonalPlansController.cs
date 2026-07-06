@@ -51,15 +51,15 @@ public class PersonalPlansController(
     /// <param name="identifier">The identifier of the member ("me" or their identity name).</param>
     /// <param name="command">The command containing plan creation details.</param>
     /// <param name="token">A cancellation token.</param>
-    /// <returns>An IActionResult containing the newly created personal plan's ID on success.</returns>
-    /// <response code="200">Returns the newly created personal plan's ID.</response>
+    /// <returns>An IActionResult containing the newly created <see cref="PersonalPlanDto"/> on success.</returns>
+    /// <response code="201">Returns the newly created personal plan's details.</response>
     /// <response code="400">If the command validation fails.</response>
     /// <response code="403">If attempting to create a plan for another user.</response>
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<Guid>> Create(
+    public async Task<ActionResult<PersonalPlanDto>> Create(
         [FromRoute] string identifier,
         [FromBody] CreatePersonalPlanCommand command,
         CancellationToken token)
@@ -79,7 +79,11 @@ public class PersonalPlansController(
         var createPlanCommand = command with { IdentifyName = targetIdentifyName };
         await createPersonalPlanCommandValidator.ValidateAndThrowAsync(createPlanCommand, token);
         var newPlanGuid = await _sender.Send(createPlanCommand, token);
-        return Ok(newPlanGuid);
+
+        var query = new PersonalPlanDetailsQuery(targetIdentifyName, newPlanGuid);
+        var personalPlanDto = await _sender.Send(query, token);
+
+        return CreatedAtAction(nameof(Read), new { identifier = identifier, planId = newPlanGuid }, personalPlanDto);
     }
 
     /// <summary>

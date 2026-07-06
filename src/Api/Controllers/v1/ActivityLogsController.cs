@@ -3,7 +3,9 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
+using Application.Dtos;
 using Application.Members.ActivityLogs.Commands.Create;
+using Application.Members.ActivityLogs.Queries.Details;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -40,17 +42,21 @@ public class ActivityLogsController(
     /// <param name="planId">The unique identifier of the plan to add the activity log to.</param>
     /// <param name="command">The command containing activity log creation details.</param>
     /// <param name="token">A cancellation token.</param>
-    /// <returns>An IActionResult containing the newly created activity log's ID on success.</returns>
+    /// <returns>An IActionResult containing the newly created <see cref="ActivityLogDto"/> on success.</returns>
+    /// <response code="201">Returns the newly created activity log's details.</response>
+    /// <response code="400">If the command validation fails.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have permission.</response>
     /// <remarks>
     /// Note: Creating an Activity Log is typically handled by the Strava Adapter. 
     /// This endpoint is primarily preserved here for testing purposes.
     /// </remarks>
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<Guid>> Create(
+    public async Task<ActionResult<ActivityLogDto>> Create(
         [FromRoute] Guid planId,
         [FromBody] CreateActivityLogCommand command,
         CancellationToken token)
@@ -64,7 +70,11 @@ public class ActivityLogsController(
         var createLogCommand = command with { PlanId = planId, IdentifyName = identifyName };
         await createActivityLogCommandValidator.ValidateAndThrowAsync(createLogCommand, token);
         var newLogGuid = await _sender.Send(createLogCommand, token);
-        return Ok(newLogGuid);
+
+        var query = new ActivityLogDetailsQuery(planId, newLogGuid);
+        var activityLogDto = await _sender.Send(query, token);
+
+        return CreatedAtAction(nameof(Read), new { planId = planId, logId = newLogGuid }, activityLogDto);
     }
 
     /// <summary>

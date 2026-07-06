@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
@@ -44,16 +44,16 @@ public class MembersController(
     /// </summary>
     /// <param name="command">The command containing member creation details.</param>
     /// <param name="token">A cancellation token.</param>
-    /// <returns>An IActionResult containing the newly created member's ID on success, otherwise an appropriate error code.</returns>
+    /// <returns>An IActionResult containing the newly created <see cref="MemberDto"/> on success, otherwise an appropriate error code.</returns>
     /// <remarks>
     /// The request body should contain a valid <see cref="CreateMemberCommand"/> object.
     /// </remarks>
-    /// <response code="200">Returns the newly created member's ID.</response>
+    /// <response code="201">Returns the newly created member's details.</response>
     /// <response code="400">If the command validation fails.</response>
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<Guid>> Create([FromBody] CreateMemberCommand command, CancellationToken token)
+    public async Task<ActionResult<MemberDto>> Create([FromBody] CreateMemberCommand command, CancellationToken token)
     {
         var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(identifyName))
@@ -64,7 +64,11 @@ public class MembersController(
         command = command with { IdentifyName = identifyName };
         await createMemberCommandValidator.ValidateAndThrowAsync(command, token);
         var newMemberGuid = await _sender.Send(command, token);
-        return Ok(newMemberGuid);
+
+        var query = new MemberDetailsQuery(newMemberGuid);
+        var memberDto = await _sender.Send(query, token);
+
+        return CreatedAtAction(nameof(Read), new { id = newMemberGuid }, memberDto);
     }
 
     /// <summary>

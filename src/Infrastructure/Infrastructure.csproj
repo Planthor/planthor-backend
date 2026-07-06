@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.28.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.29.1" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="4.15.0" />
-    <PackageReference Include="MongoDB.EntityFrameworkCore" Version="10.0.1" />
-    <PackageReference Include="Quartz" Version="3.17.1" />
-    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.17.1" />
+    <PackageReference Include="MongoDB.EntityFrameworkCore" Version="10.0.2" />
+    <PackageReference Include="Quartz" Version="3.18.2" />
+    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.18.2" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
