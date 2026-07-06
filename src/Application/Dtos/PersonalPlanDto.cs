@@ -16,6 +16,15 @@ namespace Application.Dtos;
 /// Indicates if external integrations (e.g., Strava) are enabled to automatically
 /// sync activity data to this specific plan.
 /// </param>
+/// <param name="PlanName">The name of the plan.</param>
+/// <param name="Unit">The unit of measurement for the plan (e.g., km, hours, times).</param>
+/// <param name="Target">The numeric target to achieve for the plan.</param>
+/// <param name="CurrentValue">The current accumulated value for the plan.</param>
+/// <param name="ProgressPercentage">The percentage of completion for the plan.</param>
+/// <param name="Completed">Indicates whether the plan's target has been met.</param>
+/// <param name="Status">The current status of the plan (e.g., Active, Expired, Completed).</param>
+/// <param name="FromDate">The UTC start date and time of the plan.</param>
+/// <param name="ToDate">The UTC end date and time of the plan.</param>
 public record PersonalPlanDto(
     Guid PlanId,
     Guid MemberId,
