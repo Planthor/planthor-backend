@@ -5,6 +5,9 @@ namespace Application.Members.PersonalPlans.Commands.Update;
 // TODO - Trung: Revisit when verify details.
 public class UpdatePlanCommandValidator : AbstractValidator<UpdatePlanCommand>
 {
+    private const int MinTarget = 0;
+    private const int MinCurrent = 0;
+
     public UpdatePlanCommandValidator()
     {
         RuleFor(x => x.IdentifyName)
@@ -20,11 +23,11 @@ public class UpdatePlanCommandValidator : AbstractValidator<UpdatePlanCommand>
             .WithMessage("Unit is required.");
 
         RuleFor(x => x.Target)
-            .GreaterThan(0)
+            .GreaterThan(MinTarget)
             .WithMessage("Target must be greater than zero.");
 
         RuleFor(x => x.Current)
-            .GreaterThanOrEqualTo(0)
+            .GreaterThanOrEqualTo(MinCurrent)
             .WithMessage("Current value cannot be negative.");
 
         RuleFor(x => x.ToDate)

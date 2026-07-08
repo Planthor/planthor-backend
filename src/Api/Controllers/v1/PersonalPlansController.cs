@@ -64,6 +64,11 @@ public class PersonalPlansController(
         [FromBody] CreatePersonalPlanCommand command,
         CancellationToken token)
     {
+        if (command is null)
+        {
+            return BadRequest();
+        }
+
         var targetIdentifyName = ResolveIdentifier(identifier);
         
         if (string.IsNullOrEmpty(targetIdentifyName))
@@ -107,6 +112,11 @@ public class PersonalPlansController(
         [FromBody] UpdatePlanCommand command,
         CancellationToken token)
     {
+        if (command is null)
+        {
+            return BadRequest();
+        }
+
         var targetIdentifyName = ResolveIdentifier(identifier);
         if (targetIdentifyName != CurrentUserIdentifyName)
         {

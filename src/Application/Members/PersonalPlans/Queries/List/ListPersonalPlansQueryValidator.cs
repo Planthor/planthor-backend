@@ -5,6 +5,9 @@ namespace Application.Members.PersonalPlans.Queries.List;
 // TODO - Trung: Revisit when verify details.
 public class ListPersonalPlansQueryValidator : AbstractValidator<ListPersonalPlansQuery>
 {
+    private const int MinLimit = 0;
+    private const int MaxLimit = 100;
+
     public ListPersonalPlansQueryValidator()
     {
         RuleFor(x => x.IdentifyName)
@@ -12,9 +15,9 @@ public class ListPersonalPlansQueryValidator : AbstractValidator<ListPersonalPla
             .WithMessage("IdentifyName is required.");
 
         RuleFor(x => x.Limit)
-            .GreaterThan(0)
+            .GreaterThan(MinLimit)
             .WithMessage("Limit must be greater than zero.")
-            .LessThanOrEqualTo(100)
-            .WithMessage("Limit cannot exceed 100.");
+            .LessThanOrEqualTo(MaxLimit)
+            .WithMessage($"Limit cannot exceed {MaxLimit}.");
     }
 }

@@ -274,7 +274,7 @@ public class Plan : AggregateRoot<Guid>
         RecalculateCurrentValue();
 
         // Inform other parts of the system (if any) that an activity log was added.
-        // E.g., RaiseDomainEvent(new ActivityLogAddedDomainEvent(Id, activityLog.Id, value));
+        // E.g., RaiseDomainEvent - ActivityLogAddedDomainEvent
 
         return activityLog;
     }

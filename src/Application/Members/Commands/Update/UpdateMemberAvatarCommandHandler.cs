@@ -23,11 +23,16 @@ public class UpdateMemberAvatarCommandHandler(
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A task representing the completion of the update.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the specified member is not found.</exception>
-    public async Task Handle(UpdateMemberAvatarCommand request, CancellationToken cancellationToken)
+    public Task Handle(UpdateMemberAvatarCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(memberRepository);
 
+        return HandleAsync(request, cancellationToken);
+    }
+
+    private async Task HandleAsync(UpdateMemberAvatarCommand request, CancellationToken cancellationToken)
+    {
         var member = await memberRepository.GetByIdAsync(request.MemberId, cancellationToken)
             ?? throw new InvalidOperationException($"Member with ID {request.MemberId} not found.");
 

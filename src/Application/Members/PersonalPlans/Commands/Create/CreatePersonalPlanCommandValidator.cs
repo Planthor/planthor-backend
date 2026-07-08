@@ -9,6 +9,12 @@ namespace Application.Members.PersonalPlans.Commands.Create;
 /// </summary>
 public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePersonalPlanCommand>
 {
+    private const int MaxPlanNameLength = 100;
+    private const int MaxUnitLength = 50;
+    private const int MinTarget = 0;
+    private const int MinPriority = 0;
+    private const int MaxPriority = 999;
+
     public CreatePersonalPlanCommandValidator()
     {
         RuleFor(x => x.IdentifyName)
@@ -16,14 +22,14 @@ public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePerson
 
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Plan name is required.")
-            .MaximumLength(100).WithMessage("Plan name must not exceed 100 characters.");
+            .MaximumLength(MaxPlanNameLength).WithMessage($"Plan name must not exceed {MaxPlanNameLength} characters.");
 
         RuleFor(x => x.Unit)
             .NotEmpty().WithMessage("Unit is required.")
-            .MaximumLength(50).WithMessage("Unit must not exceed 50 characters.");
+            .MaximumLength(MaxUnitLength).WithMessage($"Unit must not exceed {MaxUnitLength} characters.");
 
         RuleFor(x => x.Target)
-            .GreaterThan(0).WithMessage("Target must be greater than zero.");
+            .GreaterThan(MinTarget).WithMessage("Target must be greater than zero.");
 
         RuleFor(x => x.ToDate)
             .GreaterThan(x => x.FromDate)
@@ -44,6 +50,6 @@ public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePerson
             .WithMessage("Timezone must be a valid IANA timezone identifier.");
 
         RuleFor(x => x.Prioritize)
-            .InclusiveBetween(0, 999).WithMessage("Priority must be between 0 and 999.");
+            .InclusiveBetween(MinPriority, MaxPriority).WithMessage($"Priority must be between {MinPriority} and {MaxPriority}.");
     }
 }

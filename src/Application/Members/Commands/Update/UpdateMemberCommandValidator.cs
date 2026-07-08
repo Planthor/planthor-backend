@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using NodaTime;
 
 namespace Application.Members.Commands.Update;
@@ -8,15 +8,18 @@ namespace Application.Members.Commands.Update;
 /// </summary>
 public class UpdateMemberCommandValidator : AbstractValidator<UpdateMemberCommand>
 {
+    private const int MaxFirstNameLength = 100;
+    private const int MaxLastNameLength = 100;
+
     public UpdateMemberCommandValidator()
     {
         RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("First name is required.")
-            .MaximumLength(100).WithMessage("First name must not exceed 100 characters.");
+            .MaximumLength(MaxFirstNameLength).WithMessage($"First name must not exceed {MaxFirstNameLength} characters.");
 
         RuleFor(x => x.LastName)
             .NotEmpty().WithMessage("Last name is required.")
-            .MaximumLength(100).WithMessage("Last name must not exceed 100 characters.");
+            .MaximumLength(MaxLastNameLength).WithMessage($"Last name must not exceed {MaxLastNameLength} characters.");
 
         RuleFor(x => x.PreferredTimezone)
             .NotEmpty().WithMessage("Preferred timezone is required.")
