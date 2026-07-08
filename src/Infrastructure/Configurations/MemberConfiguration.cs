@@ -18,6 +18,8 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.HasIndex(m => m.IdentifyName).IsUnique();
         builder.OwnsMany(m => m.ExternalConnections, navigationBuilder =>
         {
+            navigationBuilder.WithOwner().HasForeignKey(ec => ec.MemberId);
+            navigationBuilder.HasKey(ec => ec.Id);
             navigationBuilder.Property(ec => ec.Id).ValueGeneratedNever();
             navigationBuilder
                 .Property(ec => ec.Status)
@@ -25,6 +27,13 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
             navigationBuilder
                 .Property(ec => ec.Provider)
                 .HasConversion(s => s.Id, id => ExternalProvider.FromId(id));
+        });
+
+        builder.OwnsMany(m => m.PersonalPlans, navigationBuilder =>
+        {
+            navigationBuilder.WithOwner().HasForeignKey(pp => pp.MemberId);
+            navigationBuilder.HasKey(pp => pp.Id);
+            navigationBuilder.Property(pp => pp.Id).ValueGeneratedNever();
         });
     }
 }

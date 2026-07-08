@@ -15,5 +15,10 @@ public class PlanConfiguration : IEntityTypeConfiguration<Plan>
         builder.ToCollection("plans");
 
         builder.HasKey(p => p.Id);
+
+        builder.Property(p => p.Status)
+            .HasConversion(
+                v => v.Id,
+                v => PlanStatus.FromId(v));
     }
 }
