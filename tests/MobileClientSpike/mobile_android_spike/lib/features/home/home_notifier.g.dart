@@ -33,13 +33,13 @@ final class HomeNotifierProvider
   HomeNotifier create() => HomeNotifier();
 }
 
-String _$homeNotifierHash() => r'1d85b52b941adc730e8fc4b7db509509ddb872ad';
+String _$homeNotifierHash() => r'4950c92fe6c13ad2849d6b8fc96e11dd300ea220';
 
 abstract class _$HomeNotifier extends $AsyncNotifier<String> {
   FutureOr<String> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<String>, String>;
     final element =
         ref.element
@@ -49,7 +49,7 @@ abstract class _$HomeNotifier extends $AsyncNotifier<String> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

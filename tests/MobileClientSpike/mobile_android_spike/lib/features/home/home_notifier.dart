@@ -28,6 +28,26 @@ class HomeNotifier extends _$HomeNotifier {
     });
   }
 
+  Future<void> createActivityLog(String planId, double value, String date) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final dio = ref.read(apiClientProvider);
+      try {
+        final payload = {
+          "Value": value,
+          "ActivityLocalDate": date,
+        };
+        final response = await dio.post('/v1/plans/$planId/ActivityLogs', data: payload);
+        return 'Status: ${response.statusCode}\n\n${response.data}';
+      } on DioException catch (e) {
+        if (e.response != null) {
+          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        }
+        rethrow;
+      }
+    });
+  }
+
   Future<void> createPersonalPlan() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {

@@ -201,6 +201,25 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
+            // Create Activity Log button
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => _showCreateActivityLogDialog(context, ref),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.add_chart),
+              label: const Text('Create Activity Log (POST)'),
+            ),
+            const SizedBox(height: 16),
+
             // API response
             Card(
               child: Padding(
@@ -225,6 +244,55 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showCreateActivityLogDialog(BuildContext context, WidgetRef ref) {
+    final planIdController = TextEditingController();
+    final valueController = TextEditingController(text: '10.0');
+    final dateController = TextEditingController(text: DateTime.now().toIso8601String().split('T')[0]);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Activity Log'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: planIdController,
+              decoration: const InputDecoration(labelText: 'Plan ID (UUID)'),
+            ),
+            TextField(
+              controller: valueController,
+              decoration: const InputDecoration(labelText: 'Value'),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            ),
+            TextField(
+              controller: dateController,
+              decoration: const InputDecoration(labelText: 'Date (YYYY-MM-DD)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final planId = planIdController.text;
+              final value = double.tryParse(valueController.text) ?? 0.0;
+              final date = dateController.text;
+              if (planId.isNotEmpty) {
+                ref.read(homeProvider.notifier).createActivityLog(planId, value, date);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Submit'),
+          ),
+        ],
       ),
     );
   }
