@@ -3,9 +3,11 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
+using Api.Requests;
 using Application.Dtos;
 using Application.Members.ActivityLogs.Commands.Create;
 using Application.Members.ActivityLogs.Queries.Details;
+using Domain.Members;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -40,7 +42,7 @@ public class ActivityLogsController(
     /// Creates a new activity log for a specific plan.
     /// </summary>
     /// <param name="planId">The unique identifier of the plan to add the activity log to.</param>
-    /// <param name="command">The command containing activity log creation details.</param>
+    /// <param name="request">The request body containing activity log creation details.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>An IActionResult containing the newly created <see cref="ActivityLogDto"/> on success.</returns>
     /// <response code="201">Returns the newly created activity log's details.</response>
@@ -58,7 +60,7 @@ public class ActivityLogsController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ActivityLogDto>> Create(
         [FromRoute] Guid planId,
-        [FromBody] CreateActivityLogCommand command,
+        [FromBody] CreateActivityLogRequest request,
         CancellationToken token)
     {
         var identifyName = CurrentUserIdentifyName;
@@ -67,7 +69,21 @@ public class ActivityLogsController(
             return Unauthorized();
         }
 
-        var createLogCommand = command with { PlanId = planId, IdentifyName = identifyName };
+        ExternalActivitySource? externalSource = null;
+        if (!string.IsNullOrEmpty(request.ExternalProviderId) && !string.IsNullOrEmpty(request.ExternalActivityId))
+        {
+            var provider = ExternalProvider.FromId(request.ExternalProviderId);
+            externalSource = new ExternalActivitySource(provider, request.ExternalActivityId);
+        }
+
+        var createLogCommand = new CreateActivityLogCommand(
+            PlanId: planId,
+            Value: request.Value,
+            ActivityLocalDate: request.ActivityLocalDate,
+            IdentifyName: identifyName,
+            ExternalSource: externalSource
+        );
+
         await createActivityLogCommandValidator.ValidateAndThrowAsync(createLogCommand, token);
         var newLogGuid = await _sender.Send(createLogCommand, token);
 

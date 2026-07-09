@@ -1,7 +1,5 @@
 using System;
 using Application.Shared;
-
-using Domain.Plans;
 using Domain.Members;
 
 namespace Application.Members.ActivityLogs.Commands.Create;

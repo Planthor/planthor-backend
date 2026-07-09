@@ -8,6 +8,7 @@ using Domain.Plans;
 using Domain.Shared;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace Infrastructure.Context;
 
@@ -27,6 +28,16 @@ public class PlanthorDbContext(DbContextOptions options, IPublisher publisher) :
 
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PlanthorDbContext).Assembly);
+    }
+
+    /// <inheritdoc/>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder
+            .Properties<Instant>()
+            .HaveConversion<InstantToDateTimeUtcConverter>();
     }
 
     /// <inheritdoc/>

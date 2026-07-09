@@ -1,4 +1,5 @@
 using System;
+using Domain.Members;
 using Domain.Plans;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -20,5 +21,20 @@ public class PlanConfiguration : IEntityTypeConfiguration<Plan>
             .HasConversion(
                 v => v.Id,
                 v => PlanStatus.FromId(v));
+
+        builder.OwnsMany(p => p.ActivityLogs, navigationBuilder =>
+        {
+            navigationBuilder.WithOwner().HasForeignKey(al => al.PlanId);
+            navigationBuilder.HasKey(al => al.Id);
+            navigationBuilder.Property(al => al.Id).ValueGeneratedNever();
+            
+            navigationBuilder.OwnsOne(al => al.ExternalSource, sourceBuilder =>
+            {
+                sourceBuilder.Property(s => s.Provider)
+                    .HasConversion(p => p.Id, id => ExternalProvider.FromId(id));
+            });
+            
+            navigationBuilder.Navigation(al => al.ExternalSource).IsRequired(false);
+        });
     }
 }

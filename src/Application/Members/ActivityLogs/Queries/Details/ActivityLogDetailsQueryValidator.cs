@@ -1,4 +1,3 @@
-using System;
 using FluentValidation;
 
 namespace Application.Members.ActivityLogs.Queries.Details;
