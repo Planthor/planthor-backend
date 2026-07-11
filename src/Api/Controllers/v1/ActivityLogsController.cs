@@ -69,6 +69,8 @@ public class ActivityLogsController(
             return Unauthorized();
         }
 
+        ArgumentNullException.ThrowIfNull(request);
+
         ExternalActivitySource? externalSource = null;
         if (!string.IsNullOrEmpty(request.ExternalProviderId) && !string.IsNullOrEmpty(request.ExternalActivityId))
         {

@@ -35,13 +35,15 @@ public class CancelPlanCommandHandler(
     private async Task<PersonalPlanDto> HandleAsync(CancelPlanCommand request, CancellationToken cancellationToken)
     {
         // 1. Fetch member
-        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken) ?? throw new KeyNotFoundException($"Member with identifier '{request.IdentifyName}' was not found.");
+        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken) 
+            ?? throw new KeyNotFoundException($"Member with identifier '{request.IdentifyName}' was not found.");
 
         // 2. Validate member owns the plan
         var personalPlan = member.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId) ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
 
         // 3. Fetch plan
-        var plan = await _planRepository.GetByIdAsync(request.PlanId, cancellationToken) ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
+        var plan = await _planRepository.GetByIdAsync(request.PlanId, cancellationToken) 
+            ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
 
         // 4. Update domain model
         plan.Cancel(member.Id, _clock);

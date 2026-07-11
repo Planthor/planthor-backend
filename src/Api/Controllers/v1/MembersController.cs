@@ -61,6 +61,8 @@ public class MembersController(
             return Unauthorized();
         }
 
+        ArgumentNullException.ThrowIfNull(command);
+
         command = command with { IdentifyName = identifyName };
         await createMemberCommandValidator.ValidateAndThrowAsync(command, token);
         var newMemberGuid = await _sender.Send(command, token);

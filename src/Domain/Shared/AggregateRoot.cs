@@ -80,7 +80,10 @@ public abstract class AggregateRoot<TId> : IAggregateRoot, IEntity<TId>, IHasAud
     /// <param name="clock">The system clock providing the current UTC instant.</param>
     protected void StampUpdatedAudit(Guid byUserId, IClock clock)
     {
-        if (clock == null) throw new ArgumentNullException(nameof(clock));
+        if (clock == null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
 
         LastUpdatedAt = clock.GetCurrentInstant();
         LastUpdatedBy = byUserId;

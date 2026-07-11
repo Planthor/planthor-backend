@@ -20,9 +20,14 @@ public class UpdatePlanCommandHandler(
     IClock clock)
     : ICommandHandler<UpdatePersonalPlanCommand, PersonalPlanDto>
 {
-    private readonly IMemberRepository _memberRepository = memberRepository ?? throw new ArgumentNullException(nameof(memberRepository));
-    private readonly IPlanRepository _planRepository = planRepository ?? throw new ArgumentNullException(nameof(planRepository));
-    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+    private readonly IMemberRepository _memberRepository = memberRepository 
+        ?? throw new ArgumentNullException(nameof(memberRepository));
+
+    private readonly IPlanRepository _planRepository = planRepository 
+        ?? throw new ArgumentNullException(nameof(planRepository));
+
+    private readonly IClock _clock = clock 
+        ?? throw new ArgumentNullException(nameof(clock));
 
     /// <inheritdoc />
     public Task<PersonalPlanDto> Handle(UpdatePersonalPlanCommand request, CancellationToken cancellationToken)
@@ -35,13 +40,16 @@ public class UpdatePlanCommandHandler(
     private async Task<PersonalPlanDto> HandleAsync(UpdatePersonalPlanCommand request, CancellationToken cancellationToken)
     {
         // 1. Fetch member
-        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken) ?? throw new KeyNotFoundException($"Member with identifier '{request.IdentifyName}' was not found.");
+        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken) 
+            ?? throw new KeyNotFoundException($"Member with identifier '{request.IdentifyName}' was not found.");
 
         // 2. Validate member owns the plan
-        var personalPlan = member.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId) ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
+        var personalPlan = member.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId) 
+            ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
 
         // 3. Fetch plan
-        var plan = await _planRepository.GetByIdAsync(request.PlanId, cancellationToken) ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
+        var plan = await _planRepository.GetByIdAsync(request.PlanId, cancellationToken) 
+            ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
 
         // 4. Update domain model
         var from = Instant.FromUnixTimeSeconds(request.FromDate.ToUnixTimeSeconds());
