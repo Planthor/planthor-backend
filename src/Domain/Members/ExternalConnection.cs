@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Domain.Shared;
 using NodaTime;
@@ -32,6 +32,11 @@ public sealed class ExternalConnection : IEntity<Guid>, IHasAudit
     /// Gets the external service provider this connection links to.
     /// </summary>
     public ExternalProvider Provider { get; private set; } = default!;
+
+    /// <summary>
+    /// Gets the type or purpose of this connection (e.g., Identity, ActivitiesSync).
+    /// </summary>
+    public ExternalConnectionType Type { get; private set; } = default!;
 
     /// <summary>
     /// Gets the member's unique identifier on the external platform.
@@ -78,6 +83,7 @@ public sealed class ExternalConnection : IEntity<Guid>, IHasAudit
     /// </summary>
     /// <param name="memberId">The identifier of the member establishing the connection.</param>
     /// <param name="provider">The external service provider being connected.</param>
+    /// <param name="type">The type or purpose of the connection.</param>
     /// <param name="externalUserId">The member's identifier on the external platform.</param>
     /// <param name="scopes">The OAuth scopes granted during authorization.</param>
     /// <param name="clock">The system clock providing the current UTC instant.</param>
@@ -85,6 +91,7 @@ public sealed class ExternalConnection : IEntity<Guid>, IHasAudit
     internal static ExternalConnection Create(
         Guid memberId,
         ExternalProvider provider,
+        ExternalConnectionType type,
         string externalUserId,
         IReadOnlyList<string> scopes,
         IClock clock)
@@ -96,6 +103,7 @@ public sealed class ExternalConnection : IEntity<Guid>, IHasAudit
             Id = Guid.NewGuid(),
             MemberId = memberId,
             Provider = provider,
+            Type = type,
             ExternalUserId = externalUserId,
             Status = ConnectionStatus.Active,
             ConnectedAt = now,

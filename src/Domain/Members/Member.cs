@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Domain.Members.Events;
@@ -78,29 +78,31 @@ public class Member(
 
     /// <summary>
     /// Establishes a new connection to an external service provider.
-    /// If a revoked or expired connection already exists for the same provider,
+    /// If a revoked or expired connection already exists for the same provider and type,
     /// it will be reactivated instead of creating a duplicate.
     /// </summary>
     /// <param name="provider">The external service provider to connect.</param>
+    /// <param name="type">The type or purpose of the connection.</param>
     /// <param name="externalUserId">The member's unique identifier on the external platform.</param>
     /// <param name="scopes">The OAuth scopes granted during authorization.</param>
     /// <param name="clock">The system clock providing the current UTC instant.</param>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when an active connection to the same provider already exists.
+    /// Thrown when an active connection to the same provider and type already exists.
     /// </exception>
     public void ConnectExternalProvider(
         ExternalProvider provider,
+        ExternalConnectionType type,
         string externalUserId,
         IReadOnlyList<string> scopes,
         IClock clock)
     {
         var existing = _externalConnections
-            .FirstOrDefault(c => c.Provider.Id == provider.Id);
+            .FirstOrDefault(c => c.Provider.Id == provider.Id && c.Type.Id == type.Id);
 
         if (existing is not null && existing.Status == ConnectionStatus.Active)
         {
             throw new InvalidOperationException(
-                $"An active connection to '{provider.Name}' already exists.");
+                $"An active '{type.Name}' connection to '{provider.Name}' already exists.");
         }
 
         if (existing is not null)
@@ -111,7 +113,7 @@ public class Member(
         else
         {
             // Create a brand-new connection.
-            var connection = ExternalConnection.Create(Id, provider, externalUserId, scopes, clock);
+            var connection = ExternalConnection.Create(Id, provider, type, externalUserId, scopes, clock);
             _externalConnections.Add(connection);
             existing = connection;
         }
@@ -122,6 +124,7 @@ public class Member(
             Id,
             existing.Id,
             provider,
+            type,
             externalUserId,
             clock,
             $"{nameof(Member)} / {nameof(ConnectExternalProvider)}"));
@@ -131,19 +134,20 @@ public class Member(
     /// Revokes an existing connection to an external service provider.
     /// </summary>
     /// <param name="provider">The external service provider to disconnect.</param>
+    /// <param name="type">The type or purpose of the connection.</param>
     /// <param name="clock">The system clock providing the current UTC instant.</param>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when no active connection to the specified provider exists.
+    /// Thrown when no active connection to the specified provider and type exists.
     /// </exception>
-    public void RevokeExternalProvider(ExternalProvider provider, IClock clock)
+    public void RevokeExternalProvider(ExternalProvider provider, ExternalConnectionType type, IClock clock)
     {
         var existing = _externalConnections
-            .FirstOrDefault(c => c.Provider.Id == provider.Id && c.Status == ConnectionStatus.Active);
+            .FirstOrDefault(c => c.Provider.Id == provider.Id && c.Type.Id == type.Id && c.Status == ConnectionStatus.Active);
 
         if (existing is null)
         {
             throw new InvalidOperationException(
-                $"No active connection to '{provider.Name}' exists.");
+                $"No active '{type.Name}' connection to '{provider.Name}' exists.");
         }
 
         existing.Revoke(clock);
@@ -154,19 +158,21 @@ public class Member(
             Id,
             existing.Id,
             provider,
+            type,
             clock,
             $"{nameof(Member)} / {nameof(RevokeExternalProvider)}"));
     }
 
     /// <summary>
-    /// Checks whether this member has an active connection to the specified provider.
+    /// Checks whether this member has an active connection to the specified provider of the given type.
     /// </summary>
     /// <param name="provider">The external service provider to check.</param>
+    /// <param name="type">The type or purpose of the connection.</param>
     /// <returns><c>true</c> if an active connection exists; otherwise, <c>false</c>.</returns>
-    public bool HasActiveConnection(ExternalProvider provider)
+    public bool HasActiveConnection(ExternalProvider provider, ExternalConnectionType type)
     {
         return _externalConnections
-            .Any(c => c.Provider.Id == provider.Id && c.Status == ConnectionStatus.Active);
+            .Any(c => c.Provider.Id == provider.Id && c.Type.Id == type.Id && c.Status == ConnectionStatus.Active);
     }
 
     /// <summary>

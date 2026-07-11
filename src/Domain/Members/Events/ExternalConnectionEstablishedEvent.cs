@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Domain.Shared;
 using NodaTime;
 
@@ -11,6 +11,7 @@ namespace Domain.Members.Events;
 /// <param name="memberId">The identifier of the member who established the connection.</param>
 /// <param name="externalConnectionId">The identifier of the newly created or reactivated connection.</param>
 /// <param name="provider">The external service provider that was connected.</param>
+/// <param name="type">The type or purpose of the connection.</param>
 /// <param name="externalUserId">The member's identifier on the external platform.</param>
 /// <param name="clock">The system clock used to timestamp when this event occurred.</param>
 /// <param name="occurredBy">The name or identifier of the component that raised this event.</param>
@@ -18,6 +19,7 @@ public sealed class ExternalConnectionEstablishedEvent(
     Guid memberId,
     Guid externalConnectionId,
     ExternalProvider provider,
+    ExternalConnectionType type,
     string externalUserId,
     IClock clock,
     string occurredBy) : DomainEvent(clock, occurredBy)
@@ -36,6 +38,11 @@ public sealed class ExternalConnectionEstablishedEvent(
     /// Gets the external service provider that was connected.
     /// </summary>
     public ExternalProvider Provider { get; } = provider;
+
+    /// <summary>
+    /// Gets the type or purpose of the connection.
+    /// </summary>
+    public ExternalConnectionType Type { get; } = type;
 
     /// <summary>
     /// Gets the member's identifier on the external platform.

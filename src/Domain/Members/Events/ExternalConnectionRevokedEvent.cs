@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Domain.Shared;
 using NodaTime;
 
@@ -10,12 +10,14 @@ namespace Domain.Members.Events;
 /// <param name="memberId">The identifier of the member who revoked the connection.</param>
 /// <param name="externalConnectionId">The identifier of the revoked connection.</param>
 /// <param name="provider">The external service provider that was disconnected.</param>
+/// <param name="type">The type or purpose of the connection.</param>
 /// <param name="clock">The system clock used to timestamp when this event occurred.</param>
 /// <param name="occurredBy">The name or identifier of the component that raised this event.</param>
 public sealed class ExternalConnectionRevokedEvent(
     Guid memberId,
     Guid externalConnectionId,
     ExternalProvider provider,
+    ExternalConnectionType type,
     IClock clock,
     string occurredBy) : DomainEvent(clock, occurredBy)
 {
@@ -33,4 +35,9 @@ public sealed class ExternalConnectionRevokedEvent(
     /// Gets the external service provider that was disconnected.
     /// </summary>
     public ExternalProvider Provider { get; } = provider;
+
+    /// <summary>
+    /// Gets the type or purpose of the connection.
+    /// </summary>
+    public ExternalConnectionType Type { get; } = type;
 }
