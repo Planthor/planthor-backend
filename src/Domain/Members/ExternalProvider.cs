@@ -25,6 +25,16 @@ public class ExternalProvider
     public static readonly ExternalProvider GitHub = new("GITHUB", "GitHub", "ExternalProvider_GitHub_Desc");
 
     /// <summary>
+    /// Facebook social network platform.
+    /// </summary>
+    public static readonly ExternalProvider Facebook = new("FACEBOOK", "Facebook", "ExternalProvider_Facebook_Desc");
+
+    /// <summary>
+    /// Google platform.
+    /// </summary>
+    public static readonly ExternalProvider Google = new("GOOGLE", "Google", "ExternalProvider_Google_Desc");
+
+    /// <summary>
     /// Gets the unique identifier for this external provider.
     /// </summary>
     public string Id { get; }
@@ -64,5 +74,5 @@ public class ExternalProvider
     /// <summary>
     /// Returns a collection of all available <see cref="ExternalProvider"/> definitions.
     /// </summary>
-    public static IReadOnlyCollection<ExternalProvider> All => [Strava, GitHub];
+    public static IReadOnlyCollection<ExternalProvider> All => [Strava, GitHub, Facebook, Google];
 }

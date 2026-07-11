@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Application.Members.Commands.Provision;
 using Application.Shared;
 using Domain.Members;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NodaTime;
 
@@ -14,6 +15,7 @@ public class ProvisionMemberCommandHandlerTests
     private readonly Mock<IMemberRepository> _mockRepository;
     private readonly Mock<IClock> _mockClock;
     private readonly Mock<IBackgroundJobClient> _mockJobClient;
+    private readonly Mock<ILogger<ProvisionMemberCommandHandler>> _mockLogger;
     private readonly ProvisionMemberCommandHandler _handler;
 
     public ProvisionMemberCommandHandlerTests()
@@ -21,13 +23,15 @@ public class ProvisionMemberCommandHandlerTests
         _mockRepository = new Mock<IMemberRepository>();
         _mockClock = new Mock<IClock>();
         _mockJobClient = new Mock<IBackgroundJobClient>();
+        _mockLogger = new Mock<ILogger<ProvisionMemberCommandHandler>>();
 
         _mockClock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
 
         _handler = new ProvisionMemberCommandHandler(
             _mockRepository.Object,
             _mockClock.Object,
-            _mockJobClient.Object);
+            _mockJobClient.Object,
+            _mockLogger.Object);
     }
 
     [Fact]

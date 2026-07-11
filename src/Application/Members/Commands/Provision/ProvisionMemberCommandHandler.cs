@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
 using Domain.Members;
+using Microsoft.Extensions.Logging;
 using NodaTime;
 
 namespace Application.Members.Commands.Provision;
@@ -16,19 +17,23 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
     private readonly IMemberRepository _memberRepository;
     private readonly IClock _clock;
     private readonly IBackgroundJobClient _backgroundJobClient;
+    private readonly ILogger<ProvisionMemberCommandHandler> _logger;
 
     public ProvisionMemberCommandHandler(
         IMemberRepository memberRepository,
         IClock clock,
-        IBackgroundJobClient backgroundJobClient)
+        IBackgroundJobClient backgroundJobClient,
+        ILogger<ProvisionMemberCommandHandler> logger)
     {
         ArgumentNullException.ThrowIfNull(memberRepository);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(backgroundJobClient);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _memberRepository = memberRepository;
         _clock = clock;
         _backgroundJobClient = backgroundJobClient;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -37,21 +42,8 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
         ArgumentNullException.ThrowIfNull(request);
 
         var existing = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken);
-
-        // Member already exists — conditionally trigger avatar download if not yet stored
-        if (existing is not null)
-        {
-            // Only enqueue if avatar hasn't been fetched yet and a URL was provided
-            if (existing.PathAvatar is null && request.AvatarUrl is not null)
-            {
-                await _backgroundJobClient.EnqueueAvatarDownloadAsync(existing.Id, request.AvatarUrl, cancellationToken);
-            }
-
-            return existing.Id;
-        }
-
-        // New member — create via JIT provisioning
-        var member = Member.Create(
+        
+        var memberToSave = existing ?? Member.Create(
             request.IdentifyName,
             request.FirstName,
             "", // Middle name not provided by external sources
@@ -60,15 +52,50 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
             "UTC", //default timezone for JIT-provisioned accounts, can be updated by user
             _clock);
 
-        await _memberRepository.AddAsync(member, cancellationToken);
-        await _memberRepository.SaveChangesAsync(cancellationToken);
-
-        // Enqueue avatar download if a URL was provided
-        if (request.AvatarUrl is not null)
+        if (existing is null)
         {
-            await _backgroundJobClient.EnqueueAvatarDownloadAsync(member.Id, request.AvatarUrl, cancellationToken);
+            await _memberRepository.AddAsync(memberToSave, cancellationToken);
         }
 
-        return member.Id;
+        bool hasChanges = existing is null;
+
+        // Conditionally connect the social identity provider if details were passed
+        if (!string.IsNullOrEmpty(request.IdentityProvider) && !string.IsNullOrEmpty(request.ExternalUserId))
+        {
+            try 
+            {
+                var provider = ExternalProvider.FromId(request.IdentityProvider);
+                if (!memberToSave.HasActiveConnection(provider))
+                {
+                    memberToSave.ConnectExternalProvider(
+                        provider,
+                        request.ExternalUserId,
+                        [], // Scopes can be empty during JIT
+                        _clock);
+                    hasChanges = true;
+                }
+            }
+            catch (ArgumentException ex) 
+            {
+                _logger.LogWarning(
+                    ex, 
+                    "Unrecognized identity provider '{IdentityProvider}' received during JIT provisioning for user '{IdentifyName}'", 
+                    request.IdentityProvider, 
+                    request.IdentifyName);
+            }
+        }
+
+        if (hasChanges)
+        {
+            await _memberRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        // Enqueue avatar download if a URL was provided
+        if (request.AvatarUrl is not null && memberToSave.PathAvatar is null)
+        {
+            await _backgroundJobClient.EnqueueAvatarDownloadAsync(memberToSave.Id, request.AvatarUrl, cancellationToken);
+        }
+
+        return memberToSave.Id;
     }
 }

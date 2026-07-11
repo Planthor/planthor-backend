@@ -27,16 +27,16 @@ public class ExternalProviderTests
     [Theory]
     [InlineData("INVALID")]
     [InlineData("")]
-    [InlineData("GOOGLE")]
+    [InlineData("UNKNOWN")]
     public void FromId_InvalidId_ThrowsArgumentException(string id)
     {
         Assert.Throws<ArgumentException>(() => ExternalProvider.FromId(id));
     }
 
     [Fact]
-    public void All_ContainsTwoProviders()
+    public void All_ContainsFourProviders()
     {
-        Assert.Equal(2, ExternalProvider.All.Count);
+        Assert.Equal(4, ExternalProvider.All.Count);
     }
 
     [Fact]

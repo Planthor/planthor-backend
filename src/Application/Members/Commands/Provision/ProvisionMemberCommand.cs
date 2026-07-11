@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Application.Shared;
 
 namespace Application.Members.Commands.Provision;
@@ -14,4 +14,6 @@ public record ProvisionMemberCommand(
     string IdentifyName,
     string FirstName,
     string LastName,
-    Uri? AvatarUrl) : ICommand<Guid>;
+    Uri? AvatarUrl,
+    string? IdentityProvider = null,
+    string? ExternalUserId = null) : ICommand<Guid>;
