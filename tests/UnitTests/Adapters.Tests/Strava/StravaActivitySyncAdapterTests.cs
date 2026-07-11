@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,7 +43,7 @@ public class StravaActivitySyncAdapterTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.IsAssignableFrom<IReadOnlyList<object>>(result);
+        Assert.IsType<IReadOnlyList<object>>(result, exactMatch: false);
         Assert.Empty(result);
     }
 
@@ -59,6 +59,6 @@ public class StravaActivitySyncAdapterTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.IsAssignableFrom<IReadOnlyList<object>>(result);
+        Assert.IsType<IReadOnlyList<object>>(result, exactMatch: false);
     }
 }

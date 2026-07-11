@@ -1,5 +1,7 @@
 namespace Api.Requests;
 
+using System.Text.Json.Serialization;
+
 /// <summary>
 /// The HTTP request body for creating a new activity log.
 /// </summary>
@@ -8,7 +10,7 @@ namespace Api.Requests;
 /// <param name="ExternalProviderId">The ID of the external provider (e.g., STRAVA, GITHUB).</param>
 /// <param name="ExternalActivityId">The unique ID of the activity on the external platform.</param>
 public record CreateActivityLogRequest(
-    float Value,
+    [property: JsonRequired] float Value,
     string ActivityLocalDate,
     string? ExternalProviderId = null,
     string? ExternalActivityId = null

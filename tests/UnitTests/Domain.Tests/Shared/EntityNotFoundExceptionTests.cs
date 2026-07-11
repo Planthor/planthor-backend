@@ -57,6 +57,6 @@ public class EntityNotFoundExceptionTests
     {
         var ex = new EntityNotFoundException<Member, Guid>(Guid.NewGuid());
 
-        Assert.IsAssignableFrom<Exception>(ex);
+        Assert.IsType<Exception>(ex, exactMatch: false);
     }
 }

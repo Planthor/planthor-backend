@@ -60,6 +60,6 @@ public class DomainValidationExceptionTests
         var errors = new List<ValidationError> { new("f", "m", "C") }.AsReadOnly();
         var ex = new DomainValidationException(errors);
 
-        Assert.IsAssignableFrom<Exception>(ex);
+        Assert.IsType<Exception>(ex, exactMatch: false);
     }
 }

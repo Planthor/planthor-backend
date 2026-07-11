@@ -17,8 +17,8 @@ public class Plan : AggregateRoot<Guid>
     private readonly List<ActivityLog> _activityLogs = [];
 
     // Required by EF Core
-    private Plan() 
-    { 
+    private Plan()
+    {
         Name = default!;
         Unit = default!;
         StartDateLocal = default!;
@@ -150,6 +150,11 @@ public class Plan : AggregateRoot<Guid>
         IClock clock,
         Guid createUserId)
     {
+        if (clock == null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
         var plan = new Plan(
             name,
             unit,
@@ -260,6 +265,11 @@ public class Plan : AggregateRoot<Guid>
         IClock clock,
         Guid createUserId)
     {
+        if (clock == null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
         var activityLog = ActivityLog.Create(
             Id,
             value,
@@ -299,11 +309,16 @@ public class Plan : AggregateRoot<Guid>
     /// <param name="clock">The system clock.</param>
     public void MarkAsExpired(IClock clock)
     {
+        if (clock == null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
         if (Status != PlanStatus.Active)
         {
             return;
         }
-        
+
         if (clock.GetCurrentInstant() > To && CurrentValue < Target)
         {
             Status = PlanStatus.Expired;
@@ -322,12 +337,17 @@ public class Plan : AggregateRoot<Guid>
         Guid byUserId,
         IClock clock)
     {
+        if (clock == null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
         Unit = unit;
         Target = target;
         CurrentValue = current;
         From = from;
         To = to;
-        
+
         StampUpdatedAudit(byUserId, clock);
     }
 
@@ -339,6 +359,11 @@ public class Plan : AggregateRoot<Guid>
     /// <param name="clock">The system clock.</param>
     public void Cancel(Guid byUserId, IClock clock)
     {
+        if (clock == null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
         if (Status != PlanStatus.Active && Status != PlanStatus.Planned)
         {
             return;

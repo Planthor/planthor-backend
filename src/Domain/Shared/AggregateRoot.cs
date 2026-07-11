@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NodaTime;
 
@@ -29,8 +29,14 @@ public abstract class AggregateRoot<TId> : IAggregateRoot, IEntity<TId>, IHasAud
     /// <param name="domainEvent">
     /// The domain event to raise. Must not be null.
     /// </param>
-    protected void RaiseDomainEvent(IDomainEvent domainEvent) =>
+    protected void RaiseDomainEvent(IDomainEvent domainEvent)
+    {
+        if (domainEvent == null)
+        {
+            throw new ArgumentNullException(nameof(domainEvent));
+        }
         _domainEvents.Add(domainEvent);
+    }
 
     /// <inheritdoc/>
     public void ClearDomainEvents() => _domainEvents.Clear();
@@ -55,6 +61,11 @@ public abstract class AggregateRoot<TId> : IAggregateRoot, IEntity<TId>, IHasAud
     /// <param name="clock">The system clock providing the current UTC instant.</param>
     protected void StampCreatedAudit(Guid byUserId, IClock clock)
     {
+        if (clock == null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
         CreatedAt = clock.GetCurrentInstant();
         CreatedBy = byUserId;
         LastUpdatedAt = clock.GetCurrentInstant();
@@ -69,6 +80,8 @@ public abstract class AggregateRoot<TId> : IAggregateRoot, IEntity<TId>, IHasAud
     /// <param name="clock">The system clock providing the current UTC instant.</param>
     protected void StampUpdatedAudit(Guid byUserId, IClock clock)
     {
+        if (clock == null) throw new ArgumentNullException(nameof(clock));
+
         LastUpdatedAt = clock.GetCurrentInstant();
         LastUpdatedBy = byUserId;
     }
