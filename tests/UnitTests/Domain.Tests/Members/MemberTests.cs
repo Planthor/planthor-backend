@@ -161,7 +161,7 @@ public class MemberTests
     {
         var member = CreateMember();
 
-        member.ConnectExternalProvider(ExternalProvider.Strava, "strava123", ["read"], Clock);
+        member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava123", ["read"], Clock);
 
         Assert.Single(member.ExternalConnections);
         Assert.Equal(ConnectionStatus.Active, member.ExternalConnections[0].Status);
@@ -171,20 +171,20 @@ public class MemberTests
     public void ConnectExternalProvider_ActiveAlreadyExists_Throws()
     {
         var member = CreateMember();
-        member.ConnectExternalProvider(ExternalProvider.Strava, "strava123", ["read"], Clock);
+        member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava123", ["read"], Clock);
 
         Assert.Throws<InvalidOperationException>(() =>
-            member.ConnectExternalProvider(ExternalProvider.Strava, "strava999", ["read"], Clock));
+            member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava999", ["read"], Clock));
     }
 
     [Fact]
     public void ConnectExternalProvider_RevokedExists_Reactivates()
     {
         var member = CreateMember();
-        member.ConnectExternalProvider(ExternalProvider.Strava, "strava123", ["read"], Clock);
-        member.RevokeExternalProvider(ExternalProvider.Strava, Clock);
+        member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava123", ["read"], Clock);
+        member.RevokeExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, Clock);
 
-        member.ConnectExternalProvider(ExternalProvider.Strava, "strava456", ["read", "write"], Clock);
+        member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava456", ["read", "write"], Clock);
 
         Assert.Single(member.ExternalConnections);
         Assert.Equal(ConnectionStatus.Active, member.ExternalConnections[0].Status);
@@ -196,7 +196,7 @@ public class MemberTests
         var member = CreateMember();
         member.ClearDomainEvents();
 
-        member.ConnectExternalProvider(ExternalProvider.GitHub, "gh123", [], Clock);
+        member.ConnectExternalProvider(ExternalProvider.GitHub, ExternalConnectionType.ActivitiesSync, "gh123", [], Clock);
 
         Assert.Single(member.DomainEvents);
     }
@@ -207,9 +207,9 @@ public class MemberTests
     public void RevokeExternalProvider_ActiveConnection_RevokesIt()
     {
         var member = CreateMember();
-        member.ConnectExternalProvider(ExternalProvider.Strava, "strava123", ["read"], Clock);
+        member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava123", ["read"], Clock);
 
-        member.RevokeExternalProvider(ExternalProvider.Strava, Clock);
+        member.RevokeExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, Clock);
 
         Assert.Equal(ConnectionStatus.Revoked, member.ExternalConnections[0].Status);
     }
@@ -220,17 +220,17 @@ public class MemberTests
         var member = CreateMember();
 
         Assert.Throws<InvalidOperationException>(() =>
-            member.RevokeExternalProvider(ExternalProvider.Strava, Clock));
+            member.RevokeExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, Clock));
     }
 
     [Fact]
     public void RevokeExternalProvider_RaisesEvent()
     {
         var member = CreateMember();
-        member.ConnectExternalProvider(ExternalProvider.Strava, "strava123", ["read"], Clock);
+        member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava123", ["read"], Clock);
         member.ClearDomainEvents();
 
-        member.RevokeExternalProvider(ExternalProvider.Strava, Clock);
+        member.RevokeExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, Clock);
 
         Assert.Single(member.DomainEvents);
     }
@@ -241,9 +241,9 @@ public class MemberTests
     public void HasActiveConnection_WhenActive_ReturnsTrue()
     {
         var member = CreateMember();
-        member.ConnectExternalProvider(ExternalProvider.Strava, "strava123", [], Clock);
+        member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava123", [], Clock);
 
-        Assert.True(member.HasActiveConnection(ExternalProvider.Strava));
+        Assert.True(member.HasActiveConnection(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync));
     }
 
     [Fact]
@@ -251,17 +251,17 @@ public class MemberTests
     {
         var member = CreateMember();
 
-        Assert.False(member.HasActiveConnection(ExternalProvider.Strava));
+        Assert.False(member.HasActiveConnection(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync));
     }
 
     [Fact]
     public void HasActiveConnection_WhenRevoked_ReturnsFalse()
     {
         var member = CreateMember();
-        member.ConnectExternalProvider(ExternalProvider.Strava, "strava123", [], Clock);
-        member.RevokeExternalProvider(ExternalProvider.Strava, Clock);
+        member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava123", [], Clock);
+        member.RevokeExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, Clock);
 
-        Assert.False(member.HasActiveConnection(ExternalProvider.Strava));
+        Assert.False(member.HasActiveConnection(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync));
     }
 
     // --- SubscribeToPlan ---

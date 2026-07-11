@@ -43,13 +43,16 @@ public static class ServiceCollectionExtension
 
         AddAvatarStorage(services, configuration);
 
-        services.AddHttpClient();
+        services.AddHttpClient<IKeycloakAdminClient, KeycloakAdminClient>();
 
         // Register Quartz.NET
         services.AddQuartz(q =>
         {
-            var jobKey = new JobKey("DownloadAvatar");
-            q.AddJob<DownloadAvatarJob>(opts => opts.WithIdentity(jobKey).StoreDurably());
+            var downloadJobKey = new JobKey("DownloadAvatar");
+            q.AddJob<DownloadAvatarJob>(opts => opts.WithIdentity(downloadJobKey).StoreDurably());
+            
+            var syncIdentityJobKey = new JobKey("SyncIdentity");
+            q.AddJob<Infrastructure.BackgroundJobClient.Jobs.SyncIdentityJob>(opts => opts.WithIdentity(syncIdentityJobKey).StoreDurably());
         });
 
         services.AddQuartzHostedService(options =>

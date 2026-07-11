@@ -68,16 +68,11 @@ public class MemberSessionFilter : IAsyncActionFilter
             Uri.TryCreate(avatarUrlString, UriKind.Absolute, out avatarUrl);
         }
 
-        var providerName = user.FindFirst("identity_provider")?.Value;
-        var externalUserId = user.FindFirst("identity_provider_identity")?.Value;
-
         await _sender.Send(new ProvisionMemberCommand(
             IdentifyName: identifyName,
             FirstName: user.FindFirst(ClaimTypes.GivenName)?.Value ?? "New",
             LastName: user.FindFirst(ClaimTypes.Surname)?.Value ?? "User",
-            AvatarUrl: avatarUrl,
-            IdentityProvider: providerName?.ToUpperInvariant(),
-            ExternalUserId: externalUserId
+            AvatarUrl: avatarUrl
         ));
 
         await next();

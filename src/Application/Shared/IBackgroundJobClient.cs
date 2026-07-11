@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,4 +16,12 @@ public interface IBackgroundJobClient
     /// <param name="avatarUrl">The URL of the avatar image to be downloaded.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     Task EnqueueAvatarDownloadAsync(Guid memberId, Uri avatarUrl, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Schedules a background job to sync a member's federated identities from Keycloak.
+    /// </summary>
+    /// <param name="memberId">The unique identifier of the member.</param>
+    /// <param name="identifyName">The user's unique identifier in Keycloak.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    Task EnqueueIdentitySyncAsync(Guid memberId, string identifyName, CancellationToken cancellationToken);
 }

@@ -59,31 +59,8 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
 
         bool hasChanges = existing is null;
 
-        // Conditionally connect the social identity provider if details were passed
-        if (!string.IsNullOrEmpty(request.IdentityProvider) && !string.IsNullOrEmpty(request.ExternalUserId))
-        {
-            try 
-            {
-                var provider = ExternalProvider.FromId(request.IdentityProvider);
-                if (!memberToSave.HasActiveConnection(provider))
-                {
-                    memberToSave.ConnectExternalProvider(
-                        provider,
-                        request.ExternalUserId,
-                        [], // Scopes can be empty during JIT
-                        _clock);
-                    hasChanges = true;
-                }
-            }
-            catch (ArgumentException ex) 
-            {
-                _logger.LogWarning(
-                    ex, 
-                    "Unrecognized identity provider '{IdentityProvider}' received during JIT provisioning for user '{IdentifyName}'", 
-                    request.IdentityProvider, 
-                    request.IdentifyName);
-            }
-        }
+        // Always sync identities in the background (idempotent operation).
+        await _backgroundJobClient.EnqueueIdentitySyncAsync(memberToSave.Id, request.IdentifyName, cancellationToken);
 
         if (hasChanges)
         {

@@ -25,4 +25,18 @@ public class QuartzBackgroundJobClient(ISchedulerFactory schedulerFactory) : IBa
             { "Url", avatarUrl.ToString() }
         }, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task EnqueueIdentitySyncAsync(Guid memberId, string identifyName, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(identifyName);
+
+        var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+
+        await scheduler.TriggerJob(new JobKey("SyncIdentity"), new JobDataMap
+        {
+            { "MemberId", memberId.ToString() },
+            { "IdentifyName", identifyName }
+        }, cancellationToken);
+    }
 }
