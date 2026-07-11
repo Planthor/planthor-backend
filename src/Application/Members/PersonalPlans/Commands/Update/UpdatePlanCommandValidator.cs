@@ -3,7 +3,10 @@ using FluentValidation;
 namespace Application.Members.PersonalPlans.Commands.Update;
 
 // TODO - Trung: Revisit when verify details.
-public class UpdatePlanCommandValidator : AbstractValidator<UpdatePlanCommand>
+/// <summary>
+/// Validator for the <see cref="UpdatePersonalPlanCommand"/> to ensure all properties like target, current progress, and date ranges are valid.
+/// </summary>
+public class UpdatePlanCommandValidator : AbstractValidator<UpdatePersonalPlanCommand>
 {
     private const int MinTarget = 0;
     private const int MinCurrent = 0;

@@ -7,8 +7,12 @@ using MongoDB.EntityFrameworkCore.Extensions;
 
 namespace Infrastructure.Configurations;
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="Plan"/> entity, detailing its indexes, owned entities, and database mappings.
+/// </summary>
 public class PlanConfiguration : IEntityTypeConfiguration<Plan>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Plan> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);

@@ -1,10 +1,14 @@
-﻿using System;
+using System;
 using Domain.Members;
 using Domain.Shared;
 using NodaTime;
 
 namespace Domain.Plans;
 
+/// <summary>
+/// Represents a single recorded activity log for a specific plan, capturing progress
+/// against the plan's target.
+/// </summary>
 public sealed class ActivityLog : IEntity<Guid>, IHasAudit
 {
     private ActivityLog() { }

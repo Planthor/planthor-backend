@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Domain.Members;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -6,8 +6,12 @@ using MongoDB.EntityFrameworkCore.Extensions;
 
 namespace Infrastructure.Configurations;
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="Member"/> entity, mapping its properties and relationships to the database schema.
+/// </summary>
 public class MemberConfiguration : IEntityTypeConfiguration<Member>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Member> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);

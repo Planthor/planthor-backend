@@ -7,6 +7,7 @@ using Api.Filters;
 using Application.Dtos;
 using Application.Members.PersonalPlans.Commands.Create;
 using Application.Members.PersonalPlans.Commands.Update;
+using Application.Members.PersonalPlans.Commands.Cancel;
 using Application.Members.PersonalPlans.Queries.Details;
 using Application.Members.PersonalPlans.Queries.List;
 using FluentValidation;
@@ -22,7 +23,7 @@ namespace Api.Controllers.v1;
 /// </summary>
 /// <param name="sender">The mediator used to send commands and queries.</param>
 /// <param name="createPersonalPlanCommandValidator">The validator for <see cref="CreatePersonalPlanCommand"/>.</param>
-/// <param name="updatePlanCommandValidator">The validator for <see cref="UpdatePlanCommand"/>.</param>
+/// <param name="updatePlanCommandValidator">The validator for <see cref="UpdatePersonalPlanCommand"/>.</param>
 /// <param name="personalPlansQueryValidator">The validator for <see cref="ListPersonalPlansQuery"/>.</param>
 /// <param name="personalPlanDetailsQueryValidator">The validator for <see cref="PersonalPlanDetailsQuery"/>.</param>
 [Authorize]
@@ -32,7 +33,7 @@ namespace Api.Controllers.v1;
 public class PersonalPlansController(
     ISender sender,
     IValidator<CreatePersonalPlanCommand> createPersonalPlanCommandValidator,
-    IValidator<UpdatePlanCommand> updatePlanCommandValidator,
+    IValidator<UpdatePersonalPlanCommand> updatePlanCommandValidator,
     IValidator<ListPersonalPlansQuery> personalPlansQueryValidator,
     IValidator<PersonalPlanDetailsQuery> personalPlanDetailsQueryValidator)
     : ControllerBase
@@ -103,13 +104,13 @@ public class PersonalPlansController(
     /// <response code="400">If the request body is null or command validation fails.</response>
     /// <response code="403">If attempting to update another user's plan.</response>
     [HttpPut("{planId}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Update(
+    public async Task<ActionResult<PersonalPlanDto>> Update(
         [FromRoute] string identifier,
         [FromRoute] Guid planId,
-        [FromBody] UpdatePlanCommand command,
+        [FromBody] UpdatePersonalPlanCommand command,
         CancellationToken token)
     {
         if (command is null)
@@ -125,8 +126,8 @@ public class PersonalPlansController(
 
         var updatePlanCommand = command with { IdentifyName = targetIdentifyName!, PlanId = planId };
         await updatePlanCommandValidator.ValidateAndThrowAsync(updatePlanCommand, token);
-        await _sender.Send(updatePlanCommand, token);
-        return NoContent();
+        var updatedPlan = await _sender.Send(updatePlanCommand, token);
+        return Ok(updatedPlan);
     }
 
     /// <summary>
@@ -210,5 +211,42 @@ public class PersonalPlansController(
         return identifier.Equals("me", StringComparison.OrdinalIgnoreCase)
             ? CurrentUserIdentifyName
             : identifier;
+    }
+
+    /// <summary>
+    /// Cancels a personal plan.
+    /// </summary>
+    /// <param name="identifier">The identifier of the member ("me" or their identity name).</param>
+    /// <param name="planId">The ID of the plan to cancel.</param>
+    /// <param name="token">A cancellation token.</param>
+    /// <returns>An IActionResult with NoContent status code on success.</returns>
+    /// <response code="204">If the plan is cancelled successfully.</response>
+    /// <response code="403">If attempting to cancel another user's plan.</response>
+    /// <response code="404">If the plan is not found.</response>
+    [HttpPost("{planId}:cancel")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PersonalPlanDto>> Cancel(
+        [FromRoute] string identifier,
+        [FromRoute] Guid planId,
+        CancellationToken token)
+    {
+        var targetIdentifyName = ResolveIdentifier(identifier);
+        
+        if (string.IsNullOrEmpty(targetIdentifyName))
+        {
+            return Unauthorized();
+        }
+        
+        if (targetIdentifyName != CurrentUserIdentifyName)
+        {
+            return Forbid();
+        }
+
+        var cancelCommand = new CancelPlanCommand(targetIdentifyName, planId);
+        var cancelledPlan = await _sender.Send(cancelCommand, token);
+        
+        return Ok(cancelledPlan);
     }
 }

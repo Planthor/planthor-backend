@@ -1,10 +1,14 @@
-﻿using System;
+using System;
 using System.Text.Json.Serialization;
+using Application.Dtos;
 using Application.Shared;
 
 namespace Application.Members.PersonalPlans.Commands.Update;
 
-public record UpdatePlanCommand(
+/// <summary>
+/// Command to update the details of a member's personal plan, such as its target, dates, and period type.
+/// </summary>
+public record UpdatePersonalPlanCommand(
     [property: JsonIgnore] string IdentifyName,
     [property: JsonIgnore] Guid PlanId,
     string Unit,
@@ -13,4 +17,4 @@ public record UpdatePlanCommand(
     DateTimeOffset FromDate,
     DateTimeOffset ToDate,
     string PeriodType)
-    : ICommand;
+    : ICommand<PersonalPlanDto>;

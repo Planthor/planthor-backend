@@ -36,7 +36,6 @@ public class PlanTests
         Assert.Equal(100f, plan.Target);
         Assert.Equal(PlanStatus.Planned, plan.Status);
         Assert.Equal(0f, plan.CurrentValue);
-        Assert.False(plan.Completed);
         Assert.Equal(0, plan.LikeCount);
         Assert.Null(plan.SportPlanDetails);
         Assert.Empty(plan.ActivityLogs);
@@ -167,5 +166,33 @@ public class PlanTests
         Assert.Equal(userId, plan.CreatedBy);
         Assert.Equal(userId, plan.LastUpdatedBy);
         Assert.Equal(Clock.GetCurrentInstant(), plan.CreatedAt);
+    }
+
+    [Fact]
+    public void RecalculateCurrentValue_WhenActiveAndTargetReached_SetsStatusToCompleted()
+    {
+        var plan = CreateValid(target: 10f);
+        
+        // Use reflection to bypass internal logic and set Status to Active
+        // since AddActivityLog requires Status == Active to complete it
+        typeof(Plan).GetProperty("Status")!.SetValue(plan, PlanStatus.Active);
+        
+        plan.AddActivityLog(10f, "2026-01-02", null, Clock, Guid.NewGuid());
+        
+        Assert.Equal(PlanStatus.Completed, plan.Status);
+    }
+
+    [Fact]
+    public void MarkAsExpired_WhenActiveAndTargetNotReachedAndPastEnd_SetsStatusToExpired()
+    {
+        var plan = CreateValid(target: 10f);
+        
+        typeof(Plan).GetProperty("Status")!.SetValue(plan, PlanStatus.Active);
+        
+        var futureClock = new TestClock(To.Plus(Duration.FromDays(1)));
+        
+        plan.MarkAsExpired(futureClock);
+        
+        Assert.Equal(PlanStatus.Expired, plan.Status);
     }
 }

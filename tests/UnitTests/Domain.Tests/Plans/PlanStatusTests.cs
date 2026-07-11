@@ -25,21 +25,29 @@ public class PlanStatusTests
     [Theory]
     [InlineData("E")]
     [InlineData("e")]
-    public void FromId_Exceeded_ReturnsExceeded(string id)
+    public void FromId_Expired_ReturnsExpired(string id)
     {
-        Assert.Equal(PlanStatus.Exceeded, PlanStatus.FromId(id));
+        Assert.Equal(PlanStatus.Expired, PlanStatus.FromId(id));
     }
 
     [Theory]
     [InlineData("C")]
     [InlineData("c")]
-    public void FromId_Closed_ReturnsClosed(string id)
+    public void FromId_Completed_ReturnsCompleted(string id)
     {
-        Assert.Equal(PlanStatus.Closed, PlanStatus.FromId(id));
+        Assert.Equal(PlanStatus.Completed, PlanStatus.FromId(id));
     }
 
     [Theory]
     [InlineData("X")]
+    [InlineData("x")]
+    public void FromId_Cancelled_ReturnsCancelled(string id)
+    {
+        Assert.Equal(PlanStatus.Cancelled, PlanStatus.FromId(id));
+    }
+
+    [Theory]
+    [InlineData("Y")]
     [InlineData("")]
     [InlineData("INVALID")]
     public void FromId_InvalidId_ThrowsArgumentException(string id)
@@ -48,9 +56,9 @@ public class PlanStatusTests
     }
 
     [Fact]
-    public void All_ContainsFourStatuses()
+    public void All_ContainsFiveStatuses()
     {
-        Assert.Equal(4, PlanStatus.All.Count);
+        Assert.Equal(5, PlanStatus.All.Count);
     }
 
     [Fact]
@@ -58,8 +66,9 @@ public class PlanStatusTests
     {
         Assert.Contains(PlanStatus.Planned, PlanStatus.All);
         Assert.Contains(PlanStatus.Active, PlanStatus.All);
-        Assert.Contains(PlanStatus.Exceeded, PlanStatus.All);
-        Assert.Contains(PlanStatus.Closed, PlanStatus.All);
+        Assert.Contains(PlanStatus.Completed, PlanStatus.All);
+        Assert.Contains(PlanStatus.Expired, PlanStatus.All);
+        Assert.Contains(PlanStatus.Cancelled, PlanStatus.All);
     }
 
     [Fact]
@@ -76,14 +85,20 @@ public class PlanStatusTests
     }
 
     [Fact]
-    public void Exceeded_HasCorrectProperties()
+    public void Completed_HasCorrectProperties()
     {
-        Assert.Equal("E", PlanStatus.Exceeded.Id);
+        Assert.Equal("C", PlanStatus.Completed.Id);
     }
 
     [Fact]
-    public void Closed_HasCorrectProperties()
+    public void Expired_HasCorrectProperties()
     {
-        Assert.Equal("C", PlanStatus.Closed.Id);
+        Assert.Equal("E", PlanStatus.Expired.Id);
+    }
+
+    [Fact]
+    public void Cancelled_HasCorrectProperties()
+    {
+        Assert.Equal("X", PlanStatus.Cancelled.Id);
     }
 }

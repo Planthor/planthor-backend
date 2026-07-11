@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
@@ -7,6 +7,10 @@ using NodaTime;
 
 namespace Application.Members.Commands.Provision;
 
+/// <summary>
+/// Handles the provisioning of a new member or triggers avatar downloads for existing members.
+/// Implements Just-In-Time (JIT) provisioning logic for users logging in via external providers.
+/// </summary>
 public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberCommand, Guid>
 {
     private readonly IMemberRepository _memberRepository;
@@ -27,6 +31,7 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
         _backgroundJobClient = backgroundJobClient;
     }
 
+    /// <inheritdoc />
     public async Task<Guid> Handle(ProvisionMemberCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

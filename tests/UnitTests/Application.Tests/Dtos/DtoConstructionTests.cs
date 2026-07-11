@@ -18,7 +18,7 @@ public class DtoConstructionTests
             id, memberId, "Run 100km", "km", 100f, 50f,
             now, now.AddDays(30),
             "2026-01-01", "2026-12-31",
-            "UTC", false, true, "PlanStatus_Planned_Desc", 5, sportTypes.AsReadOnly());
+            "UTC", true, "PlanStatus_Planned_Desc", 5, sportTypes.AsReadOnly());
 
         Assert.Equal(id, dto.Id);
         Assert.Equal(memberId, dto.MemberId);

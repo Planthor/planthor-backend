@@ -17,7 +17,15 @@ public class Plan : AggregateRoot<Guid>
     private readonly List<ActivityLog> _activityLogs = [];
 
     // Required by EF Core
-    private Plan() { }
+    private Plan() 
+    { 
+        Name = default!;
+        Unit = default!;
+        StartDateLocal = default!;
+        EndDateLocal = default!;
+        Timezone = default!;
+        Status = default!;
+    }
 
     private Plan(
         string name,
@@ -30,7 +38,6 @@ public class Plan : AggregateRoot<Guid>
         string endDateLocal,
         string timezone,
         bool enableActivityLog,
-        bool completed,
         PlanStatus status,
         int likeCount)
     {
@@ -44,7 +51,6 @@ public class Plan : AggregateRoot<Guid>
         EndDateLocal = endDateLocal;
         Timezone = timezone;
         EnableActivityLog = enableActivityLog;
-        Completed = completed;
         Status = status;
         LikeCount = likeCount;
     }
@@ -98,12 +104,6 @@ public class Plan : AggregateRoot<Guid>
     /// </summary>
     public string Timezone { get; private set; }
 
-    /// <summary>
-    /// Gets whether this plan has been completed.
-    /// A plan is auto-completed when <see cref="CurrentValue"/> meets
-    /// or exceeds <see cref="Target"/>.
-    /// </summary>
-    public bool Completed { get; private set; }
 
     /// <summary>
     /// Gets whether activity logging is enabled for this plan.
@@ -161,7 +161,6 @@ public class Plan : AggregateRoot<Guid>
             endDateLocal,
             timezone,
             enableActivityLog,
-            completed: false,
             PlanStatus.Planned,
             likeCount: 0
         )
@@ -281,16 +280,72 @@ public class Plan : AggregateRoot<Guid>
 
     /// <summary>
     /// Recalculates the current value based on all associated activity logs.
-    /// Auto-completes the plan if the target is reached.
+    /// Auto-completes the plan if the target is reached and the plan is active.
     /// </summary>
     private void RecalculateCurrentValue()
     {
         CurrentValue = _activityLogs.Sum(log => log.Value);
 
-        if (!Completed && CurrentValue >= Target)
+        if (Status == PlanStatus.Active && CurrentValue >= Target)
         {
-            Completed = true;
+            Status = PlanStatus.Completed;
         }
+    }
+
+    /// <summary>
+    /// Marks the plan as expired if the current time has passed the plan's end date
+    /// and the target has not been met.
+    /// </summary>
+    /// <param name="clock">The system clock.</param>
+    public void MarkAsExpired(IClock clock)
+    {
+        if (Status != PlanStatus.Active)
+        {
+            return;
+        }
+        
+        if (clock.GetCurrentInstant() > To && CurrentValue < Target)
+        {
+            Status = PlanStatus.Expired;
+        }
+    }
+
+    /// <summary>
+    /// Updates the plan details.
+    /// </summary>
+    public void Update(
+        string unit,
+        float target,
+        float current,
+        Instant from,
+        Instant to,
+        Guid byUserId,
+        IClock clock)
+    {
+        Unit = unit;
+        Target = target;
+        CurrentValue = current;
+        From = from;
+        To = to;
+        
+        StampUpdatedAudit(byUserId, clock);
+    }
+
+    /// <summary>
+    /// Cancels the plan, setting its status to Cancelled.
+    /// Only Active or Planned plans can be cancelled.
+    /// </summary>
+    /// <param name="byUserId">The ID of the user performing the cancellation.</param>
+    /// <param name="clock">The system clock.</param>
+    public void Cancel(Guid byUserId, IClock clock)
+    {
+        if (Status != PlanStatus.Active && Status != PlanStatus.Planned)
+        {
+            return;
+        }
+
+        Status = PlanStatus.Cancelled;
+        StampUpdatedAudit(byUserId, clock);
     }
 
     /// <inheritdoc/>

@@ -17,17 +17,22 @@ public class PlanStatus
     /// <summary>
     /// An active plan.
     /// </summary>
-    public static readonly PlanStatus Active = new("A", "Active", "PlanStatus_Active_Desc");
+    public static readonly PlanStatus Active = new("A", "ACTIVE", "PlanStatus_Active_Desc");
 
     /// <summary>
-    /// A plan that has already exceeded its deadline.
+    /// A plan where the activity logs reached the target before the end date.
     /// </summary>
-    public static readonly PlanStatus Exceeded = new("E", "EXCEEDED", "PlanStatus_Exceeded_Desc");
+    public static readonly PlanStatus Completed = new("C", "COMPLETED", "PlanStatus_Completed_Desc");
 
     /// <summary>
-    /// A plan that has been closed.
+    /// A plan that exceeded its end date before the target was reached.
     /// </summary>
-    public static readonly PlanStatus Closed = new("C", "CLOSED", "PlanStatus_Closed_Desc");
+    public static readonly PlanStatus Expired = new("E", "EXPIRED", "PlanStatus_Expired_Desc");
+
+    /// <summary>
+    /// A plan that was manually cancelled or aborted.
+    /// </summary>
+    public static readonly PlanStatus Cancelled = new("X", "CANCELLED", "PlanStatus_Cancelled_Desc");
 
     /// <summary>
     /// Gets the unique short-hand identifier for the Plan Status (e.g., "P", "A", "E", "C").
@@ -69,5 +74,5 @@ public class PlanStatus
     /// <summary>
     /// Returns a collection of all available <see cref="PlanStatus"/> definitions.
     /// </summary>
-    public static IReadOnlyCollection<PlanStatus> All => [Planned, Active, Exceeded, Closed];
+    public static IReadOnlyCollection<PlanStatus> All => [Planned, Active, Completed, Expired, Cancelled];
 }

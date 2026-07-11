@@ -12,11 +12,13 @@ You are a QA automation expert writing tests for `planthor-backend`.
 - **Structure:** Strictly adhere to the AAA pattern (Arrange, Act, Assert). Leave an empty line between each phase in the code.
 - **Naming:** Name test methods clearly using the pattern: `MethodName_StateUnderTest_ExpectedBehavior` (e.g., `CalculateTotal_WithEmptyCart_ReturnsZero()`).
 
-## Testing Strategy & Priorities
-- **High-Level Priority:** ALWAYS prioritize high-level automation tests (E2E Tests, API Tests, and Integration Tests) over low-level Unit Tests. We want to test behavior, not implementation details.
-- **Integration Tests Default:** When asked to write a test, default to writing an Integration Test in the `tests/IntegrationTests` folder that exercises the full vertical slice (API -> MediatR -> Database) unless explicitly instructed otherwise.
-- **Testcontainers:** Use `Testcontainers` to spin up real database instances during integration tests. Avoid using InMemory Database providers.
-- **API Setup:** Use `WebApplicationFactory<Program>` to spin up the API in memory for E2E/API tests.
+## Testing Strategy & Priorities (Testing Honeycomb)
+- **The Testing Honeycomb:** Shift away from the traditional testing pyramid. Favor a "Honeycomb" approach where the vast majority of tests are **API Tests and Integration Tests**.
+- **High-Level Priority:** ALWAYS prioritize high-level automation tests over low-level Unit Tests for the Application, Infrastructure, and Api layers. We want to test behavior, HTTP routing, and database integrations, not just mock isolated implementation details.
+- **Integration Tests Default:** When asked to write a test, default to writing an API/Integration Test in the `tests/IntegrationTests/Api.Tests` folder. These tests should exercise the full vertical slice (API -> MediatR -> Database) using `CustomWebApplicationFactory`.
+- **Unit Tests for Domain Only:** Keep Unit Tests restricted mostly to the `Domain` layer, where business logic is pure and has no external dependencies. Avoid writing unit tests for MediatR handlers or Controllers.
+- **Testcontainers:** Use `Testcontainers` to spin up real database instances (Postgres, Keycloak, etc.) during integration tests. Avoid using InMemory Database providers.
+- **API Setup:** Use `WebApplicationFactory<Program>` (e.g., `CustomWebApplicationFactory`) to spin up the API in memory for E2E/API tests.
 
 ## Coverage Requirements
 - **Coverage Thresholds:** Code must maintain a minimum of **80% line coverage** and **80% conditional logic (branch) coverage**.

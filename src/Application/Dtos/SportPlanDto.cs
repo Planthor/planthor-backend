@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Application.Dtos;
@@ -17,7 +17,6 @@ namespace Application.Dtos;
 /// <param name="StartDateLocal">The local start date as an ISO string.</param>
 /// <param name="EndDateLocal">The local end date as an ISO string.</param>
 /// <param name="Timezone">The IANA timezone identifier snapshotted at creation time.</param>
-/// <param name="Completed">Indicates whether this plan has been completed.</param>
 /// <param name="EnableActivityLog">Indicates whether activity logging is enabled for this plan.</param>
 /// <param name="StatusI18nKey">The i18n localization key for the current lifecycle status of this plan.</param>
 /// <param name="LikeCount">The total number of likes on this plan.</param>
@@ -34,7 +33,6 @@ public record SportPlanDto(
     string StartDateLocal,
     string EndDateLocal,
     string Timezone,
-    bool Completed,
     bool EnableActivityLog,
     string StatusI18nKey,
     int LikeCount,

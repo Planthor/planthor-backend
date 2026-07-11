@@ -1,8 +1,11 @@
-﻿using System;
+using System;
 using NodaTime;
 
 namespace Domain.Shared;
 
+/// <summary>
+/// Defines a contract for entities that require auditing metadata, such as creation and modification timestamps.
+/// </summary>
 public interface IHasAudit
 {
     /// <summary>

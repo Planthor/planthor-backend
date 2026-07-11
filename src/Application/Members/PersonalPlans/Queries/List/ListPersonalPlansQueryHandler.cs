@@ -93,7 +93,6 @@ public class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
                 plan.Target,
                 plan.CurrentValue,
                 plan.Target > 0 ? Math.Round((plan.CurrentValue / plan.Target) * 100.0, 2) : 0.0,
-                plan.Completed,
                 plan.Status.Name,
                 plan.From.ToDateTimeOffset(),
                 plan.To.ToDateTimeOffset()

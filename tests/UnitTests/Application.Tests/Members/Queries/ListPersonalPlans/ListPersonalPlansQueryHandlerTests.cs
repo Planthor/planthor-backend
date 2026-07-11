@@ -100,7 +100,6 @@ public class ListPersonalPlansQueryHandlerTests
         Assert.Equal(100f, dto.Target);
         Assert.Equal(0f, dto.CurrentValue);
         Assert.Equal(0.0, dto.ProgressPercentage);
-        Assert.False(dto.Completed);
     }
 
     [Fact]

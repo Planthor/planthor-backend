@@ -45,7 +45,6 @@ public class PersonalPlanDetailsQueryHandler(IReadOnlyContext readOnlyContext)
             plan.Target,
             plan.CurrentValue,
             progressPercentage,
-            plan.Completed,
             plan.Status.I18NKey,
             DateTimeOffset.FromUnixTimeSeconds(plan.From.ToUnixTimeSeconds()),
             DateTimeOffset.FromUnixTimeSeconds(plan.To.ToUnixTimeSeconds())
