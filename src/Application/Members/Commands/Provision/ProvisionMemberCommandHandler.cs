@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
 using Domain.Members;
-using Microsoft.Extensions.Logging;
 using NodaTime;
 
 namespace Application.Members.Commands.Provision;
@@ -17,23 +16,19 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
     private readonly IMemberRepository _memberRepository;
     private readonly IClock _clock;
     private readonly IBackgroundJobClient _backgroundJobClient;
-    private readonly ILogger<ProvisionMemberCommandHandler> _logger;
 
     public ProvisionMemberCommandHandler(
         IMemberRepository memberRepository,
         IClock clock,
-        IBackgroundJobClient backgroundJobClient,
-        ILogger<ProvisionMemberCommandHandler> logger)
+        IBackgroundJobClient backgroundJobClient)
     {
         ArgumentNullException.ThrowIfNull(memberRepository);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(backgroundJobClient);
-        ArgumentNullException.ThrowIfNull(logger);
 
         _memberRepository = memberRepository;
         _clock = clock;
         _backgroundJobClient = backgroundJobClient;
-        _logger = logger;
     }
 
     /// <inheritdoc />

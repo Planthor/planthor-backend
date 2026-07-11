@@ -63,6 +63,11 @@ public class MembersController(
 
         ArgumentNullException.ThrowIfNull(command);
 
+        return await CreateInternalAsync(command, identifyName, token);
+    }
+
+    private async Task<ActionResult<MemberDto>> CreateInternalAsync(CreateMemberCommand command, string identifyName, CancellationToken token)
+    {
         command = command with { IdentifyName = identifyName };
         await createMemberCommandValidator.ValidateAndThrowAsync(command, token);
         var newMemberGuid = await _sender.Send(command, token);

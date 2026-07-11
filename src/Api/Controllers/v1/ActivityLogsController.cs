@@ -71,6 +71,15 @@ public class ActivityLogsController(
 
         ArgumentNullException.ThrowIfNull(request);
 
+        return await CreateAsync(planId, request, identifyName, token);
+    }
+
+    private async Task<ActionResult<ActivityLogDto>> CreateAsync(
+        Guid planId,
+        CreateActivityLogRequest request,
+        string identifyName,
+        CancellationToken token)
+    {
         ExternalActivitySource? externalSource = null;
         if (!string.IsNullOrEmpty(request.ExternalProviderId) && !string.IsNullOrEmpty(request.ExternalActivityId))
         {

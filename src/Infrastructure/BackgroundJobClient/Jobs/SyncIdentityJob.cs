@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Infrastructure.Services;
 using Domain.Members;
@@ -49,24 +48,9 @@ public class SyncIdentityJob(
             bool hasChanges = false;
             foreach (var identity in identities)
             {
-                try 
+                if (ProcessIdentity(member, identity, identifyName))
                 {
-                    var provider = ExternalProvider.FromId(identity.IdentityProvider.ToUpperInvariant());
-                    if (!member.HasActiveConnection(provider, ExternalConnectionType.Identity))
-                    {
-                        member.ConnectExternalProvider(
-                            provider,
-                            ExternalConnectionType.Identity,
-                            identity.UserId,
-                            [], // No scopes for identity sync
-                            _clock);
-                        
-                        hasChanges = true;
-                    }
-                }
-                catch (ArgumentException ex)
-                {
-                    _logger.LogWarning(ex, "SyncIdentityJob: Unrecognized identity provider '{IdentityProvider}' for user '{IdentifyName}'", identity.IdentityProvider, identifyName);
+                    hasChanges = true;
                 }
             }
 
@@ -81,5 +65,30 @@ public class SyncIdentityJob(
             _logger.LogError(ex, "SyncIdentityJob: Failed to sync federated identities for Member {MemberId}.", memberId);
             throw; // Rethrow to let Quartz handle retries if configured
         }
+    }
+
+    private bool ProcessIdentity(Member member, FederatedIdentityDto identity, string identifyName)
+    {
+        try 
+        {
+            var provider = ExternalProvider.FromId(identity.IdentityProvider.ToUpperInvariant());
+            if (!member.HasActiveConnection(provider, ExternalConnectionType.Identity))
+            {
+                member.ConnectExternalProvider(
+                    provider,
+                    ExternalConnectionType.Identity,
+                    identity.UserId,
+                    [], // No scopes for identity sync
+                    _clock);
+                
+                return true;
+            }
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "SyncIdentityJob: Unrecognized identity provider '{IdentityProvider}' for user '{IdentifyName}'", identity.IdentityProvider, identifyName);
+        }
+
+        return false;
     }
 }

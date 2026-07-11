@@ -21,7 +21,11 @@ public class KeycloakAdminClient(HttpClient httpClient, IConfiguration configura
     private readonly ILogger<KeycloakAdminClient> _logger = logger;
 
     /// <inheritdoc />
-    public async Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string identifyName, CancellationToken cancellationToken = default)
+    public Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string identifyName)
+        => GetUserFederatedIdentitiesAsync(identifyName, CancellationToken.None);
+
+    /// <inheritdoc />
+    public async Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string identifyName, CancellationToken cancellationToken)
     {
         var authority = _configuration["Authentication:Keycloak:Authority"];
         var clientId = _configuration["Authentication:Keycloak:ClientId"] ?? "planthor-backend";
@@ -41,7 +45,7 @@ public class KeycloakAdminClient(HttpClient httpClient, IConfiguration configura
             {
                 { "grant_type", "client_credentials" },
                 { "client_id", clientId },
-                { "client_secret", clientSecret }
+                { "client_secret", clientSecret ?? string.Empty }
             })
         };
 
