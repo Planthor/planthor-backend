@@ -1,6 +1,8 @@
-﻿# Unit Tests
+# Unit Tests
 
 Unit tests validate the behavior of individual units of code within the application. They ensure that each component functions correctly in isolation.
+
+> **Note:** According to our "Testing Honeycomb" strategy, Unit Tests should be strictly reserved for testing pure business logic within the `Domain` layer. For testing `Application` (MediatR), `Infrastructure`, or `Adapters`, you should default to writing vertical slice API Tests in the `tests/ApiTests` project instead.
 
 ## Collect code coverage result with coverlet cli
 

@@ -11,8 +11,8 @@
     <Project Path="src/Adapters/Strava/Adapters.Strava.csproj" />
   </Folder>
   <Folder Name="/tests/" />
-  <Folder Name="/tests/IntegrationTests/">
-    <Project Path="tests/IntegrationTests/Api.Tests/Api.Tests.csproj" />
+  <Folder Name="/tests/ApiTests/">
+    <Project Path="tests/ApiTests/Api.Tests/Api.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/UnitTests/">
     <Project Path="tests/UnitTests/Adapters.Tests/Adapters.Tests.csproj" />

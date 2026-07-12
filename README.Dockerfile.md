@@ -1,6 +1,7 @@
 # Dependencies
 
-When you install with a package manager, these libraries are installed for you. 
+When you install with a package manager, these libraries are installed for you.
+
 But, if you manually install .NET or you publish a self-contained app, you'll need to make sure these libraries are installed:
 
 - ca-certificates
