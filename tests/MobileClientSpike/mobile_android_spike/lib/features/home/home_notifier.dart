@@ -66,7 +66,7 @@ class HomeNotifier extends _$HomeNotifier {
           "EnableActivityLog": true,
           "DisplayOnProfile": true,
           "Prioritize": 1,
-          "LinkUserAdapter": false
+          "LinkUserAdapter": true
         };
         final response = await dio.post('/v1/members/me/PersonalPlans', data: payload);
         return 'Status: ${response.statusCode}\n\n${response.data}';
