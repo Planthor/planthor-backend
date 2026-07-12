@@ -16,11 +16,20 @@ namespace Application.Members.PersonalPlans.Queries.List;
 public class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
     : IQueryHandler<ListPersonalPlansQuery, CursorPagedResult<PersonalPlanDto>>
 {
+    private const double PercentageMultiplier = 100.0;
+    private const int RoundingDecimals = 2;
+
     /// <inheritdoc />
-    public async Task<CursorPagedResult<PersonalPlanDto>> Handle(ListPersonalPlansQuery request, CancellationToken cancellationToken)
+    public Task<CursorPagedResult<PersonalPlanDto>> Handle(ListPersonalPlansQuery request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(readOnlyContext);
         ArgumentNullException.ThrowIfNull(request);
 
+        return HandleAsync(request, cancellationToken);
+    }
+
+    private async Task<CursorPagedResult<PersonalPlanDto>> HandleAsync(ListPersonalPlansQuery request, CancellationToken cancellationToken)
+    {
         // 1. Fetch the Member's PersonalPlans
         var member = await readOnlyContext.FirstOrDefaultAsync<Member, Member>(
             q => q.Where(m => m.IdentifyName == request.IdentifyName),
@@ -92,14 +101,14 @@ public class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
                 plan.Unit,
                 plan.Target,
                 plan.CurrentValue,
-                plan.Target > 0 ? Math.Round((plan.CurrentValue / plan.Target) * 100.0, 2) : 0.0,
+                plan.Target > 0 ? Math.Round((plan.CurrentValue / plan.Target) * PercentageMultiplier, RoundingDecimals) : 0.0,
                 plan.Status.Name,
                 plan.From.ToDateTimeOffset(),
                 plan.To.ToDateTimeOffset()
             ));
         }
 
-        string? nextCursor = hasNextPage && paginatedPersonalPlans.Count != 0
+        string? nextCursor = hasNextPage
             ? paginatedPersonalPlans.Last().PlanId.ToString()
             : null;
 
