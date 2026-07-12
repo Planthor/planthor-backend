@@ -78,6 +78,38 @@ class HomeNotifier extends _$HomeNotifier {
       }
     });
   }
+
+  Future<void> cancelPersonalPlan(String planId) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final dio = ref.read(apiClientProvider);
+      try {
+        final response = await dio.post('/v1/members/me/PersonalPlans/$planId:cancel');
+        return 'Status: ${response.statusCode}\n\n${response.data}';
+      } on DioException catch (e) {
+        if (e.response != null) {
+          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        }
+        rethrow;
+      }
+    });
+  }
+
+  Future<void> activatePersonalPlan(String planId) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final dio = ref.read(apiClientProvider);
+      try {
+        final response = await dio.post('/v1/members/me/PersonalPlans/$planId:activate');
+        return 'Status: ${response.statusCode}\n\n${response.data}';
+      } on DioException catch (e) {
+        if (e.response != null) {
+          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        }
+        rethrow;
+      }
+    });
+  }
 }
 
 /// Exposes token info for debugging the PKCE flow.

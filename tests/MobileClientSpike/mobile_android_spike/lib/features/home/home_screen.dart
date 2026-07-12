@@ -220,6 +220,50 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
+            // Cancel Personal Plan button
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => _showCancelPersonalPlanDialog(context, ref),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.cancel),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              label: const Text('Cancel Personal Plan (POST)'),
+            ),
+            const SizedBox(height: 16),
+
+            // Activate Personal Plan button
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => _showActivatePersonalPlanDialog(context, ref),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.play_arrow),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.green, // Just a specific color for 'activate'
+              ),
+              label: const Text('Activate Personal Plan (POST)'),
+            ),
+            const SizedBox(height: 16),
+
             // API response
             Card(
               child: Padding(
@@ -291,6 +335,84 @@ class HomeScreen extends ConsumerWidget {
               }
             },
             child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelPersonalPlanDialog(BuildContext context, WidgetRef ref) {
+    final planIdController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Personal Plan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: planIdController,
+              decoration: const InputDecoration(labelText: 'Plan ID (UUID)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final planId = planIdController.text;
+              if (planId.isNotEmpty) {
+                ref.read(homeProvider.notifier).cancelPersonalPlan(planId);
+                Navigator.pop(context);
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Cancel Plan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showActivatePersonalPlanDialog(BuildContext context, WidgetRef ref) {
+    final planIdController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Activate Personal Plan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: planIdController,
+              decoration: const InputDecoration(labelText: 'Plan ID (UUID)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final planId = planIdController.text;
+              if (planId.isNotEmpty) {
+                ref.read(homeProvider.notifier).activatePersonalPlan(planId);
+                Navigator.pop(context);
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text('Activate Plan'),
           ),
         ],
       ),
