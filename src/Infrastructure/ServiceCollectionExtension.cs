@@ -10,6 +10,7 @@ using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Infrastructure.BackgroundJobClient.Jobs;
 
 namespace Infrastructure;
 

@@ -352,6 +352,28 @@ public class Plan : AggregateRoot<Guid>
     }
 
     /// <summary>
+    /// Activates the plan, setting its status to Active.
+    /// Only Planned plans can be activated.
+    /// </summary>
+    /// <param name="byUserId">The ID of the user performing the activation.</param>
+    /// <param name="clock">The system clock.</param>
+    public void Activate(Guid byUserId, IClock clock)
+    {
+        if (clock == null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
+        if (Status != PlanStatus.Planned)
+        {
+            return;
+        }
+
+        Status = PlanStatus.Active;
+        StampUpdatedAudit(byUserId, clock);
+    }
+
+    /// <summary>
     /// Cancels the plan, setting its status to Cancelled.
     /// Only Active or Planned plans can be cancelled.
     /// </summary>

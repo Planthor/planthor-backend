@@ -8,6 +8,7 @@ using Application.Dtos;
 using Application.Members.PersonalPlans.Commands.Create;
 using Application.Members.PersonalPlans.Commands.Update;
 using Application.Members.PersonalPlans.Commands.Cancel;
+using Application.Members.PersonalPlans.Commands.Activate;
 using Application.Members.PersonalPlans.Queries.Details;
 using Application.Members.PersonalPlans.Queries.List;
 using FluentValidation;
@@ -26,6 +27,7 @@ namespace Api.Controllers.v1;
 /// <param name="updatePlanCommandValidator">The validator for <see cref="UpdatePersonalPlanCommand"/>.</param>
 /// <param name="personalPlansQueryValidator">The validator for <see cref="ListPersonalPlansQuery"/>.</param>
 /// <param name="personalPlanDetailsQueryValidator">The validator for <see cref="PersonalPlanDetailsQuery"/>.</param>
+/// <param name="activatePlanCommandValidator">The validator for <see cref="ActivatePersonalPlanCommand"/>.</param>
 [Authorize]
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
@@ -35,7 +37,8 @@ public class PersonalPlansController(
     IValidator<CreatePersonalPlanCommand> createPersonalPlanCommandValidator,
     IValidator<UpdatePersonalPlanCommand> updatePlanCommandValidator,
     IValidator<ListPersonalPlansQuery> personalPlansQueryValidator,
-    IValidator<PersonalPlanDetailsQuery> personalPlanDetailsQueryValidator)
+    IValidator<PersonalPlanDetailsQuery> personalPlanDetailsQueryValidator,
+    IValidator<ActivatePersonalPlanCommand> activatePlanCommandValidator)
     : ControllerBase
 {
     private readonly ISender _sender = sender
@@ -248,5 +251,43 @@ public class PersonalPlansController(
         var cancelledPlan = await _sender.Send(cancelCommand, token);
         
         return Ok(cancelledPlan);
+    }
+
+    /// <summary>
+    /// Activates a personal plan.
+    /// </summary>
+    /// <param name="identifier">The identifier of the member ("me" or their identity name).</param>
+    /// <param name="planId">The ID of the plan to activate.</param>
+    /// <param name="token">A cancellation token.</param>
+    /// <returns>An IActionResult with Ok status code on success.</returns>
+    /// <response code="200">If the plan is activated successfully.</response>
+    /// <response code="403">If attempting to activate another user's plan.</response>
+    /// <response code="404">If the plan is not found.</response>
+    [HttpPost("{planId}:activate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PersonalPlanDto>> Activate(
+        [FromRoute] string identifier,
+        [FromRoute] Guid planId,
+        CancellationToken token)
+    {
+        var targetIdentifyName = ResolveIdentifier(identifier);
+        
+        if (string.IsNullOrEmpty(targetIdentifyName))
+        {
+            return Unauthorized();
+        }
+        
+        if (targetIdentifyName != CurrentUserIdentifyName)
+        {
+            return Forbid();
+        }
+
+        var command = new ActivatePersonalPlanCommand(targetIdentifyName, planId);
+        await activatePlanCommandValidator.ValidateAndThrowAsync(command, token);
+        var activatedPlan = await _sender.Send(command, token);
+        
+        return Ok(activatedPlan);
     }
 }

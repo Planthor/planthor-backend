@@ -31,6 +31,9 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
             navigationBuilder
                 .Property(ec => ec.Provider)
                 .HasConversion(s => s.Id, id => ExternalProvider.FromId(id));
+            navigationBuilder
+                .Property(ec => ec.Type)
+                .HasConversion(t => t.Id, id => ExternalConnectionType.FromId(id));
         });
 
         builder.OwnsMany(m => m.PersonalPlans, navigationBuilder =>

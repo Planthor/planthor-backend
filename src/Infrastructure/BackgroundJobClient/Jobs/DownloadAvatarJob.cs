@@ -7,7 +7,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
-namespace Infrastructure.BackgroundJobClient;
+namespace Infrastructure.BackgroundJobClient.Jobs;
 
 /// <summary>
 /// A Quartz background job responsible for downloading a member's avatar from an external URL
