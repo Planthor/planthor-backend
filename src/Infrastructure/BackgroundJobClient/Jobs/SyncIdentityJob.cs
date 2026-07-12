@@ -11,7 +11,7 @@ namespace Infrastructure.BackgroundJobClient.Jobs;
 /// <summary>
 /// Quartz job to synchronize federated identities from Keycloak for a member.
 /// </summary>
-public class SyncIdentityJob(
+public partial class SyncIdentityJob(
     IKeycloakAdminClient keycloakAdminClient,
     IMemberRepository memberRepository,
     IClock clock,
@@ -30,14 +30,14 @@ public class SyncIdentityJob(
 
         if (!Guid.TryParse(memberIdString, out var memberId) || string.IsNullOrEmpty(identifyName))
         {
-            _logger.LogWarning("SyncIdentityJob: Invalid or missing MemberId/IdentifyName in JobDataMap.");
+            LogInvalidJobData();
             return;
         }
 
         var member = await _memberRepository.GetByIdAsync(memberId, context.CancellationToken);
         if (member == null)
         {
-            _logger.LogWarning("SyncIdentityJob: Member {MemberId} not found.", memberId);
+            LogMemberNotFound(memberId);
             return;
         }
 
@@ -57,12 +57,12 @@ public class SyncIdentityJob(
             if (hasChanges)
             {
                 await _memberRepository.SaveChangesAsync(context.CancellationToken);
-                _logger.LogInformation("SyncIdentityJob: Synced federated identities for Member {MemberId}.", memberId);
+                LogIdentitiesSynced(memberId);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "SyncIdentityJob: Failed to sync federated identities for Member {MemberId}.", memberId);
+            LogSyncFailed(ex, memberId);
             throw; // Rethrow to let Quartz handle retries if configured
         }
     }
@@ -86,9 +86,24 @@ public class SyncIdentityJob(
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "SyncIdentityJob: Unrecognized identity provider '{IdentityProvider}' for user '{IdentifyName}'", identity.IdentityProvider, identifyName);
+            LogUnrecognizedProvider(ex, identity.IdentityProvider, identifyName);
         }
 
         return false;
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "SyncIdentityJob: Invalid or missing MemberId/IdentifyName in JobDataMap.")]
+    private partial void LogInvalidJobData();
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "SyncIdentityJob: Member {MemberId} not found.")]
+    private partial void LogMemberNotFound(Guid memberId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "SyncIdentityJob: Synced federated identities for Member {MemberId}.")]
+    private partial void LogIdentitiesSynced(Guid memberId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "SyncIdentityJob: Failed to sync federated identities for Member {MemberId}.")]
+    private partial void LogSyncFailed(Exception ex, Guid memberId);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "SyncIdentityJob: Unrecognized identity provider '{IdentityProvider}' for user '{IdentifyName}'")]
+    private partial void LogUnrecognizedProvider(Exception ex, string identityProvider, string identifyName);
 }

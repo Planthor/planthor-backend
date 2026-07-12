@@ -14,7 +14,7 @@ namespace Infrastructure.Services;
 /// <summary>
 /// Lightweight implementation of <see cref="IKeycloakAdminClient"/> using HttpClient.
 /// </summary>
-public class KeycloakAdminClient(HttpClient httpClient, IConfiguration configuration, ILogger<KeycloakAdminClient> logger) : IKeycloakAdminClient
+public partial class KeycloakAdminClient(HttpClient httpClient, IConfiguration configuration, ILogger<KeycloakAdminClient> logger) : IKeycloakAdminClient
 {
     private readonly HttpClient _httpClient = httpClient;
     private readonly IConfiguration _configuration = configuration;
@@ -75,11 +75,14 @@ public class KeycloakAdminClient(HttpClient httpClient, IConfiguration configura
         
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Failed to fetch federated identities for user {IdentifyName}. Status: {StatusCode}", identifyName, response.StatusCode);
+            LogFetchFailed(identifyName, response.StatusCode);
             return new List<FederatedIdentityDto>();
         }
 
         var result = await response.Content.ReadFromJsonAsync<List<FederatedIdentityDto>>(cancellationToken: cancellationToken);
         return result ?? [];
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to fetch federated identities for user {IdentifyName}. Status: {StatusCode}")]
+    private partial void LogFetchFailed(string identifyName, System.Net.HttpStatusCode statusCode);
 }

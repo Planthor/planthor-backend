@@ -57,7 +57,7 @@ try
             options.Authority = keycloakAuthority;
             options.Audience = keycloakAudience;
             options.RequireHttpsMetadata = builder.Configuration
-                .GetValue<bool>("Authentication:Keycloak:RequireHttpsMetadata", !builder.Environment.IsDevelopment());
+                .GetValue("Authentication:Keycloak:RequireHttpsMetadata", !builder.Environment.IsDevelopment());
 
             options.TokenValidationParameters = new TokenValidationParameters
             {

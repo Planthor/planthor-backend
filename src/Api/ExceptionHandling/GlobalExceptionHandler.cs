@@ -10,6 +10,7 @@ namespace Api.ExceptionHandling;
 
 internal sealed partial class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
+    private readonly ILogger<GlobalExceptionHandler> _logger = logger;
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,

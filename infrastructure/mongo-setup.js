@@ -1,6 +1,8 @@
 try {
   rs.status();
+  print("Replica set is already initialized.");
 } catch (e) {
+  print("Replica set not initialized or status check failed. Initializing... Error: " + e.message);
   rs.initiate({
     _id: "rs0",
     members: [

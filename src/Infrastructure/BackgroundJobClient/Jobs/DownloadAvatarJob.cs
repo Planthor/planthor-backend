@@ -16,14 +16,15 @@ namespace Infrastructure.BackgroundJobClient.Jobs;
 /// <param name="httpClientFactory">Factory for creating HTTP clients to download the image.</param>
 /// <param name="avatarStorageService">The service used to upload the avatar to storage.</param>
 /// <param name="sender">The MediatR sender used to update the member's profile with the new path.</param>
-/// <param name="logger">The logger for tracking job execution and errors.</param>
 [DisallowConcurrentExecution]
-public class DownloadAvatarJob(
+public partial class DownloadAvatarJob(
     IHttpClientFactory httpClientFactory,
     IAvatarStorageService avatarStorageService,
     ISender sender,
     ILogger<DownloadAvatarJob> logger) : IJob
 {
+    private readonly ILogger<DownloadAvatarJob> _logger = logger;
+
     /// <summary>
     /// Executes the avatar download and storage process.
     /// </summary>
@@ -37,7 +38,7 @@ public class DownloadAvatarJob(
 
         if (string.IsNullOrEmpty(memberIdString) || string.IsNullOrEmpty(urlString))
         {
-            logger.LogWarning("Invalid job data: MemberId={MemberId}, Url={Url}", memberIdString, urlString);
+            LogInvalidJobData(memberIdString, urlString);
             return;
         }
 
@@ -61,12 +62,21 @@ public class DownloadAvatarJob(
 
             await sender.Send(new UpdateMemberAvatarCommand(memberId, avatarPath), context.CancellationToken);
 
-            logger.LogInformation("Successfully updated avatar for member {MemberId}", memberId);
+            LogAvatarUpdated(memberId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to download or upload avatar for member {MemberId}", memberId);
+            LogAvatarUpdateFailed(ex, memberId);
             throw new JobExecutionException(msg: "Failed to process avatar download", cause: ex, refireImmediately: false);
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid job data: MemberId={MemberId}, Url={Url}")]
+    private partial void LogInvalidJobData(string? memberId, string? url);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Successfully updated avatar for member {MemberId}")]
+    private partial void LogAvatarUpdated(Guid memberId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to download or upload avatar for member {MemberId}")]
+    private partial void LogAvatarUpdateFailed(Exception ex, Guid memberId);
 }
