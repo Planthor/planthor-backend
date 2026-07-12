@@ -18,38 +18,38 @@ public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePerson
     public CreatePersonalPlanCommandValidator()
     {
         RuleFor(x => x.IdentifyName)
-            .NotEmpty().WithMessage("Identify name is required.");
+            .NotEmpty().WithErrorCode("error_identity_name_required");
 
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Plan name is required.")
-            .MaximumLength(MaxPlanNameLength).WithMessage($"Plan name must not exceed {MaxPlanNameLength} characters.");
+            .NotEmpty().WithErrorCode("error_plan_name_required")
+            .MaximumLength(MaxPlanNameLength).WithErrorCode("error_plan_name_too_long");
 
         RuleFor(x => x.Unit)
-            .NotEmpty().WithMessage("Unit is required.")
-            .MaximumLength(MaxUnitLength).WithMessage($"Unit must not exceed {MaxUnitLength} characters.");
+            .NotEmpty().WithErrorCode("error_unit_required")
+            .MaximumLength(MaxUnitLength).WithErrorCode("error_unit_too_long");
 
         RuleFor(x => x.Target)
-            .GreaterThan(MinTarget).WithMessage("Target must be greater than zero.");
+            .GreaterThan(MinTarget).WithErrorCode("error_target_invalid");
 
         RuleFor(x => x.ToDate)
             .GreaterThan(x => x.FromDate)
-            .WithMessage("ToDate must be after FromDate.");
+            .WithErrorCode("error_todate_before_fromdate");
 
         RuleFor(x => x.StartDateLocal)
-            .NotEmpty().WithMessage("Start date local is required.");
+            .NotEmpty().WithErrorCode("error_start_date_local_required");
 
         RuleFor(x => x.EndDateLocal)
-            .NotEmpty().WithMessage("End date local is required.")
+            .NotEmpty().WithErrorCode("error_end_date_local_required")
             .Must((cmd, endDate) => string.Compare(cmd.StartDateLocal, endDate, StringComparison.Ordinal) <= 0)
             .When(cmd => !string.IsNullOrEmpty(cmd.StartDateLocal) && !string.IsNullOrEmpty(cmd.EndDateLocal))
-            .WithMessage("End date local must be on or after start date local.");
+            .WithErrorCode("error_end_date_before_start_date");
 
         RuleFor(x => x.Timezone)
-            .NotEmpty().WithMessage("Timezone is required.")
+            .NotEmpty().WithErrorCode("error_timezone_required")
             .Must(tz => !string.IsNullOrEmpty(tz) && DateTimeZoneProviders.Tzdb.GetZoneOrNull(tz) is not null)
-            .WithMessage("Timezone must be a valid IANA timezone identifier.");
+            .WithErrorCode("error_timezone_invalid");
 
         RuleFor(x => x.Prioritize)
-            .InclusiveBetween(MinPriority, MaxPriority).WithMessage($"Priority must be between {MinPriority} and {MaxPriority}.");
+            .InclusiveBetween(MinPriority, MaxPriority).WithErrorCode("error_priority_invalid");
     }
 }

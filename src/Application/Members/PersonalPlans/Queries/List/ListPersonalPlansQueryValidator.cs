@@ -15,12 +15,12 @@ public class ListPersonalPlansQueryValidator : AbstractValidator<ListPersonalPla
     {
         RuleFor(x => x.IdentifyName)
             .NotEmpty()
-            .WithMessage("IdentifyName is required.");
+            .WithErrorCode("error_identity_name_required");
 
         RuleFor(x => x.Limit)
             .GreaterThan(MinLimit)
-            .WithMessage("Limit must be greater than zero.")
+            .WithErrorCode("error_limit_too_low")
             .LessThanOrEqualTo(MaxLimit)
-            .WithMessage($"Limit cannot exceed {MaxLimit}.");
+            .WithErrorCode("error_limit_too_high");
     }
 }

@@ -13,6 +13,6 @@ public class CheckMemberExistsQueryValidator : AbstractValidator<CheckMemberExis
     public CheckMemberExistsQueryValidator()
     {
         RuleFor(x => x.IdentifyName)
-            .NotEmpty().WithMessage("IdentifyName is required.");
+            .NotEmpty().WithErrorCode("error_identity_name_required");
     }
 }

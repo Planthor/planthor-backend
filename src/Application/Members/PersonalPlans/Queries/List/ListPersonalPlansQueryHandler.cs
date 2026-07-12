@@ -68,7 +68,7 @@ public class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
 
             if (validStatusIds.Count != 0)
             {
-                plans = plans.Where(p => validStatusIds.Contains(p.Status.Id)).ToList();
+                plans = [.. plans.Where(p => validStatusIds.Contains(p.Status.Id))];
             }
         }
 

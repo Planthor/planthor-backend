@@ -39,7 +39,8 @@ public class CancelPlanCommandHandler(
             ?? throw new KeyNotFoundException($"Member with identifier '{request.IdentifyName}' was not found.");
 
         // 2. Validate member owns the plan
-        var personalPlan = member.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId) ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
+        var personalPlan = member.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId) 
+            ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
 
         // 3. Fetch plan
         var plan = await _planRepository.GetByIdAsync(request.PlanId, cancellationToken) 

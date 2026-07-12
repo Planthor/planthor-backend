@@ -14,19 +14,19 @@ public class CreateMemberCommandValidator : AbstractValidator<CreateMemberComman
     public CreateMemberCommandValidator()
     {
         RuleFor(x => x.IdentifyName)
-            .NotEmpty().WithMessage("Identity name is required.");
+            .NotEmpty().WithErrorCode("error_identity_name_required");
 
         RuleFor(x => x.FirstName)
-            .NotEmpty().WithMessage("First name is required.")
-            .MaximumLength(MaxFirstNameLength).WithMessage($"First name must not exceed {MaxFirstNameLength} characters.");
+            .NotEmpty().WithErrorCode("error_first_name_required")
+            .MaximumLength(MaxFirstNameLength).WithErrorCode("error_first_name_too_long");
 
         RuleFor(x => x.LastName)
-            .NotEmpty().WithMessage("Last name is required.")
-            .MaximumLength(MaxLastNameLength).WithMessage($"Last name must not exceed {MaxLastNameLength} characters.");
+            .NotEmpty().WithErrorCode("error_last_name_required")
+            .MaximumLength(MaxLastNameLength).WithErrorCode("error_last_name_too_long");
 
         RuleFor(x => x.PreferredTimezone)
-            .NotEmpty().WithMessage("Preferred timezone is required.")
+            .NotEmpty().WithErrorCode("error_preferred_timezone_required")
             .Must(tz => !string.IsNullOrEmpty(tz) && DateTimeZoneProviders.Tzdb.GetZoneOrNull(tz) is not null)
-            .WithMessage("Preferred timezone must be a valid IANA timezone identifier.");
+            .WithErrorCode("error_preferred_timezone_invalid");
     }
 }

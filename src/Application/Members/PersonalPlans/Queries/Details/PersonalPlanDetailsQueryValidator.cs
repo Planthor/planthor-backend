@@ -12,10 +12,10 @@ public class PersonalPlanDetailsQueryValidator : AbstractValidator<PersonalPlanD
     {
         RuleFor(x => x.IdentifyName)
             .NotEmpty()
-            .WithMessage("IdentifyName is required.");
+            .WithErrorCode("error_identity_name_required");
 
         RuleFor(x => x.PlanId)
             .NotEmpty()
-            .WithMessage("PlanId is required.");
+            .WithErrorCode("error_plan_id_required");
     }
 }

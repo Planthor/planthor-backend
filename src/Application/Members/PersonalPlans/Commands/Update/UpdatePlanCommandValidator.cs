@@ -15,30 +15,30 @@ public class UpdatePlanCommandValidator : AbstractValidator<UpdatePersonalPlanCo
     {
         RuleFor(x => x.IdentifyName)
             .NotEmpty()
-            .WithMessage("IdentifyName is required.");
+            .WithErrorCode("error_identity_name_required");
 
         RuleFor(x => x.PlanId)
             .NotEmpty()
-            .WithMessage("PlanId is required.");
+            .WithErrorCode("error_plan_id_required");
 
         RuleFor(x => x.Unit)
             .NotEmpty()
-            .WithMessage("Unit is required.");
+            .WithErrorCode("error_unit_required");
 
         RuleFor(x => x.Target)
             .GreaterThan(MinTarget)
-            .WithMessage("Target must be greater than zero.");
+            .WithErrorCode("error_target_invalid");
 
         RuleFor(x => x.Current)
             .GreaterThanOrEqualTo(MinCurrent)
-            .WithMessage("Current value cannot be negative.");
+            .WithErrorCode("error_current_invalid");
 
         RuleFor(x => x.ToDate)
             .GreaterThan(x => x.FromDate)
-            .WithMessage("ToDate must be strictly after FromDate.");
+            .WithErrorCode("error_todate_before_fromdate");
             
         RuleFor(x => x.PeriodType)
             .NotEmpty()
-            .WithMessage("PeriodType is required.");
+            .WithErrorCode("error_period_type_required");
     }
 }

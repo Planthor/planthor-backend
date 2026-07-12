@@ -16,6 +16,9 @@ namespace Application.Members.PersonalPlans.Queries.Details;
 public class PersonalPlanDetailsQueryHandler(IReadOnlyContext readOnlyContext)
     : IQueryHandler<PersonalPlanDetailsQuery, PersonalPlanDto>
 {
+    private const double PercentageMultiplier = 100;
+    private const int RoundingDecimals = 2;
+
     /// <inheritdoc />
     public async Task<PersonalPlanDto> Handle(PersonalPlanDetailsQuery request, CancellationToken cancellationToken)
     {
@@ -32,7 +35,7 @@ public class PersonalPlanDetailsQueryHandler(IReadOnlyContext readOnlyContext)
             q => q.Where(p => p.Id == request.PlanId),
             cancellationToken) ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
 
-        var progressPercentage = plan.Target > 0 ? Math.Round((double)plan.CurrentValue / plan.Target * 100, 2) : 0;
+        var progressPercentage = Math.Round((double)plan.CurrentValue / plan.Target * PercentageMultiplier, RoundingDecimals);
 
         return new PersonalPlanDto(
             personalPlan.PlanId,

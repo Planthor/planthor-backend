@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace Application.Members.Queries.Details;
 
@@ -10,6 +10,6 @@ public class MemberDetailsQueryValidator : AbstractValidator<MemberDetailsQuery>
     public MemberDetailsQueryValidator()
     {
         RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("Id is required.");
+            .NotEmpty().WithErrorCode("error_id_required");
     }
 }
