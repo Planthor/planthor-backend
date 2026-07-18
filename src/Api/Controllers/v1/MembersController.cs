@@ -50,9 +50,12 @@ public class MembersController(
     /// </remarks>
     /// <response code="201">Returns the newly created member's details.</response>
     /// <response code="400">If the command validation fails.</response>
+    /// <response code="404">If not in the development environment.</response>
     [HttpPost]
+    [DevelopmentOnly]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MemberDto>> Create([FromBody] CreateMemberCommand command, CancellationToken token)
     {
         var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

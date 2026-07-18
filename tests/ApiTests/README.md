@@ -1,6 +1,6 @@
 # API Tests (Formerly Integration Tests)
 
-In this project, we prioritize **API Tests** (Vertical Slices) over traditional Integration or Unit tests for external-facing layers. 
+In this project, we prioritize **API Tests** (Vertical Slices) over traditional Integration or Unit tests for external-facing layers.
 
 ## Definitions & Strategy
 
@@ -12,5 +12,5 @@ In this project, we prioritize **API Tests** (Vertical Slices) over traditional 
 ## Best Practices
 
 - **Testcontainers:** Always use Testcontainers for databases (e.g., MongoDB). Avoid `InMemoryDatabase`.
-- **WireMock.Net:** Use WireMock to simulate external third-party HTTP dependencies (e.g., Google Identity, Strava API). Do not hit real external services in these tests.
+- **WireMock.Net:** Use WireMock to simulate external third-party HTTP dependencies (e.g., Keycloak, Strava API). Do not hit real external services in these tests.
 - **CustomWebApplicationFactory:** Use the factory to spin up the API in memory and orchestrate the Testcontainers and WireMock instances.
