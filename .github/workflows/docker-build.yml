@@ -16,6 +16,9 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     name: Run docker build
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,8 +41,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.GH_USER }}
-          password: ${{ secrets.GH_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v6
