@@ -1,7 +1,7 @@
 using System;
 using Application.Shared;
 using Domain.Shared;
-using Moq;
+using NSubstitute;
 
 namespace Application.Tests.Shared;
 
@@ -10,22 +10,22 @@ public class DomainEventNotificationTests
     [Fact]
     public void Constructor_SetsDomainEvent()
     {
-        var domainEvent = new Mock<IDomainEvent>();
-        domainEvent.Setup(e => e.EventId).Returns(Guid.NewGuid());
+        var domainEvent = Substitute.For<IDomainEvent>();
+        domainEvent.EventId.Returns(Guid.NewGuid());
 
-        var notification = new DomainEventNotification<IDomainEvent>(domainEvent.Object);
+        var notification = new DomainEventNotification<IDomainEvent>(domainEvent);
 
-        Assert.Equal(domainEvent.Object, notification.DomainEvent);
+        Assert.Equal(domainEvent, notification.DomainEvent);
     }
 
     [Fact]
     public void DomainEvent_IsAccessibleAfterConstruction()
     {
-        var domainEvent = new Mock<IDomainEvent>();
+        var domainEvent = Substitute.For<IDomainEvent>();
         var id = Guid.NewGuid();
-        domainEvent.Setup(e => e.EventId).Returns(id);
+        domainEvent.EventId.Returns(id);
 
-        var notification = new DomainEventNotification<IDomainEvent>(domainEvent.Object);
+        var notification = new DomainEventNotification<IDomainEvent>(domainEvent);
 
         Assert.Equal(id, notification.DomainEvent.EventId);
     }

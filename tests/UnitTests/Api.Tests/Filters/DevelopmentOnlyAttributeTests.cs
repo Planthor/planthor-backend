@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace Api.Tests.Filters;
@@ -18,17 +18,17 @@ public class DevelopmentOnlyAttributeTests
     public void OnAuthorization_WhenEnvironmentIsDevelopment_DoesNothing()
     {
         // Arrange
-        var envMock = new Mock<IWebHostEnvironment>();
+        var envMock = Substitute.For<IWebHostEnvironment>();
         envMock.Setup(e => e.EnvironmentName).Returns("Development");
 
-        var serviceProviderMock = new Mock<IServiceProvider>();
-        serviceProviderMock.Setup(sp => sp.GetService(typeof(IWebHostEnvironment))).Returns(envMock.Object);
+        var serviceProviderMock = Substitute.For<IServiceProvider>();
+        serviceProviderMock.GetService(typeof(IWebHostEnvironment)).Returns(envMock);
 
-        var httpContextMock = new Mock<HttpContext>();
-        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock.Object);
+        var httpContextMock = Substitute.For<HttpContext>();
+        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock);
 
         var actionContext = new ActionContext(
-            httpContextMock.Object,
+            httpContextMock,
             new RouteData(),
             new ActionDescriptor()
         );
@@ -50,17 +50,17 @@ public class DevelopmentOnlyAttributeTests
     public void OnAuthorization_WhenEnvironmentIsNotDevelopment_ReturnsNotFound(string environment)
     {
         // Arrange
-        var envMock = new Mock<IWebHostEnvironment>();
+        var envMock = Substitute.For<IWebHostEnvironment>();
         envMock.Setup(e => e.EnvironmentName).Returns(environment);
 
-        var serviceProviderMock = new Mock<IServiceProvider>();
-        serviceProviderMock.Setup(sp => sp.GetService(typeof(IWebHostEnvironment))).Returns(envMock.Object);
+        var serviceProviderMock = Substitute.For<IServiceProvider>();
+        serviceProviderMock.GetService(typeof(IWebHostEnvironment)).Returns(envMock);
 
-        var httpContextMock = new Mock<HttpContext>();
-        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock.Object);
+        var httpContextMock = Substitute.For<HttpContext>();
+        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock);
 
         var actionContext = new ActionContext(
-            httpContextMock.Object,
+            httpContextMock,
             new RouteData(),
             new ActionDescriptor()
         );
@@ -79,15 +79,15 @@ public class DevelopmentOnlyAttributeTests
     public void OnAuthorization_WhenEnvironmentIsNull_ReturnsNotFound()
     {
         // Arrange
-        var serviceProviderMock = new Mock<IServiceProvider>();
+        var serviceProviderMock = Substitute.For<IServiceProvider>();
         // Simulate missing IWebHostEnvironment
-        serviceProviderMock.Setup(sp => sp.GetService(typeof(IWebHostEnvironment))).Returns(null!);
+        serviceProviderMock.GetService(typeof(IWebHostEnvironment)).Returns(null!);
 
-        var httpContextMock = new Mock<HttpContext>();
-        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock.Object);
+        var httpContextMock = Substitute.For<HttpContext>();
+        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock);
 
         var actionContext = new ActionContext(
-            httpContextMock.Object,
+            httpContextMock,
             new RouteData(),
             new ActionDescriptor()
         );

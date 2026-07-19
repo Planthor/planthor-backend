@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
+using Api.Requests;
 using Application.Dtos;
 using Application.Members.Commands.Create;
 using Application.Members.Commands.Update;
@@ -42,7 +43,7 @@ public class MembersController(
     /// <summary>
     /// Creates a new member.
     /// </summary>
-    /// <param name="command">The command containing member creation details.</param>
+    /// <param name="request">The request containing member creation details.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>An IActionResult containing the newly created <see cref="MemberDto"/> on success, otherwise an appropriate error code.</returns>
     /// <remarks>
@@ -56,7 +57,7 @@ public class MembersController(
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<MemberDto>> Create([FromBody] CreateMemberCommand command, CancellationToken token)
+    public async Task<ActionResult<MemberDto>> Create([FromBody] CreateMemberRequest request, CancellationToken token)
     {
         var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(identifyName))
@@ -64,14 +65,21 @@ public class MembersController(
             return Unauthorized();
         }
 
-        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(request);
 
-        return await CreateInternalAsync(command, identifyName, token);
+        var command = new CreateMemberCommand(
+            identifyName,
+            request.FirstName,
+            request.MiddleName,
+            request.LastName,
+            request.Description,
+            request.PreferredTimezone);
+
+        return await CreateInternalAsync(command, token);
     }
 
-    private async Task<ActionResult<MemberDto>> CreateInternalAsync(CreateMemberCommand command, string identifyName, CancellationToken token)
+    private async Task<ActionResult<MemberDto>> CreateInternalAsync(CreateMemberCommand command, CancellationToken token)
     {
-        command = command with { IdentifyName = identifyName };
         await createMemberCommandValidator.ValidateAndThrowAsync(command, token);
         var newMemberGuid = await _sender.Send(command, token);
 
@@ -85,7 +93,7 @@ public class MembersController(
     /// Updates an existing member.
     /// </summary>
     /// <param name="id">The ID of the member to update.</param>
-    /// <param name="command">The command containing member update details.</param>
+    /// <param name="request">The request containing member update details.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>An IActionResult with NoContent status code on success, otherwise an appropriate error code.</returns>
     /// <remarks>
@@ -100,17 +108,20 @@ public class MembersController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(
         [FromRoute] Guid id,
-        [FromBody] UpdateMemberCommand command,
+        [FromBody] UpdateMemberRequest request,
         CancellationToken token)
     {
-        if (command == null)
-        {
-            return BadRequest();
-        }
+        var command = new UpdateMemberCommand(
+            id,
+            request.FirstName,
+            request.MiddleName,
+            request.LastName,
+            request.Description,
+            request.PathAvatar,
+            request.PreferredTimezone);
 
-        var updateMemberCommand = command with { Id = id };
-        await updateMemberCommandValidator.ValidateAndThrowAsync(updateMemberCommand, token);
-        await _sender.Send(updateMemberCommand, token);
+        await updateMemberCommandValidator.ValidateAndThrowAsync(command, token);
+        await _sender.Send(command, token);
         return NoContent();
     }
 

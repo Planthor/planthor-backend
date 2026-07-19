@@ -7,14 +7,14 @@ using Application.Members.PersonalPlans.Queries.List;
 using Application.Shared;
 using Domain.Members;
 using Domain.Plans;
-using Moq;
+using NSubstitute;
 using NodaTime;
 
 namespace Application.Tests.Members.Queries.ListPersonalPlans;
 
 public class ListPersonalPlansQueryHandlerTests
 {
-    private readonly Mock<IReadOnlyContext> _mockContext;
+    private readonly IReadOnlyContext _mockContext;
     private readonly ListPersonalPlansQueryHandler _handler;
     private readonly IClock _clock;
     private readonly Instant _from;
@@ -22,9 +22,10 @@ public class ListPersonalPlansQueryHandlerTests
 
     public ListPersonalPlansQueryHandlerTests()
     {
-        _mockContext = new Mock<IReadOnlyContext>();
-        _handler = new ListPersonalPlansQueryHandler(_mockContext.Object);
-        _clock = Mock.Of<IClock>(c => c.GetCurrentInstant() == Instant.FromUtc(2024, 1, 1, 0, 0));
+        _mockContext = Substitute.For<IReadOnlyContext>();
+        _handler = new ListPersonalPlansQueryHandler(_mockContext);
+        _clock = Substitute.For<IClock>();
+        _clock.GetCurrentInstant().Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
         _from = Instant.FromUtc(2024, 1, 1, 0, 0);
         _to = Instant.FromUtc(2024, 12, 31, 0, 0);
     }
@@ -38,19 +39,19 @@ public class ListPersonalPlansQueryHandlerTests
     private void SetupMemberContext(Member? member)
     {
         _mockContext
-            .Setup(c => c.FirstOrDefaultAsync<Member, Member>(
-                It.IsAny<Func<IQueryable<Member>, IQueryable<Member>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(member);
+            .FirstOrDefaultAsync<Member, Member>(
+                Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(member);
     }
 
     private void SetupPlansContext(List<Plan> plans)
     {
         _mockContext
-            .Setup(c => c.QueryAsync<Plan, Plan>(
-                It.IsAny<Func<IQueryable<Plan>, IQueryable<Plan>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(plans);
+            .QueryAsync<Plan, Plan>(
+                Arg.Any<Func<IQueryable<Plan>, IQueryable<Plan>>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(plans);
     }
 
     [Fact]
@@ -229,10 +230,6 @@ public class ListPersonalPlansQueryHandlerTests
 
         await _handler.Handle(new ListPersonalPlansQuery("user1"), cancellationToken);
 
-        _mockContext.Verify(
-            c => c.FirstOrDefaultAsync<Member, Member>(
-                It.IsAny<Func<IQueryable<Member>, IQueryable<Member>>>(),
-                cancellationToken),
-            Times.Once);
+        _mockContext.Received(1).FirstOrDefaultAsync<Member, Member>(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
     }
 }

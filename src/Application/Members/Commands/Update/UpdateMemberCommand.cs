@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.Json.Serialization;
+using System;
 using Application.Shared;
 
 namespace Application.Members.Commands.Update;
@@ -13,7 +12,7 @@ namespace Application.Members.Commands.Update;
 /// <param name="Description"></param>
 /// <param name="PathAvatar"></param>
 public record UpdateMemberCommand(
-    [property: JsonIgnore] Guid Id,
+    Guid Id,
     string FirstName,
     string? MiddleName,
     string LastName,

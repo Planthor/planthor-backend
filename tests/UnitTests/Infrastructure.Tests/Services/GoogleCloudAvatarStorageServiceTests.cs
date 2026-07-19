@@ -9,7 +9,7 @@ using Google.Cloud.Storage.V1;
 using Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 
 namespace Infrastructure.Tests.Services;
 
@@ -29,35 +29,35 @@ public class GoogleCloudAvatarStorageServiceTests
             .Build();
     }
 
-    private static (Mock<StorageClient> client, GoogleCloudAvatarStorageService service) Create(string? bucketName = BucketName)
+    private static (StorageClient client, GoogleCloudAvatarStorageService service) Create(string? bucketName = BucketName)
     {
-        var mockClient = new Mock<StorageClient>();
-        var logger = new Mock<ILogger<GoogleCloudAvatarStorageService>>();
-        var service = new GoogleCloudAvatarStorageService(CreateConfig(bucketName), logger.Object, mockClient.Object);
+        var mockClient = Substitute.For<StorageClient>();
+        var logger = Substitute.For<ILogger<GoogleCloudAvatarStorageService>>();
+        var service = new GoogleCloudAvatarStorageService(CreateConfig(bucketName), logger, mockClient);
         return (mockClient, service);
     }
 
-    private static void SetupUpload(Mock<StorageClient> mockClient)
+    private static void SetupUpload(StorageClient mockClient)
     {
-        mockClient.Setup(s => s.UploadObjectAsync(
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<Stream>(),
-            It.IsAny<UploadObjectOptions>(),
-            It.IsAny<CancellationToken>(),
-            It.IsAny<IProgress<IUploadProgress>>()))
-            .ReturnsAsync(new Google.Apis.Storage.v1.Data.Object());
+        mockClient.UploadObjectAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Stream>(),
+            Arg.Any<UploadObjectOptions>(),
+            Arg.Any<CancellationToken>(),
+            Arg.Any<IProgress<IUploadProgress>>())
+            .Returns(new Google.Apis.Storage.v1.Data.Object());
     }
 
     [Fact]
     public void Constructor_MissingBucketName_ThrowsInvalidOperationException()
     {
-        var logger = new Mock<ILogger<GoogleCloudAvatarStorageService>>();
-        var mockClient = new Mock<StorageClient>();
+        var logger = Substitute.For<ILogger<GoogleCloudAvatarStorageService>>();
+        var mockClient = Substitute.For<StorageClient>();
 
         Assert.Throws<InvalidOperationException>(() =>
-            new GoogleCloudAvatarStorageService(CreateConfig(null), logger.Object, mockClient.Object));
+            new GoogleCloudAvatarStorageService(CreateConfig(null), logger, mockClient));
     }
 
     [Fact]
@@ -97,11 +97,11 @@ public class GoogleCloudAvatarStorageServiceTests
     public async Task DeleteAvatarAsync_ValidUri_CallsStorageClientWithCorrectObjectName()
     {
         var (mockClient, service) = Create();
-        mockClient.Setup(s => s.DeleteObjectAsync(
-            It.IsAny<string>(),
-            It.IsAny<string>(),
-            It.IsAny<DeleteObjectOptions>(),
-            It.IsAny<CancellationToken>()))
+        mockClient.DeleteObjectAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<DeleteObjectOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         const string objectPath = "avatars/some-member-id/file.jpg";
@@ -109,9 +109,8 @@ public class GoogleCloudAvatarStorageServiceTests
 
         await service.DeleteAvatarAsync(new Uri(uri), CancellationToken.None);
 
-        mockClient.Verify(s => s.DeleteObjectAsync(
-            BucketName, objectPath, It.IsAny<DeleteObjectOptions>(), It.IsAny<CancellationToken>()),
-            Times.Once);
+        mockClient.Received(1).DeleteObjectAsync(
+            BucketName, objectPath, Arg.Any<DeleteObjectOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -132,9 +131,8 @@ public class GoogleCloudAvatarStorageServiceTests
             new Uri("https://storage.googleapis.com/wrong-bucket/avatars/file.jpg"),
             CancellationToken.None);
 
-        mockClient.Verify(s => s.DeleteObjectAsync(
-            It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<DeleteObjectOptions>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        mockClient.DidNotReceive().DeleteObjectAsync(
+            Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<DeleteObjectOptions>(), Arg.Any<CancellationToken>());
     }
 }

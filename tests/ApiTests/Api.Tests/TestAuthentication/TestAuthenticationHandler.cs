@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -23,9 +23,20 @@ public class TestAuthenticationHandler(
 
         var roles = rolesHeader.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
+        if (Request.Headers.ContainsKey("X-Force-Unauthorized"))
+        {
+            return Task.FromResult(AuthenticateResult.Fail("Forced unauthorized"));
+        }
+        var userIdHeader = Request.Headers["X-TestUserId"].FirstOrDefault() ?? "test-user-id-123";
+
         var claims = new List<Claim> {
-            new(ClaimTypes.Name, "TestUser"),
-            new(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()) };
+            new(ClaimTypes.Name, "TestUser")
+        };
+
+        if (!Request.Headers.ContainsKey("X-Omit-NameIdentifier"))
+        {
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, userIdHeader));
+        }
 
         // Add role claims after trimming whitespace
         foreach (var role in roles)

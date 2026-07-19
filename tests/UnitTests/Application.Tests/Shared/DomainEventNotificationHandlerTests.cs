@@ -4,30 +4,30 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
 using Domain.Shared;
-using Moq;
+using NSubstitute;
 
 namespace Application.Tests.Shared;
 
 public class DomainEventNotificationHandlerTests
 {
-    private readonly Mock<IDomainEventHandler<IDomainEvent>> _mockHandler;
+    private readonly IDomainEventHandler<IDomainEvent> _mockHandler;
     private readonly DomainEventNotificationHandler<IDomainEvent> _sut;
 
     public DomainEventNotificationHandlerTests()
     {
-        _mockHandler = new Mock<IDomainEventHandler<IDomainEvent>>();
-        _sut = new DomainEventNotificationHandler<IDomainEvent>([_mockHandler.Object]);
+        _mockHandler = Substitute.For<IDomainEventHandler<IDomainEvent>>();
+        _sut = new DomainEventNotificationHandler<IDomainEvent>([_mockHandler]);
     }
 
     [Fact]
     public async Task Handle_CallsAllRegisteredHandlers()
     {
-        var domainEvent = new Mock<IDomainEvent>();
-        var notification = new DomainEventNotification<IDomainEvent>(domainEvent.Object);
+        var domainEvent = Substitute.For<IDomainEvent>();
+        var notification = new DomainEventNotification<IDomainEvent>(domainEvent);
 
         await _sut.Handle(notification, CancellationToken.None);
 
-        _mockHandler.Verify(h => h.HandleAsync(domainEvent.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _mockHandler.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -40,24 +40,24 @@ public class DomainEventNotificationHandlerTests
     [Fact]
     public async Task Handle_MultipleHandlers_CallsEachHandler()
     {
-        var handler2 = new Mock<IDomainEventHandler<IDomainEvent>>();
+        var handler2 = Substitute.For<IDomainEventHandler<IDomainEvent>>();
         var multi = new DomainEventNotificationHandler<IDomainEvent>(
-            [_mockHandler.Object, handler2.Object]);
+            [_mockHandler, handler2]);
 
-        var domainEvent = new Mock<IDomainEvent>();
-        var notification = new DomainEventNotification<IDomainEvent>(domainEvent.Object);
+        var domainEvent = Substitute.For<IDomainEvent>();
+        var notification = new DomainEventNotification<IDomainEvent>(domainEvent);
 
         await multi.Handle(notification, CancellationToken.None);
 
-        _mockHandler.Verify(h => h.HandleAsync(domainEvent.Object, It.IsAny<CancellationToken>()), Times.Once);
-        handler2.Verify(h => h.HandleAsync(domainEvent.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _mockHandler.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
+        handler2.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_NoHandlers_CompletesWithoutError()
     {
         var empty = new DomainEventNotificationHandler<IDomainEvent>(new List<IDomainEventHandler<IDomainEvent>>());
-        var notification = new DomainEventNotification<IDomainEvent>(new Mock<IDomainEvent>().Object);
+        var notification = new DomainEventNotification<IDomainEvent>(Substitute.For<IDomainEvent>());
 
         var exception = await Record.ExceptionAsync(() => empty.Handle(notification, CancellationToken.None));
 

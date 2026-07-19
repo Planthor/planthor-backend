@@ -3,28 +3,28 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.Commands.Update;
 using Domain.Members;
-using Moq;
+using NSubstitute;
 using NodaTime;
 
 namespace Application.Tests.Members.Commands.Update;
 
 public class UpdateMemberAvatarCommandHandlerTests
 {
-    private readonly Mock<IMemberRepository> _mockRepository;
-    private readonly Mock<IClock> _mockClock;
+    private readonly IMemberRepository _mockRepository;
+    private readonly IClock _mockClock;
     private readonly UpdateMemberAvatarCommandHandler _handler;
 
     public UpdateMemberAvatarCommandHandlerTests()
     {
-        _mockRepository = new Mock<IMemberRepository>();
-        _mockClock = new Mock<IClock>();
-        _mockClock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
+        _mockRepository = Substitute.For<IMemberRepository>();
+        _mockClock = Substitute.For<IClock>();
+        _mockClock.GetCurrentInstant().Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
 
-        _handler = new UpdateMemberAvatarCommandHandler(_mockRepository.Object, _mockClock.Object);
+        _handler = new UpdateMemberAvatarCommandHandler(_mockRepository, _mockClock);
     }
 
     private Member CreateMember() =>
-        Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock.Object);
+        Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
 
     [Fact]
     public async Task Handle_ExistingMember_UpdatesAvatar()
@@ -32,14 +32,14 @@ public class UpdateMemberAvatarCommandHandlerTests
         var member = CreateMember();
         var command = new UpdateMemberAvatarCommand(member.Id, "https://storage.example.com/new.jpg");
         _mockRepository
-            .Setup(r => r.GetByIdAsync(member.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(member);
+            .GetByIdAsync(member.Id, Arg.Any<CancellationToken>())
+            .Returns(member);
 
         await _handler.Handle(command, CancellationToken.None);
 
         Assert.Equal("https://storage.example.com/new.jpg", member.PathAvatar);
-        _mockRepository.Verify(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()), Times.Once);
-        _mockRepository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Received(1).UpdateAsync(member, Arg.Any<CancellationToken>());
+        _mockRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -47,8 +47,8 @@ public class UpdateMemberAvatarCommandHandlerTests
     {
         var memberId = Guid.NewGuid();
         _mockRepository
-            .Setup(r => r.GetByIdAsync(memberId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member?)null);
+            .GetByIdAsync(memberId, Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _handler.Handle(new UpdateMemberAvatarCommand(memberId, "https://example.com/img.jpg"), CancellationToken.None));
@@ -59,12 +59,12 @@ public class UpdateMemberAvatarCommandHandlerTests
     {
         var memberId = Guid.NewGuid();
         _mockRepository
-            .Setup(r => r.GetByIdAsync(memberId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member?)null);
+            .GetByIdAsync(memberId, Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _handler.Handle(new UpdateMemberAvatarCommand(memberId, "https://example.com/img.jpg"), CancellationToken.None));
 
-        _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepository.DidNotReceive().UpdateAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
     }
 }

@@ -308,6 +308,30 @@ public class Member(
     }
 
     /// <summary>
+    /// Updates the member's profile details.
+    /// </summary>
+    public void Update(
+        string firstName,
+        string middleName,
+        string lastName,
+        string description,
+        string pathAvatar,
+        string preferredTimezone,
+        IClock clock)
+    {
+        FirstName = firstName;
+        MiddleName = middleName;
+        LastName = lastName;
+        Description = description;
+        if (!string.IsNullOrEmpty(pathAvatar))
+        {
+            UpdateAvatar(pathAvatar, clock);
+        }
+        PreferredTimezone = preferredTimezone;
+        StampUpdatedAudit(Id, clock);
+    }
+
+    /// <summary>
     /// Updates the member's avatar path and raises a <see cref="MemberAvatarUpdatedEvent"/>.
     /// </summary>
     /// <param name="pathAvatar">The new path or URI for the member's avatar.</param>

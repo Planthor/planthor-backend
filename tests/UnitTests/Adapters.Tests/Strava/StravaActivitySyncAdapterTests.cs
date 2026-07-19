@@ -4,20 +4,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using Adapters.Strava;
 using Adapters.Strava.Client;
-using Moq;
+using NSubstitute;
 using NodaTime;
 
 namespace Adapters.Tests.Strava;
 
 public class StravaActivitySyncAdapterTests
 {
-    private readonly Mock<StravaApiClient> _mockStravaApiClient;
+    private readonly StravaApiClient _mockStravaApiClient;
     private readonly StravaActivitySyncAdapter _adapter;
 
     public StravaActivitySyncAdapterTests()
     {
-        _mockStravaApiClient = new Mock<StravaApiClient>();
-        _adapter = new StravaActivitySyncAdapter(_mockStravaApiClient.Object);
+        _mockStravaApiClient = Substitute.For<StravaApiClient>();
+        _adapter = new StravaActivitySyncAdapter(_mockStravaApiClient);
     }
 
     [Fact]

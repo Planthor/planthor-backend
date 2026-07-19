@@ -4,30 +4,30 @@ using System.Threading.Tasks;
 using Application.Members.Commands.Provision;
 using Application.Shared;
 using Domain.Members;
-using Moq;
+using NSubstitute;
 using NodaTime;
 
 namespace Application.Tests.Members.Commands.Provision;
 
 public class ProvisionMemberCommandHandlerTests
 {
-    private readonly Mock<IMemberRepository> _mockRepository;
-    private readonly Mock<IClock> _mockClock;
-    private readonly Mock<IBackgroundJobClient> _mockJobClient;
+    private readonly IMemberRepository _mockRepository;
+    private readonly IClock _mockClock;
+    private readonly IBackgroundJobClient _mockJobClient;
     private readonly ProvisionMemberCommandHandler _handler;
 
     public ProvisionMemberCommandHandlerTests()
     {
-        _mockRepository = new Mock<IMemberRepository>();
-        _mockClock = new Mock<IClock>();
-        _mockJobClient = new Mock<IBackgroundJobClient>();
+        _mockRepository = Substitute.For<IMemberRepository>();
+        _mockClock = Substitute.For<IClock>();
+        _mockJobClient = Substitute.For<IBackgroundJobClient>();
 
-        _mockClock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
+        _mockClock.GetCurrentInstant().Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
 
         _handler = new ProvisionMemberCommandHandler(
-            _mockRepository.Object,
-            _mockClock.Object,
-            _mockJobClient.Object);
+            _mockRepository,
+            _mockClock,
+            _mockJobClient);
     }
 
     [Fact]
@@ -36,29 +36,29 @@ public class ProvisionMemberCommandHandlerTests
         var command = new ProvisionMemberCommand("new_user", "John", "Doe", null);
 
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(command.IdentifyName, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member?)null);
+            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
 
         _mockRepository
-            .Setup(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member m, CancellationToken _) => m);
+            .AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>())
+            .Returns(c => Task.FromResult(c.ArgAt<Member>(0)));
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.NotEqual(Guid.Empty, result);
-        _mockRepository.Verify(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockRepository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Received(1).AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
+        _mockRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_WhenMemberAlreadyExists_ReturnsExistingMemberId()
     {
-        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock.Object);
+        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
         var command = new ProvisionMemberCommand("existing_user", "Jane", "Doe", null);
 
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(command.IdentifyName, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingMember);
+            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .Returns(existingMember);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -68,17 +68,17 @@ public class ProvisionMemberCommandHandlerTests
     [Fact]
     public async Task Handle_WhenMemberAlreadyExists_DoesNotCreateDuplicate()
     {
-        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock.Object);
+        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
         var command = new ProvisionMemberCommand("existing_user", "Jane", "Doe", null);
 
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(command.IdentifyName, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingMember);
+            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .Returns(existingMember);
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockRepository.Verify(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()), Times.Never);
-        _mockRepository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepository.DidNotReceive().AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
+        _mockRepository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -88,18 +88,16 @@ public class ProvisionMemberCommandHandlerTests
         var command = new ProvisionMemberCommand("new_user", "John", "Doe", avatarUrl);
 
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(command.IdentifyName, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member?)null);
+            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
 
         _mockRepository
-            .Setup(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member m, CancellationToken _) => m);
+            .AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>())
+            .Returns(c => Task.FromResult(c.ArgAt<Member>(0)));
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockJobClient.Verify(
-            j => j.EnqueueAvatarDownloadAsync(It.IsAny<Guid>(), avatarUrl, It.IsAny<CancellationToken>()),
-            Times.Once);
+        _mockJobClient.Received(1).EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), avatarUrl, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -108,55 +106,49 @@ public class ProvisionMemberCommandHandlerTests
         var command = new ProvisionMemberCommand("new_user", "John", "Doe", null);
 
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(command.IdentifyName, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member?)null);
+            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
 
         _mockRepository
-            .Setup(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member m, CancellationToken _) => m);
+            .AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>())
+            .Returns(c => Task.FromResult(c.ArgAt<Member>(0)));
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockJobClient.Verify(
-            j => j.EnqueueAvatarDownloadAsync(It.IsAny<Guid>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        _mockJobClient.DidNotReceive().EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), Arg.Any<Uri>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_WhenExistingMemberWithNoAvatarAndUrlProvided_EnqueuesAvatarDownload()
     {
-        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock.Object);
+        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
         var avatarUrl = new Uri("https://example.com/avatar.jpg");
         var command = new ProvisionMemberCommand("existing_user", "Jane", "Doe", avatarUrl);
 
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(command.IdentifyName, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingMember);
+            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .Returns(existingMember);
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockJobClient.Verify(
-            j => j.EnqueueAvatarDownloadAsync(existingMember.Id, avatarUrl, It.IsAny<CancellationToken>()),
-            Times.Once);
+        _mockJobClient.Received(1).EnqueueAvatarDownloadAsync(existingMember.Id, avatarUrl, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_WhenExistingMemberAlreadyHasAvatar_DoesNotEnqueueAvatarDownload()
     {
-        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock.Object);
-        existingMember.UpdateAvatar("https://storage.example.com/stored-avatar.jpg", _mockClock.Object);
+        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
+        existingMember.UpdateAvatar("https://storage.example.com/stored-avatar.jpg", _mockClock);
 
         var avatarUrl = new Uri("https://example.com/avatar.jpg");
         var command = new ProvisionMemberCommand("existing_user", "Jane", "Doe", avatarUrl);
 
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(command.IdentifyName, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingMember);
+            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .Returns(existingMember);
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockJobClient.Verify(
-            j => j.EnqueueAvatarDownloadAsync(It.IsAny<Guid>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        _mockJobClient.DidNotReceive().EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), Arg.Any<Uri>(), Arg.Any<CancellationToken>());
     }
 }

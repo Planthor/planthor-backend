@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
+using Api.Requests;
 using Application.Dtos;
 using Application.Members.PersonalPlans.Commands.Create;
 using Application.Members.PersonalPlans.Commands.Update;
@@ -53,7 +54,7 @@ public class PersonalPlansController(
     /// Create a new personal plan.
     /// </summary>
     /// <param name="identifier">The identifier of the member ("me" or their identity name).</param>
-    /// <param name="command">The command containing plan creation details.</param>
+    /// <param name="request">The request containing plan creation details.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>An IActionResult containing the newly created <see cref="PersonalPlanDto"/> on success.</returns>
     /// <response code="201">Returns the newly created personal plan's details.</response>
@@ -65,27 +66,41 @@ public class PersonalPlansController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<PersonalPlanDto>> Create(
         [FromRoute] string identifier,
-        [FromBody] CreatePersonalPlanCommand command,
+        [FromBody] CreatePersonalPlanRequest request,
         CancellationToken token)
     {
-        if (command is null)
+        if (request is null)
         {
             return BadRequest();
         }
 
         var targetIdentifyName = ResolveIdentifier(identifier);
-        
+
         if (string.IsNullOrEmpty(targetIdentifyName))
         {
             return Unauthorized();
         }
-        
+
         if (targetIdentifyName != CurrentUserIdentifyName)
         {
             return Forbid();
         }
 
-        var createPlanCommand = command with { IdentifyName = targetIdentifyName };
+        var createPlanCommand = new CreatePersonalPlanCommand(
+            targetIdentifyName,
+            request.Name,
+            request.Unit,
+            request.Target,
+            request.FromDate,
+            request.ToDate,
+            request.StartDateLocal,
+            request.EndDateLocal,
+            request.Timezone,
+            request.EnableActivityLog,
+            request.DisplayOnProfile,
+            request.Prioritize,
+            request.LinkUserAdapter);
+
         await createPersonalPlanCommandValidator.ValidateAndThrowAsync(createPlanCommand, token);
         var newPlanGuid = await _sender.Send(createPlanCommand, token);
 
@@ -100,7 +115,7 @@ public class PersonalPlansController(
     /// </summary>
     /// <param name="identifier">The identifier of the member ("me" or their identity name).</param>
     /// <param name="planId">The ID of the plan to update.</param>
-    /// <param name="command">The command containing plan update details.</param>
+    /// <param name="request">The request containing plan update details.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>An IActionResult with NoContent status code on success.</returns>
     /// <response code="204">If the member is updated successfully.</response>
@@ -113,21 +128,36 @@ public class PersonalPlansController(
     public async Task<ActionResult<PersonalPlanDto>> Update(
         [FromRoute] string identifier,
         [FromRoute] Guid planId,
-        [FromBody] UpdatePersonalPlanCommand command,
+        [FromBody] UpdatePersonalPlanRequest request,
         CancellationToken token)
     {
-        if (command is null)
+        if (request is null)
         {
             return BadRequest();
         }
 
         var targetIdentifyName = ResolveIdentifier(identifier);
+
+        if (string.IsNullOrEmpty(targetIdentifyName))
+        {
+            return Unauthorized();
+        }
+
         if (targetIdentifyName != CurrentUserIdentifyName)
         {
             return Forbid();
         }
 
-        var updatePlanCommand = command with { IdentifyName = targetIdentifyName!, PlanId = planId };
+        var updatePlanCommand = new UpdatePersonalPlanCommand(
+            targetIdentifyName!,
+            planId,
+            request.Unit,
+            request.Target,
+            request.Current,
+            request.FromDate,
+            request.ToDate,
+            request.PeriodType);
+
         await updatePlanCommandValidator.ValidateAndThrowAsync(updatePlanCommand, token);
         var updatedPlan = await _sender.Send(updatePlanCommand, token);
         return Ok(updatedPlan);
@@ -236,20 +266,20 @@ public class PersonalPlansController(
         CancellationToken token)
     {
         var targetIdentifyName = ResolveIdentifier(identifier);
-        
+
         if (string.IsNullOrEmpty(targetIdentifyName))
         {
             return Unauthorized();
         }
-        
+
         if (targetIdentifyName != CurrentUserIdentifyName)
         {
             return Forbid();
         }
 
-        var cancelCommand = new CancelPlanCommand(targetIdentifyName, planId);
-        var cancelledPlan = await _sender.Send(cancelCommand, token);
-        
+        var cancelPlanCommand = new CancelPlanCommand(targetIdentifyName, planId);
+        var cancelledPlan = await _sender.Send(cancelPlanCommand, token);
+
         return Ok(cancelledPlan);
     }
 
@@ -273,21 +303,21 @@ public class PersonalPlansController(
         CancellationToken token)
     {
         var targetIdentifyName = ResolveIdentifier(identifier);
-        
+
         if (string.IsNullOrEmpty(targetIdentifyName))
         {
             return Unauthorized();
         }
-        
+
         if (targetIdentifyName != CurrentUserIdentifyName)
         {
             return Forbid();
         }
 
-        var command = new ActivatePersonalPlanCommand(targetIdentifyName, planId);
-        await activatePlanCommandValidator.ValidateAndThrowAsync(command, token);
-        var activatedPlan = await _sender.Send(command, token);
-        
+        var activatePlanCommand = new ActivatePersonalPlanCommand(targetIdentifyName, planId);
+        await activatePlanCommandValidator.ValidateAndThrowAsync(activatePlanCommand, token);
+        var activatedPlan = await _sender.Send(activatePlanCommand, token);
+
         return Ok(activatedPlan);
     }
 }

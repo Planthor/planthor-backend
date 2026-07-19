@@ -3,24 +3,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.Commands.Create;
 using Domain.Members;
-using Moq;
+using NSubstitute;
 using NodaTime;
 
 namespace Application.Tests.Members.Commands.Create;
 
 public class CreateMemberCommandHandlerTests
 {
-    private readonly Mock<IMemberRepository> _mockRepository;
-    private readonly Mock<IClock> _mockClock;
+    private readonly IMemberRepository _mockRepository;
+    private readonly IClock _mockClock;
     private readonly CreateMemberCommandHandler _handler;
 
     public CreateMemberCommandHandlerTests()
     {
-        _mockRepository = new Mock<IMemberRepository>();
-        _mockClock = new Mock<IClock>();
-        _mockClock.Setup(c => c.GetCurrentInstant()).Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
+        _mockRepository = Substitute.For<IMemberRepository>();
+        _mockClock = Substitute.For<IClock>();
+        _mockClock.GetCurrentInstant().Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
 
-        _handler = new CreateMemberCommandHandler(_mockRepository.Object, _mockClock.Object);
+        _handler = new CreateMemberCommandHandler(_mockRepository, _mockClock);
     }
 
     private static CreateMemberCommand ValidCommand(string identifyName = "user1") =>
@@ -31,32 +31,32 @@ public class CreateMemberCommandHandlerTests
     {
         var command = ValidCommand();
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(command.IdentifyName, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member?)null);
+            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
         _mockRepository
-            .Setup(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member m, CancellationToken _) => m);
+            .AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>())
+            .Returns(c => Task.FromResult(c.ArgAt<Member>(0)));
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.NotEqual(Guid.Empty, result);
-        _mockRepository.Verify(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockRepository.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Received(1).AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
+        _mockRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task Handle_ExistingMember_ReturnsExistingId()
     {
         var command = ValidCommand("existing");
-        var existing = Member.Create("existing", "Jane", "", "Doe", "", "UTC", _mockClock.Object);
+        var existing = Member.Create("existing", "Jane", "", "Doe", "", "UTC", _mockClock);
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync("existing", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existing);
+            .GetByIdentifyNameAsync("existing", Arg.Any<CancellationToken>())
+            .Returns(existing);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.Equal(existing.Id, result);
-        _mockRepository.Verify(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockRepository.DidNotReceive().AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -64,17 +64,16 @@ public class CreateMemberCommandHandlerTests
     {
         var command = new CreateMemberCommand("user1", "John", null, "Doe", null, "UTC");
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member?)null);
-        _mockRepository
-            .Setup(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member m, CancellationToken _) => m);
-
+            .GetByIdentifyNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
         Member? captured = null;
         _mockRepository
-            .Setup(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()))
-            .Callback<Member, CancellationToken>((m, _) => captured = m)
-            .ReturnsAsync((Member m, CancellationToken _) => m);
+            .AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>())
+            .Returns(c => 
+            {
+                captured = c.ArgAt<Member>(0);
+                return Task.FromResult(c.ArgAt<Member>(0));
+            });
 
         await _handler.Handle(command, CancellationToken.None);
 
@@ -88,12 +87,15 @@ public class CreateMemberCommandHandlerTests
         var command = new CreateMemberCommand("user1", "John", null, "Doe", null, "UTC");
         Member? captured = null;
         _mockRepository
-            .Setup(r => r.GetByIdentifyNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Member?)null);
+            .GetByIdentifyNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
         _mockRepository
-            .Setup(r => r.AddAsync(It.IsAny<Member>(), It.IsAny<CancellationToken>()))
-            .Callback<Member, CancellationToken>((m, _) => captured = m)
-            .ReturnsAsync((Member m, CancellationToken _) => m);
+            .AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>())
+            .Returns(c => 
+            {
+                captured = c.ArgAt<Member>(0);
+                return Task.FromResult(c.ArgAt<Member>(0));
+            });
 
         await _handler.Handle(command, CancellationToken.None);
 

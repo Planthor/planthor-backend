@@ -2,7 +2,7 @@ using Infrastructure.Context;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
-using Moq;
+using NSubstitute;
 
 namespace Infrastructure.Tests.Context;
 
@@ -12,15 +12,15 @@ public class PlanthorDbContextTests
     public void Model_ShouldBuildSuccessfully_WithoutConstructorBindingErrors()
     {
         // Arrange
-        var clientMock = new Mock<IMongoClient>();
+        var clientMock = Substitute.For<IMongoClient>();
         
         var options = new DbContextOptionsBuilder<PlanthorDbContext>()
-            .UseMongoDB(clientMock.Object, "DummyDb")
+            .UseMongoDB(clientMock, "DummyDb")
             .Options;
             
-        var publisherMock = new Mock<IPublisher>();
+        var publisherMock = Substitute.For<IPublisher>();
         
-        using var context = new PlanthorDbContext(options, publisherMock.Object);
+        using var context = new PlanthorDbContext(options, publisherMock);
         
         // Act
         // Accessing the Model property forces EF Core to build and validate the model.

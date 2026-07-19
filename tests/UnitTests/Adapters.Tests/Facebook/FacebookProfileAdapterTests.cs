@@ -6,8 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Adapters.Facebook;
 using Microsoft.Extensions.Configuration;
-using Moq;
-using Moq.Protected;
+using NSubstitute;
 
 namespace Adapters.Tests.Facebook;
 
@@ -26,27 +25,40 @@ public class FacebookProfileAdapterTests
     private static FacebookProfileAdapter CreateAdapter(IHttpClientFactory factory) =>
         new(factory, CreateConfig());
 
-    private static (Mock<HttpMessageHandler> handler, IHttpClientFactory factory) CreateFactory()
+    private class TestHttpMessageHandler : HttpMessageHandler
     {
-        var handler = new Mock<HttpMessageHandler>();
-        var factory = new Mock<IHttpClientFactory>();
-        factory.Setup(f => f.CreateClient(It.IsAny<string>()))
-               .Returns(new HttpClient(handler.Object));
-        return (handler, factory.Object);
+        public Dictionary<string, HttpResponseMessage> Responses { get; } = new();
+        public List<string> Requests { get; } = new();
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var url = request.RequestUri!.ToString();
+            Requests.Add(url);
+            if (Responses.TryGetValue(url, out var response))
+            {
+                return Task.FromResult(response);
+            }
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
     }
 
-    private static void SetupUrl(Mock<HttpMessageHandler> handler, string url, HttpStatusCode status, string? content = null)
+    private static (TestHttpMessageHandler handler, IHttpClientFactory factory) CreateFactory()
     {
-        handler.Protected()
-            .Setup<Task<HttpResponseMessage>>("SendAsync",
-                ItExpr.Is<HttpRequestMessage>(r => r.RequestUri!.ToString() == url),
-                ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(new HttpResponseMessage(status)
-            {
-                Content = content is null
-                    ? new ByteArrayContent([])
-                    : new StringContent(content, Encoding.UTF8, "image/jpeg")
-            });
+        var handler = new TestHttpMessageHandler();
+        var factory = Substitute.For<IHttpClientFactory>();
+        factory.CreateClient(Arg.Any<string>())
+               .Returns(new HttpClient(handler));
+        return (handler, factory);
+    }
+
+    private static void SetupUrl(TestHttpMessageHandler handler, string url, HttpStatusCode status, string? content = null)
+    {
+        handler.Responses[url] = new HttpResponseMessage(status)
+        {
+            Content = content is null
+                ? new ByteArrayContent([])
+                : new StringContent(content, Encoding.UTF8, "image/jpeg")
+        };
     }
 
     [Fact]
@@ -71,10 +83,7 @@ public class FacebookProfileAdapterTests
         var adapter = CreateAdapter(factory);
         await adapter.GetProfilePictureStreamAsync("https://example.com/photo.jpg", CancellationToken.None);
 
-        handler.Protected().Verify("SendAsync",
-            Times.Never(),
-            ItExpr.Is<HttpRequestMessage>(r => r.RequestUri!.ToString().Contains("ui-avatars")),
-            ItExpr.IsAny<CancellationToken>());
+        Assert.DoesNotContain(handler.Requests, url => url.Contains("ui-avatars"));
     }
 
     [Fact]
