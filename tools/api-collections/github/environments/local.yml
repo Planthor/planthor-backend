@@ -1,0 +1,7 @@
+name: local
+variables:
+  - name: baseUrl
+    value: https://api.github.com
+  - name: accessToken
+    value: ""
+    secret: true
