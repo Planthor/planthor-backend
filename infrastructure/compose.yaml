@@ -10,6 +10,7 @@ services:
       - "27017:27017"
     volumes:
       - mongodb1_data:/data/db
+      - mongodb1_configdb:/data/configdb
     networks:
       - app_network
     healthcheck:
@@ -27,6 +28,7 @@ services:
       - "27018:27017"
     volumes:
       - mongodb2_data:/data/db
+      - mongodb2_configdb:/data/configdb
     networks:
       - app_network
     healthcheck:
@@ -42,6 +44,9 @@ services:
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27019:27017"
+    volumes:
+      - mongodb3_data:/data/db
+      - mongodb3_configdb:/data/configdb
     networks:
       - app_network
     healthcheck:
@@ -71,6 +76,8 @@ services:
     restart: "no"
     volumes:
       - ./mongo-setup.js:/mongo-setup.js:ro
+      - mongo_setup_data:/data/db
+      - mongo_setup_configdb:/data/configdb
     entrypoint: ["mongosh", "--host", "mongodb1:27017", "--file", "/mongo-setup.js"]
 
   mongo-express:
@@ -177,7 +184,19 @@ services:
 volumes:
   mongodb1_data:
     driver: local
+  mongodb1_configdb:
+    driver: local
   mongodb2_data:
+    driver: local
+  mongodb2_configdb:
+    driver: local
+  mongodb3_data:
+    driver: local
+  mongodb3_configdb:
+    driver: local
+  mongo_setup_data:
+    driver: local
+  mongo_setup_configdb:
     driver: local
   postgres_data:
     driver: local
