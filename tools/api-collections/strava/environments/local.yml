@@ -4,4 +4,3 @@ variables:
     value: https://www.strava.com/api/v3
   - name: accessToken
     value: ""
-    secret: true
