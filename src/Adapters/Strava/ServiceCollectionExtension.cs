@@ -29,7 +29,7 @@ public static class ServiceCollectionExtension
         services.AddSingleton<StravaAdapterDatabase>();
 
         // Typed HTTP client for Strava API
-        services.AddHttpClient<StravaApiClient>();
+        services.AddHttpClient<IStravaApiClient, StravaApiClient>();
 
         return services;
     }

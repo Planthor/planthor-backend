@@ -16,11 +16,11 @@ namespace Adapters.Strava.Client;
 /// The underlying <see cref="HttpClient"/> is managed by the <c>IHttpClientFactory</c>
 /// infrastructure and should not be disposed manually.
 /// </remarks>
-public sealed partial class StravaApiClient(
+public partial class StravaApiClient(
     HttpClient httpClient,
     StravaAdapterDatabase tokenDb,
     IOptions<StravaOptions> options,
-    ILogger<StravaApiClient> logger)
+    ILogger<StravaApiClient> logger) : IStravaApiClient
 {
     private const string TokenEndpoint = "https://www.strava.com/oauth/token";
     private const string DeauthorizeEndpoint = "https://www.strava.com/oauth/deauthorize";

@@ -1,12 +1,6 @@
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
-using Adapters.Strava.Persistence;
 using Adapters.Strava.Webhook;
-using Domain.Members;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +18,6 @@ namespace Adapters.Strava.Controllers;
 [Route("v1/[controller]")]
 public sealed partial class StravaController(
     StravaApiClient stravaClient,
-    IMemberRepository memberRepository,
     IClock clock,
     IOptions<StravaOptions> options,
     ILogger<StravaController> logger) : ControllerBase
@@ -164,87 +157,6 @@ public sealed partial class StravaController(
         // Phase 2: Will dispatch SyncStravaActivitiesCommand via MediatR
         await Task.CompletedTask;
         throw new NotSupportedException("Manual sync will be implemented in Phase 2.");
-    }
-
-    // ────────────────────────────────────────────────────────────────
-    // State Encryption (AES-GCM)
-    // ────────────────────────────────────────────────────────────────
-
-    private string EncryptState(Guid memberId)
-    {
-        var payload = JsonSerializer.Serialize(new OAuthStatePayload
-        {
-            MemberId = memberId,
-            Nonce = Guid.NewGuid().ToString("N"),
-            TimestampUtc = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-        });
-
-        var key = Convert.FromBase64String(_options.StateEncryptionKey);
-        var plaintext = Encoding.UTF8.GetBytes(payload);
-        var nonce = new byte[AesGcm.NonceByteSizes.MaxSize]; // 12 bytes
-        RandomNumberGenerator.Fill(nonce);
-        var ciphertext = new byte[plaintext.Length];
-        var tag = new byte[AesGcm.TagByteSizes.MaxSize]; // 16 bytes
-
-        using var aes = new AesGcm(key, AesGcm.TagByteSizes.MaxSize);
-        aes.Encrypt(nonce, plaintext, ciphertext, tag);
-
-        // Format: Base64(nonce + ciphertext + tag)
-        var combined = new byte[nonce.Length + ciphertext.Length + tag.Length];
-        Buffer.BlockCopy(nonce, 0, combined, 0, nonce.Length);
-        Buffer.BlockCopy(ciphertext, 0, combined, nonce.Length, ciphertext.Length);
-        Buffer.BlockCopy(tag, 0, combined, nonce.Length + ciphertext.Length, tag.Length);
-
-        return Convert.ToBase64String(combined);
-    }
-
-    private Guid? DecryptState(string encryptedState)
-    {
-        try
-        {
-            var combined = Convert.FromBase64String(encryptedState);
-            var key = Convert.FromBase64String(_options.StateEncryptionKey);
-
-            const int nonceSize = 12; // AesGcm.NonceByteSizes.MaxSize
-            const int tagSize = 16;   // AesGcm.TagByteSizes.MaxSize
-
-            if (combined.Length < nonceSize + tagSize)
-            {
-                return null;
-            }
-
-            var nonce = combined.AsSpan(0, nonceSize);
-            var ciphertext = combined.AsSpan(nonceSize, combined.Length - nonceSize - tagSize);
-            var tag = combined.AsSpan(combined.Length - tagSize, tagSize);
-            var plaintext = new byte[ciphertext.Length];
-
-            using var aes = new AesGcm(key, tagSize);
-            aes.Decrypt(nonce, ciphertext, tag, plaintext);
-
-            var payload = JsonSerializer.Deserialize<OAuthStatePayload>(Encoding.UTF8.GetString(plaintext));
-            if (payload is null)
-            {
-                return null;
-            }
-
-            // Reject states older than 10 minutes
-            var ageSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - payload.TimestampUtc;
-            if (ageSeconds > 600) // 10 minutes
-            {
-                LogCallbackStateExpired(payload.MemberId);
-                return null;
-            }
-
-            return payload.MemberId;
-        }
-        catch (CryptographicException)
-        {
-            return null;
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
     }
 
     // ────────────────────────────────────────────────────────────────

@@ -31,9 +31,12 @@ public static class ServiceCollectionExtension
         string connectionString,
         IConfiguration configuration)
     {
+        var mongoClient = new MongoDB.Driver.MongoClient(connectionString);
+        services.AddSingleton<MongoDB.Driver.IMongoClient>(mongoClient);
+
         services.AddDbContext<PlanthorDbContext>(options =>
         {
-            options.UseMongoDB(connectionString, "planthordb");
+            options.UseMongoDB(mongoClient, "planthordb");
         });
 
         // Register your specific aggregate repositories (Manual DI)

@@ -11,12 +11,12 @@ namespace Adapters.Tests.Strava;
 
 public class StravaActivitySyncAdapterTests
 {
-    private readonly StravaApiClient _mockStravaApiClient;
+    private readonly IStravaApiClient _mockStravaApiClient;
     private readonly StravaActivitySyncAdapter _adapter;
 
     public StravaActivitySyncAdapterTests()
     {
-        _mockStravaApiClient = Substitute.For<StravaApiClient>();
+        _mockStravaApiClient = Substitute.For<IStravaApiClient>();
         _adapter = new StravaActivitySyncAdapter(_mockStravaApiClient);
     }
 

@@ -9,7 +9,7 @@ namespace Adapters.Strava;
 /// Fetches activities via the Strava API and maps them to the provider-agnostic
 /// <see cref="AdapterActivityDto"/> shape.
 /// </summary>
-public sealed class StravaActivitySyncAdapter(StravaApiClient client) : IActivitySyncAdapter
+public sealed class StravaActivitySyncAdapter(IStravaApiClient client) : IActivitySyncAdapter
 {
     /// <summary>
     /// Gets the provider ID for Strava.

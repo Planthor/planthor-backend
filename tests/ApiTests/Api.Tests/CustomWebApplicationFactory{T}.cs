@@ -72,10 +72,21 @@ public class CustomWebApplicationFactory<TProgram>
                 services.Remove(dbConnectionDescriptor);
             }
 
+            var mongoClientDescriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(MongoDB.Driver.IMongoClient));
+
+            if (mongoClientDescriptor != null)
+            {
+                services.Remove(mongoClientDescriptor);
+            }
+
+            var connectionString = $"mongodb://{_mongoDbContainer.Hostname}:{_mongoDbContainer.GetMappedPublicPort(27017)}/?replicaSet=rs0&directConnection=true";
+            var mongoClient = new MongoDB.Driver.MongoClient(connectionString);
+            services.AddSingleton<MongoDB.Driver.IMongoClient>(mongoClient);
+
             services.AddDbContext<PlanthorDbContext>(options =>
             {
-                var connectionString = $"mongodb://{_mongoDbContainer.Hostname}:{_mongoDbContainer.GetMappedPublicPort(27017)}/?replicaSet=rs0&directConnection=true";
-                options.UseMongoDB(connectionString, "planthordb_test");
+                options.UseMongoDB(mongoClient, "planthordb_test");
             });
 
             services

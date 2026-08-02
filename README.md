@@ -1,4 +1,4 @@
-﻿# Planthor Backend
+# Planthor Backend
 
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Planthor_PlanthorWebApi&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Planthor_PlanthorWebApi)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Planthor_PlanthorWebApi&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=Planthor_PlanthorWebApi)
@@ -293,6 +293,15 @@ The Strava adapter syncs activities and processes webhook events in real-time.
 
 2. Register the tunnel URL with Strava as the webhook callback:
    `https://<tunnel-id>.trycloudflare.com/v1/webhooks/strava`
+
+#### Authentication Architecture (BFF Pattern)
+
+To ensure high security and cross-platform reusability, Planthor uses a **Backend-For-Frontend (BFF)** pattern for all third-party OAuth connections (Strava, Facebook, etc.).
+
+Mobile and Web clients **must not** initiate the Strava OAuth flow directly (e.g., no PKCE from the client). Instead:
+1. **Initiate:** The client calls `GET /v1/Strava/authorize` to retrieve a secure, state-protected authorization URL.
+2. **Authorize:** The client opens this URL in a secure web view (e.g., `ASWebAuthenticationSession` on iOS).
+3. **Callback:** The backend handles the Strava callback at `/v1/Strava/callback`, securely exchanges the token using the `client_secret`, saves the connection in the database, and redirects control back to the client via a deep link.
 
 ### Facebook Integration
 
