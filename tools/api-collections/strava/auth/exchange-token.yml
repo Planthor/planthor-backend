@@ -1,0 +1,30 @@
+info:
+  name: Exchange Token
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://www.strava.com/oauth/token
+  body:
+    type: json
+    data: |-
+      {
+        "client_id": "{{clientId}}",
+        "client_secret": "{{clientSecret}}",
+        "code": "{{authCode}}",
+        "grant_type": "authorization_code"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        console.log("Response Body:", res.getBody());
+        test("should return 200", function() {
+          expect(res.status).to.equal(200);
+        });
+
+settings:
+  encodeUrl: true

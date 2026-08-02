@@ -11,6 +11,8 @@ strava/
 ├── opencollection.yml              # Bruno collection metadata
 ├── environments/
 │   └── local.yml                   # Base URL + secret access token
+├── auth/
+│   └── exchange-token.yml          # POST /oauth/token
 ├── athlete/
 │   └── get-authenticated-athlete.yml  # GET /athlete
 └── README.md                       # This file
@@ -41,25 +43,29 @@ Strava uses **OAuth 2.0**. For quick local testing you can generate a short-live
    ```
 
 3. Authorise the app. You will be redirected to `http://localhost?code=XXXX` — copy the `code` value.
-4. Exchange the code for a token (run in a terminal):
+4. In Bruno, open this collection folder (`tools/api-collections/strava`).
+5. Select the **local** environment (top-right dropdown).
+6. Click the **lock icon** to configure secrets. Fill in `clientSecret` and `authCode` (with the `XXXX` value from step 3).
+7. Exchange the code for a token using the Bruno CLI:
 
    ```bash
-   curl -X POST https://www.strava.com/oauth/token \
-     -d client_id=YOUR_CLIENT_ID \
-     -d client_secret=YOUR_CLIENT_SECRET \
-     -d code=XXXX \
-     -d grant_type=authorization_code
+   # Run the token exchange request
+   bru run auth/exchange-token.yml --env local
    ```
+   *(Alternatively, you can just click Run on the `Exchange Token` request inside the Bruno GUI).*
 
-5. Copy the `access_token` from the JSON response.
+8. Copy the `access_token` from the JSON response.
+9. Go back to the Bruno environment **lock icon** and paste the copied token into `accessToken` — it is stored as a **secret** and never committed to Git.
 
 ---
 
-## Configure the Environment
+## Running Requests
 
-1. In Bruno, open this collection folder (`tools/api-collections/strava`).
-2. Select the **local** environment (top-right dropdown).
-3. Click the **lock icon** next to `accessToken` and paste your token — it is stored as a **secret** and never committed to Git.
+Now that your `accessToken` is configured in the local environment, you can run other requests like fetching the authenticated athlete:
+
+```bash
+bru run athlete/get-authenticated-athlete.yml --env local
+```
 
 ---
 

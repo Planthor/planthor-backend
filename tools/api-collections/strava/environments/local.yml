@@ -4,3 +4,9 @@ variables:
     value: https://www.strava.com/api/v3
   - name: accessToken
     value: ""
+  - name: clientId
+    value: 266300
+  - name: clientSecret
+    value: ""
+  - name: authCode
+    value: ""
