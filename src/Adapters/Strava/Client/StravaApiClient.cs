@@ -160,7 +160,10 @@ public partial class StravaApiClient(
         CancellationToken cancellationToken)
     {
         var token = await tokenDb.GetByMemberIdAsync(memberId, cancellationToken);
-        if (token is null) return null;
+        if (token is null)
+        {
+            return null;
+        }
 
         // Proactive refresh: refresh if within 60 seconds of expiry
         var nowEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();

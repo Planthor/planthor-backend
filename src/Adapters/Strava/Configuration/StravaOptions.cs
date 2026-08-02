@@ -14,7 +14,7 @@ public class StravaOptions
     /// <summary>
     /// The configuration section name.
     /// </summary>
-    public const string SectionName = "Strava";
+    public static readonly string SectionName = "Strava";
 
     /// <summary>
     /// Gets or sets the Strava API application client ID.
