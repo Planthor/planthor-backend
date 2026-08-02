@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Text.Json;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Webhook;
@@ -17,16 +19,12 @@ namespace Adapters.Strava.Controllers;
 [ApiController]
 [Route("v1/[controller]")]
 public sealed partial class StravaController(
-    StravaApiClient stravaClient,
+    IStravaApiClient stravaClient,
     IClock clock,
     IOptions<StravaOptions> options,
     ILogger<StravaController> logger) : ControllerBase
 {
     private readonly StravaOptions _options = options.Value;
-
-    // ────────────────────────────────────────────────────────────────
-    // OAuth Flow
-    // ────────────────────────────────────────────────────────────────
 
     /// <summary>
     /// Initiates the Strava OAuth authorization flow by redirecting the user
@@ -42,7 +40,39 @@ public sealed partial class StravaController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Authorize(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException("Authorization endpoint will be implemented in Phase 1.");
+        var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(identifyName))
+        {
+            return Unauthorized();
+        }
+
+        var payload = new OAuthStatePayload
+        {
+            IdentifyName = identifyName,
+            Nonce = Guid.NewGuid().ToString("N"),
+            TimestampUtc = clock.GetCurrentInstant().ToUnixTimeSeconds()
+        };
+
+        var json = JsonSerializer.Serialize(payload);
+        var encryptedState = AesEncryptionHelper.Encrypt(json, _options.StateEncryptionKey);
+
+        var redirectUri = Url.Action(nameof(Callback), "Strava", null, Request.Scheme);
+        if (string.IsNullOrEmpty(redirectUri))
+        {
+            return BadRequest("Could not generate redirect URI.");
+        }
+
+        var authorizeUrl = $"https://www.strava.com/oauth/authorize" +
+                           $"?client_id={_options.ClientId}" +
+                           $"&response_type=code" +
+                           $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                           $"&approval_prompt=force" +
+                           $"&scope={Uri.EscapeDataString(_options.Scopes)}" +
+                           $"&state={Uri.EscapeDataString(encryptedState)}";
+
+        LogAuthorizationRedirect(identifyName);
+
+        return Redirect(authorizeUrl);
     }
 
     /// <summary>
@@ -64,7 +94,56 @@ public sealed partial class StravaController(
         [FromQuery] string? error,
         CancellationToken cancellationToken)
     {
-        throw new NotImplementedException("Callback endpoint will be implemented in Phase 1.");
+        if (!string.IsNullOrEmpty(error))
+        {
+            LogCallbackDenied(error);
+            return Redirect($"{_options.FrontendErrorUrl}?error={Uri.EscapeDataString(error)}");
+        }
+
+        if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
+        {
+            LogCallbackMissingParams();
+            return Redirect($"{_options.FrontendErrorUrl}?error=missing_params");
+        }
+
+        OAuthStatePayload? payload = null;
+        try
+        {
+            var decryptedJson = AesEncryptionHelper.Decrypt(state, _options.StateEncryptionKey);
+            payload = System.Text.Json.JsonSerializer.Deserialize<OAuthStatePayload>(decryptedJson);
+        }
+        catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException ||
+                                   ex is System.Text.Json.JsonException ||
+                                   ex is FormatException)
+        {
+            LogCallbackInvalidState(ex);
+        }
+
+        if (payload == null || string.IsNullOrEmpty(payload.IdentifyName))
+        {
+            if (payload == null)
+            {
+                LogCallbackInvalidState(new InvalidOperationException("Decrypted state payload was null or empty."));
+            }
+            return Redirect($"{_options.FrontendErrorUrl}?error=invalid_state");
+        }
+
+        var nowEpoch = clock.GetCurrentInstant().ToUnixTimeSeconds();
+        if (nowEpoch - payload.TimestampUtc > 900) // 15 minutes expiration
+        {
+            LogCallbackStateExpired(payload.IdentifyName);
+            return Redirect($"{_options.FrontendErrorUrl}?error=state_expired");
+        }
+
+        var tokenResponse = await stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
+        if (tokenResponse == null)
+        {
+            LogCallbackTokenExchangeFailed(payload.IdentifyName);
+            return Redirect($"{_options.FrontendErrorUrl}?error=exchange_failed");
+        }
+
+        LogCallbackSuccess(payload.IdentifyName, tokenResponse.Athlete.Id);
+        return Redirect(_options.FrontendSuccessUrl);
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -163,8 +242,8 @@ public sealed partial class StravaController(
     // High-performance structured logging
     // ────────────────────────────────────────────────────────────────
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Redirecting member {MemberId} to Strava authorization")]
-    private partial void LogAuthorizationRedirect(Guid memberId);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Redirecting member {IdentifyName} to Strava authorization")]
+    private partial void LogAuthorizationRedirect(string identifyName);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Strava OAuth callback denied by user: {Error}")]
     private partial void LogCallbackDenied(string error);
@@ -173,19 +252,16 @@ public sealed partial class StravaController(
     private partial void LogCallbackMissingParams();
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Strava OAuth callback received invalid or tampered state")]
-    private partial void LogCallbackInvalidState();
+    private partial void LogCallbackInvalidState(Exception ex);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Strava OAuth callback state expired for member {MemberId}")]
-    private partial void LogCallbackStateExpired(Guid memberId);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Strava OAuth callback state expired for member {IdentifyName}")]
+    private partial void LogCallbackStateExpired(string identifyName);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Strava token exchange failed during callback for member {MemberId}")]
-    private partial void LogCallbackTokenExchangeFailed(Guid memberId);
+    [LoggerMessage(Level = LogLevel.Error, Message = "Strava token exchange failed during callback for member {IdentifyName}")]
+    private partial void LogCallbackTokenExchangeFailed(string identifyName);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Member {MemberId} not found during Strava callback")]
-    private partial void LogCallbackMemberNotFound(Guid memberId);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Strava connection established for member {MemberId}, athlete {AthleteId}")]
-    private partial void LogCallbackSuccess(Guid memberId, long athleteId);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Strava connection established for member {IdentifyName}, athlete {AthleteId}")]
+    private partial void LogCallbackSuccess(string identifyName, long athleteId);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Strava connection disconnected for member {MemberId}")]
     private partial void LogDisconnectSuccess(Guid memberId);
@@ -203,9 +279,9 @@ public sealed partial class StravaController(
 internal class OAuthStatePayload
 {
     /// <summary>
-    /// Gets or sets the Planthor member identifier.
+    /// Gets or sets the Planthor member's Keycloak subject ID (Identity Name).
     /// </summary>
-    public Guid MemberId { get; set; }
+    public string IdentifyName { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets a cryptographic nonce to prevent replay attacks.

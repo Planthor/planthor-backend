@@ -14,7 +14,10 @@ public class StravaControllerTests : IClassFixture<CustomWebApplicationFactory<P
     public StravaControllerTests(CustomWebApplicationFactory<Program> factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
     }
 
     [Fact]
@@ -34,17 +37,17 @@ public class StravaControllerTests : IClassFixture<CustomWebApplicationFactory<P
         // We just call the endpoints to trigger the NotImplementedException / NotSupportedException
         // We need to be authorized for some endpoints, so we first create a member or mock headers.
         
-        // Callback is AllowAnonymous
+        // Callback is AllowAnonymous, returns Redirect on invalid/missing params
         var callbackRes = await _client.GetAsync("/v1/Strava/callback?code=123&state=abc");
-        Assert.Equal(HttpStatusCode.InternalServerError, callbackRes.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, callbackRes.StatusCode);
 
         // Webhook POST is AllowAnonymous
         var webhookPost = await _client.PostAsJsonAsync("/v1/Strava/webhook", new { });
         Assert.Equal(HttpStatusCode.InternalServerError, webhookPost.StatusCode);
         
-        // For authorized ones, we can just hit them without auth to get 401, covering the Authorize attribute
+        // Authorize endpoint redirects to Strava OAuth
         var authorizeRes = await _client.GetAsync("/v1/Strava/authorize");
-        Assert.Equal(HttpStatusCode.InternalServerError, authorizeRes.StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, authorizeRes.StatusCode);
 
         var disconnectRes = await _client.DeleteAsync("/v1/Strava/disconnect");
         Assert.Equal(HttpStatusCode.InternalServerError, disconnectRes.StatusCode);

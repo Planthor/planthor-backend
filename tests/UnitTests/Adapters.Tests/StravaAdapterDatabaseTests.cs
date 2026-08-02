@@ -10,7 +10,7 @@ public class StravaAdapterDatabaseTests
     {
         var doc = new StravaTokenDocument
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.NewGuid().ToString("N"),
             AthleteId = 12345,
             AccessToken = "acc",
             RefreshToken = "ref",
@@ -18,7 +18,7 @@ public class StravaAdapterDatabaseTests
             LastRefreshedAtUtc = DateTime.UtcNow
         };
         
-        Assert.NotEqual(Guid.Empty, doc.Id);
+        Assert.False(string.IsNullOrEmpty(doc.Id));
         Assert.Equal(12345, doc.AthleteId);
         Assert.Equal("acc", doc.AccessToken);
         Assert.Equal("ref", doc.RefreshToken);

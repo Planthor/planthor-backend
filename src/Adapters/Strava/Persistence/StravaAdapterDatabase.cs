@@ -27,16 +27,16 @@ public class StravaAdapterDatabase
     }
 
     /// <summary>
-    /// Retrieves a token document by the Planthor member's unique identifier.
+    /// Retrieves a token document by the Planthor member's identity name (Keycloak Subject ID).
     /// </summary>
-    /// <param name="memberId">The Planthor member identifier.</param>
+    /// <param name="identifyName">The Planthor member's Keycloak Identity Name.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns>The token document, or <c>null</c> if no document exists for the member.</returns>
-    public async Task<StravaTokenDocument?> GetByMemberIdAsync(
-        Guid memberId,
+    public async Task<StravaTokenDocument?> GetByIdentifyNameAsync(
+        string identifyName,
         CancellationToken cancellationToken)
     {
-        var filter = Builders<StravaTokenDocument>.Filter.Eq(t => t.Id, memberId);
+        var filter = Builders<StravaTokenDocument>.Filter.Eq(t => t.Id, identifyName);
         return await _tokens.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -74,15 +74,15 @@ public class StravaAdapterDatabase
     }
 
     /// <summary>
-    /// Deletes a token document by the Planthor member's unique identifier.
+    /// Deletes a token document by the Planthor member's identity name.
     /// </summary>
-    /// <param name="memberId">The Planthor member identifier whose tokens should be removed.</param>
+    /// <param name="identifyName">The Planthor member's Keycloak Identity Name whose tokens should be removed.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     public async Task DeleteAsync(
-        Guid memberId,
+        string identifyName,
         CancellationToken cancellationToken)
     {
-        var filter = Builders<StravaTokenDocument>.Filter.Eq(t => t.Id, memberId);
+        var filter = Builders<StravaTokenDocument>.Filter.Eq(t => t.Id, identifyName);
         await _tokens.DeleteOneAsync(filter, cancellationToken);
     }
 }

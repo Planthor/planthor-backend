@@ -5,17 +5,17 @@ namespace Adapters.Strava.Persistence;
 /// Stored in the <c>strava_adapter_db / strava_tokens</c> collection.
 /// </summary>
 /// <remarks>
-/// This document uses the Planthor <c>MemberId</c> as its primary key,
-/// ensuring a one-to-one mapping between a member and their Strava credentials.
+/// This document uses the Planthor <c>IdentifyName</c> (Keycloak Subject ID) as its primary key,
+/// ensuring a one-to-one mapping between a member's identity provider ID and their Strava credentials.
 /// The <see cref="AthleteId"/> field enables reverse lookups when processing
 /// webhook events (which only carry the Strava athlete ID, not the Planthor member ID).
 /// </remarks>
 public class StravaTokenDocument
 {
     /// <summary>
-    /// Gets or sets the document identifier, which equals the Planthor member's unique ID.
+    /// Gets or sets the document identifier, which equals the Planthor member's IdentifyName.
     /// </summary>
-    public Guid Id { get; set; }
+    public string Id { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the Strava athlete numeric identifier.

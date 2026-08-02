@@ -27,7 +27,7 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
     [Fact]
     public async Task ExchangeCodeAsync_Success()
     {
-        var memberId = Guid.NewGuid();
+        var memberId = Guid.NewGuid().ToString("N");
         _factory.WireMockServer
             .Given(Request.Create().WithPath("/oauth/token").UsingPost())
             .RespondWith(Response.Create()
@@ -87,7 +87,7 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
     [Fact]
     public async Task ApiClient_Error_Branches()
     {
-        var memberId = Guid.NewGuid();
+        var memberId = Guid.NewGuid().ToString("N");
         
         // Exchange error
         _factory.WireMockServer
@@ -98,15 +98,15 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
         Assert.Null(exchFail);
 
         // Refresh missing token
-        var refreshFail = await _apiClient.RefreshTokenAsync(Guid.NewGuid(), CancellationToken.None);
+        var refreshFail = await _apiClient.RefreshTokenAsync(Guid.NewGuid().ToString("N"), CancellationToken.None);
         Assert.Null(refreshFail);
         
         // GetValidToken missing token
-        var validFail = await _apiClient.GetValidTokenAsync(Guid.NewGuid(), CancellationToken.None);
+        var validFail = await _apiClient.GetValidTokenAsync(Guid.NewGuid().ToString("N"), CancellationToken.None);
         Assert.Null(validFail);
 
         // Deauth missing token
-        var deauthFail = await _apiClient.DeauthorizeAsync(Guid.NewGuid(), CancellationToken.None);
+        var deauthFail = await _apiClient.DeauthorizeAsync(Guid.NewGuid().ToString("N"), CancellationToken.None);
         Assert.True(deauthFail);
     }
 }
