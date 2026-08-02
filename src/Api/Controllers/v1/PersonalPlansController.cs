@@ -39,7 +39,8 @@ public class PersonalPlansController(
     IValidator<UpdatePersonalPlanCommand> updatePlanCommandValidator,
     IValidator<ListPersonalPlansQuery> personalPlansQueryValidator,
     IValidator<PersonalPlanDetailsQuery> personalPlanDetailsQueryValidator,
-    IValidator<ActivatePersonalPlanCommand> activatePlanCommandValidator)
+    IValidator<ActivatePersonalPlanCommand> activatePlanCommandValidator,
+    IValidator<CancelPlanCommand> cancelPlanCommandValidator)
     : ControllerBase
 {
     private readonly ISender _sender = sender
@@ -278,6 +279,7 @@ public class PersonalPlansController(
         }
 
         var cancelPlanCommand = new CancelPlanCommand(targetIdentifyName, planId);
+        await cancelPlanCommandValidator.ValidateAndThrowAsync(cancelPlanCommand, token);
         var cancelledPlan = await _sender.Send(cancelPlanCommand, token);
 
         return Ok(cancelledPlan);

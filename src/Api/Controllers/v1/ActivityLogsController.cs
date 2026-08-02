@@ -28,7 +28,8 @@ namespace Api.Controllers.v1;
 [Route("v1/plans/{planId}/[controller]")]
 public class ActivityLogsController(
     ISender sender,
-    IValidator<CreateActivityLogCommand> createActivityLogCommandValidator)
+    IValidator<CreateActivityLogCommand> createActivityLogCommandValidator,
+    IValidator<ActivityLogDetailsQuery> activityLogDetailsQueryValidator)
     : ControllerBase
 {
     private readonly ISender _sender = sender ?? throw new ArgumentNullException(nameof(sender));
@@ -99,6 +100,7 @@ public class ActivityLogsController(
         var newLogGuid = await _sender.Send(createLogCommand, token);
 
         var query = new ActivityLogDetailsQuery(planId, newLogGuid);
+        await activityLogDetailsQueryValidator.ValidateAndThrowAsync(query, token);
         var activityLogDto = await _sender.Send(query, token);
 
         return CreatedAtAction(nameof(Read), new { planId = planId, logId = newLogGuid }, activityLogDto);
@@ -164,7 +166,11 @@ public class ActivityLogsController(
             return Unauthorized();
         }
 
-        return Ok();
+        var query = new ActivityLogDetailsQuery(planId, logId);
+        await activityLogDetailsQueryValidator.ValidateAndThrowAsync(query, token);
+        var activityLogDto = await _sender.Send(query, token);
+
+        return Ok(activityLogDto);
     }
 
     /// <summary>

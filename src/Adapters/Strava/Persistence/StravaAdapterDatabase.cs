@@ -22,7 +22,7 @@ public class StravaAdapterDatabase
     public StravaAdapterDatabase(IMongoClient mongoClient)
     {
         ArgumentNullException.ThrowIfNull(mongoClient);
-        var database = mongoClient.GetDatabase("strava_adapter_db");
+        var database = mongoClient.GetDatabase("strava_activity_sync_adapter_db");
         _tokens = database.GetCollection<StravaTokenDocument>("strava_tokens");
     }
 

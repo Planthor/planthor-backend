@@ -1,11 +1,16 @@
-namespace Adapters.Facebook;
+namespace Adapters.Abstraction;
 
 /// <summary>
-/// Defines the contract for an adapter that interacts with Facebook's external APIs.
-/// Provides methods to retrieve user profile information, such as the profile picture.
+/// Defines the contract for an adapter that interacts with external APIs to retrieve social profile data.
+/// Implementations are registered with keyed DI using ProviderId as the key.
 /// </summary>
-public interface IFacebookAdapter
+public interface ISocialProfileAdapter
 {
+    /// <summary>
+    /// The external provider this adapter serves.
+    /// </summary>
+    string ProviderId { get; }
+
     /// <summary>
     /// Retrieves a stream containing the user's profile picture from the given external path.
     /// </summary>

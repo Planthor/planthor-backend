@@ -22,10 +22,10 @@ public partial class StravaApiClient(
     IOptions<StravaOptions> options,
     ILogger<StravaApiClient> logger) : IStravaApiClient
 {
-    private const string TokenEndpoint = "https://www.strava.com/oauth/token";
-    private const string DeauthorizeEndpoint = "https://www.strava.com/oauth/deauthorize";
-
     private readonly StravaOptions _options = options.Value;
+
+    private string TokenEndpoint => $"{_options.BaseUrl.TrimEnd('/')}/oauth/token";
+    private string DeauthorizeEndpoint => $"{_options.BaseUrl.TrimEnd('/')}/oauth/deauthorize";
 
     /// <summary>
     /// Exchanges an authorization code for access and refresh tokens,

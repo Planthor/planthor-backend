@@ -1,3 +1,4 @@
+using Adapters.Abstraction;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Persistence;
@@ -22,6 +23,15 @@ public static class ServiceCollectionExtension
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        try
+        {
+            MongoDB.Bson.Serialization.BsonSerializer.RegisterSerializer(
+                new MongoDB.Bson.Serialization.Serializers.GuidSerializer(MongoDB.Bson.GuidRepresentation.Standard));
+        }
+        catch (MongoDB.Bson.BsonSerializationException)
+        {
+            // Ignore if already registered
+        }
         // Bind configuration
         services.Configure<StravaOptions>(configuration.GetSection(StravaOptions.SectionName));
 
@@ -30,6 +40,8 @@ public static class ServiceCollectionExtension
 
         // Typed HTTP client for Strava API
         services.AddHttpClient<IStravaApiClient, StravaApiClient>();
+
+        services.AddKeyedScoped<IActivitySyncAdapter, StravaActivitySyncAdapter>("STRAVA");
 
         return services;
     }

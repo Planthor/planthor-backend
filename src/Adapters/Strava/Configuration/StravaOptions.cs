@@ -60,4 +60,9 @@ public class StravaOptions
     /// Defaults to <c>"activity:read_all,profile:read_all"</c>.
     /// </summary>
     public string Scopes { get; set; } = "activity:read_all,profile:read_all";
+
+    /// <summary>
+    /// Gets or sets the Strava API Base URL (useful for mocking).
+    /// </summary>
+    public string BaseUrl { get; set; } = "https://www.strava.com";
 }
