@@ -1,5 +1,6 @@
 using System;
 using Adapters.Facebook;
+using Adapters.Strava;
 using Api.ExceptionHandling;
 using Api.Filters;
 using Application;
@@ -35,6 +36,7 @@ try
         builder.Configuration);
 
     builder.Services.AddScoped<IFacebookAdapter, FacebookProfileAdapter>();
+    builder.Services.AddStravaAdapter(builder.Configuration);
     builder.Services.AddScoped<MemberSessionFilter>();
     builder.Services.AddApplicationServices(builder.Configuration);
 
