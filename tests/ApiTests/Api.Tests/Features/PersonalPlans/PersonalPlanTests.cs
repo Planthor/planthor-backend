@@ -24,7 +24,7 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
     public async Task PersonalPlan_Lifecycle_Tests()
     {
         // We first need a member for the identity
-        var createMemberCmd = new Api.Requests.CreateMemberRequest(
+        var createMemberCmd = new CreateMemberRequest(
             FirstName: "Plan",
             MiddleName: null,
             LastName: "Owner",

@@ -26,7 +26,7 @@ public class ListMembersQueryHandlerTests
     private void SetupMembers(List<MemberDto> dtos)
     {
         _mockContext
-            .QueryAsync<Member, MemberDto>(
+            .QueryAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<MemberDto>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(dtos);
@@ -65,7 +65,7 @@ public class ListMembersQueryHandlerTests
 
         await _handler.Handle(new ListMembersQuery(), ct);
 
-        _mockContext.Received(1).QueryAsync<Member, MemberDto>(
+        _mockContext.Received(1).QueryAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<MemberDto>>>(),
                 ct);
     }
@@ -79,7 +79,7 @@ public class ListMembersQueryHandlerTests
         var member2 = Member.Create("bob", "Bob", "A", "Jones", null!, "UTC", clock);
 
         _mockContext
-            .QueryAsync<Member, MemberDto>(
+            .QueryAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<MemberDto>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(c => Task.FromResult(c.ArgAt<Func<IQueryable<Member>, IQueryable<MemberDto>>>(0)(new[] { member1, member2 }.AsQueryable()).ToList()));

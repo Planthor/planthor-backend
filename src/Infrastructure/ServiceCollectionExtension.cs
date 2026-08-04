@@ -56,7 +56,7 @@ public static class ServiceCollectionExtension
             q.AddJob<DownloadAvatarJob>(opts => opts.WithIdentity(downloadJobKey).StoreDurably());
             
             var syncIdentityJobKey = new JobKey("SyncIdentity");
-            q.AddJob<Infrastructure.BackgroundJobClient.Jobs.SyncIdentityJob>(opts => opts.WithIdentity(syncIdentityJobKey).StoreDurably());
+            q.AddJob<SyncIdentityJob>(opts => opts.WithIdentity(syncIdentityJobKey).StoreDurably());
         });
 
         services.AddQuartzHostedService(options =>

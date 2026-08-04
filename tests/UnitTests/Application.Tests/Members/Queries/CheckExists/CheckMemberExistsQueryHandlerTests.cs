@@ -25,7 +25,7 @@ public class CheckMemberExistsQueryHandlerTests
     {
         var query = new CheckMemberExistsQuery("nonexistent_user");
         _mockReadOnlyContext
-            .AnyAsync<Member>(
+            .AnyAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(false);
@@ -33,7 +33,7 @@ public class CheckMemberExistsQueryHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         Assert.False(result);
-        _mockReadOnlyContext.Received(1).AnyAsync<Member>(
+        _mockReadOnlyContext.Received(1).AnyAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 Arg.Any<CancellationToken>());
     }
@@ -44,14 +44,14 @@ public class CheckMemberExistsQueryHandlerTests
         var query = new CheckMemberExistsQuery("testuser");
         var cancellationToken = new CancellationToken();
         _mockReadOnlyContext
-            .AnyAsync<Member>(
+            .AnyAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(false);
 
         _ = await _handler.Handle(query, cancellationToken);
 
-        _mockReadOnlyContext.Received(1).AnyAsync<Member>(
+        _mockReadOnlyContext.Received(1).AnyAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 cancellationToken);
     }
@@ -61,7 +61,7 @@ public class CheckMemberExistsQueryHandlerTests
     {
         var query = new CheckMemberExistsQuery("testuser123");
         _mockReadOnlyContext
-            .AnyAsync<Member>(
+            .AnyAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(true);

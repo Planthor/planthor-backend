@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text.Json;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
@@ -110,10 +111,10 @@ public sealed partial class StravaController(
         try
         {
             var decryptedJson = AesEncryptionHelper.Decrypt(state, _options.StateEncryptionKey);
-            payload = System.Text.Json.JsonSerializer.Deserialize<OAuthStatePayload>(decryptedJson);
+            payload = JsonSerializer.Deserialize<OAuthStatePayload>(decryptedJson);
         }
-        catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException ||
-                                   ex is System.Text.Json.JsonException ||
+        catch (Exception ex) when (ex is CryptographicException ||
+                                   ex is JsonException ||
                                    ex is FormatException)
         {
             LogCallbackInvalidState(ex);

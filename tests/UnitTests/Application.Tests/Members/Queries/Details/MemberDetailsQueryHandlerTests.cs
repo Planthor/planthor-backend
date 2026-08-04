@@ -26,7 +26,7 @@ public class MemberDetailsQueryHandlerTests
     private void SetupContext(MemberDto? dto)
     {
         _mockContext
-            .FirstOrDefaultAsync<Member, MemberDto>(
+            .FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<MemberDto>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(dto));
@@ -66,7 +66,7 @@ public class MemberDetailsQueryHandlerTests
         await Assert.ThrowsAsync<KeyNotFoundException>(
             () => _handler.Handle(new MemberDetailsQuery(Guid.NewGuid()), ct));
 
-        _mockContext.Received(1).FirstOrDefaultAsync<Member, MemberDto>(
+        _mockContext.Received(1).FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<MemberDto>>>(),
                 ct);
     }
@@ -79,10 +79,10 @@ public class MemberDetailsQueryHandlerTests
         var member = Member.Create("john", "John", "M", "Doe", "desc", "UTC", clock);
 
         _mockContext
-            .FirstOrDefaultAsync<Member, MemberDto>(
+            .FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<MemberDto>>>(),
                 Arg.Any<CancellationToken>())
-            .Returns(c => Task.FromResult<MemberDto?>(c.ArgAt<Func<IQueryable<Member>, IQueryable<MemberDto>>>(0)(new[] { member }.AsQueryable()).FirstOrDefault()));
+            .Returns(c => Task.FromResult(c.ArgAt<Func<IQueryable<Member>, IQueryable<MemberDto>>>(0)(new[] { member }.AsQueryable()).FirstOrDefault()));
 
         var result = await _handler.Handle(new MemberDetailsQuery(member.Id), CancellationToken.None);
 

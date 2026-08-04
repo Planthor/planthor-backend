@@ -30,13 +30,13 @@ public class PersonalPlanDetailsQueryHandlerTests
     private void SetupContext(Member? member, Plan? plan)
     {
         _mockContext
-            .FirstOrDefaultAsync<Member, Member>(
+            .FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(member);
 
         _mockContext
-            .FirstOrDefaultAsync<Plan, Plan>(
+            .FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Plan>, IQueryable<Plan>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(plan);
@@ -106,7 +106,7 @@ public class PersonalPlanDetailsQueryHandlerTests
         await Assert.ThrowsAsync<KeyNotFoundException>(
             () => _handler.Handle(new PersonalPlanDetailsQuery("user1", Guid.NewGuid()), cancellationToken));
 
-        _mockContext.Received(1).FirstOrDefaultAsync<Member, Member>(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
+        _mockContext.Received(1).FirstOrDefaultAsync(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
     }
 
     [Fact]
@@ -120,13 +120,13 @@ public class PersonalPlanDetailsQueryHandlerTests
         typeof(Plan).GetProperty(nameof(Plan.Id))!.SetValue(plan, planId);
 
         _mockContext
-            .FirstOrDefaultAsync<Member, Member>(
+            .FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(c => Task.FromResult(c.ArgAt<Func<IQueryable<Member>, IQueryable<Member>>>(0)(new[] { member }.AsQueryable()).FirstOrDefault()));
 
         _mockContext
-            .FirstOrDefaultAsync<Plan, Plan>(
+            .FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Plan>, IQueryable<Plan>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(c => Task.FromResult(c.ArgAt<Func<IQueryable<Plan>, IQueryable<Plan>>>(0)(new[] { plan }.AsQueryable()).FirstOrDefault()));

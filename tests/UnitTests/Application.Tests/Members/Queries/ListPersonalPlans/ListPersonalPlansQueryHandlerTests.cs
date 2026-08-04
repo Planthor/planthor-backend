@@ -39,7 +39,7 @@ public class ListPersonalPlansQueryHandlerTests
     private void SetupMemberContext(Member? member)
     {
         _mockContext
-            .FirstOrDefaultAsync<Member, Member>(
+            .FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(member);
@@ -48,7 +48,7 @@ public class ListPersonalPlansQueryHandlerTests
     private void SetupPlansContext(List<Plan> plans)
     {
         _mockContext
-            .QueryAsync<Plan, Plan>(
+            .QueryAsync(
                 Arg.Any<Func<IQueryable<Plan>, IQueryable<Plan>>>(),
                 Arg.Any<CancellationToken>())
             .Returns(plans);
@@ -230,6 +230,6 @@ public class ListPersonalPlansQueryHandlerTests
 
         await _handler.Handle(new ListPersonalPlansQuery("user1"), cancellationToken);
 
-        _mockContext.Received(1).FirstOrDefaultAsync<Member, Member>(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
+        _mockContext.Received(1).FirstOrDefaultAsync(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
     }
 }
