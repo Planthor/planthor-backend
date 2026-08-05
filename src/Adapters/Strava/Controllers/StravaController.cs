@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
+using Microsoft.AspNetCore.WebUtilities;
 using Adapters.Strava.Webhook;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -98,13 +99,13 @@ public sealed partial class StravaController(
         if (!string.IsNullOrEmpty(error))
         {
             LogCallbackDenied(error);
-            return Redirect($"{_options.FrontendErrorUrl}?error={Uri.EscapeDataString(error)}");
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", error));
         }
 
         if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
         {
             LogCallbackMissingParams();
-            return Redirect($"{_options.FrontendErrorUrl}?error=missing_params");
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "missing_params"));
         }
 
         OAuthStatePayload? payload = null;
@@ -126,21 +127,21 @@ public sealed partial class StravaController(
             {
                 LogCallbackInvalidState(new InvalidOperationException("Decrypted state payload was null or empty."));
             }
-            return Redirect($"{_options.FrontendErrorUrl}?error=invalid_state");
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "invalid_state"));
         }
 
         var nowEpoch = clock.GetCurrentInstant().ToUnixTimeSeconds();
         if (nowEpoch - payload.TimestampUtc > 900) // 15 minutes expiration
         {
             LogCallbackStateExpired(payload.IdentifyName);
-            return Redirect($"{_options.FrontendErrorUrl}?error=state_expired");
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "state_expired"));
         }
 
         var tokenResponse = await stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
         if (tokenResponse == null)
         {
             LogCallbackTokenExchangeFailed(payload.IdentifyName);
-            return Redirect($"{_options.FrontendErrorUrl}?error=exchange_failed");
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "exchange_failed"));
         }
 
         LogCallbackSuccess(payload.IdentifyName, tokenResponse.Athlete.Id);

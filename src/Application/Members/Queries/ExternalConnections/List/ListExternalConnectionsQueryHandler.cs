@@ -21,7 +21,7 @@ public class ListExternalConnectionsQueryHandler(IReadOnlyContext readOnlyContex
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var dtos = await readOnlyContext.QueryAsync<Member, ExternalConnectionDto>(
+        var members = await readOnlyContext.QueryAsync<Member, Member>(
             q => {
                 var memberQuery = q;
                 if (request.Identifier.Equals("@me", StringComparison.OrdinalIgnoreCase))
@@ -38,19 +38,21 @@ public class ListExternalConnectionsQueryHandler(IReadOnlyContext readOnlyContex
                     memberQuery = memberQuery.Where(m => false);
                 }
 
-                return memberQuery
-                    .SelectMany(m => m.ExternalConnections)
-                    .Select(c => new ExternalConnectionDto(
-                        c.Id,
-                        c.MemberId,
-                        c.Provider.Id,
-                        c.Type.Id,
-                        c.ExternalUserId,
-                        c.Status.Id,
-                        c.ConnectedAt,
-                        c.DisconnectedAt));
+                return memberQuery;
             },
             cancellationToken);
+
+        var dtos = members
+            .SelectMany(m => m.ExternalConnections)
+            .Select(c => new ExternalConnectionDto(
+                c.Id,
+                c.MemberId,
+                c.Provider.Id,
+                c.Type.Id,
+                c.ExternalUserId,
+                c.Status.Id,
+                c.ConnectedAt,
+                c.DisconnectedAt));
 
         return dtos;
     }

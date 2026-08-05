@@ -21,7 +21,7 @@ public class ExternalConnectionDetailsQueryHandler(IReadOnlyContext readOnlyCont
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var dto = await readOnlyContext.FirstOrDefaultAsync<Member, ExternalConnectionDto>(
+        var member = await readOnlyContext.FirstOrDefaultAsync<Member, Member>(
             q => {
                 var memberQuery = q;
                 if (request.Identifier.Equals("@me", StringComparison.OrdinalIgnoreCase))
@@ -38,26 +38,20 @@ public class ExternalConnectionDetailsQueryHandler(IReadOnlyContext readOnlyCont
                     memberQuery = memberQuery.Where(m => false);
                 }
 
-                return memberQuery
-                    .SelectMany(m => m.ExternalConnections)
-                    .Where(c => c.Id == request.ConnectionId)
-                    .Select(c => new ExternalConnectionDto(
-                        c.Id,
-                        c.MemberId,
-                        c.Provider.Id,
-                        c.Type.Id,
-                        c.ExternalUserId,
-                        c.Status.Id,
-                        c.ConnectedAt,
-                        c.DisconnectedAt));
+                return memberQuery;
             },
             cancellationToken);
 
-        if (dto == null)
-        {
-            throw new KeyNotFoundException($"External connection '{request.ConnectionId}' for member '{request.Identifier}' was not found.");
-        }
-
-        return dto;
+        var connection = (member?.ExternalConnections.FirstOrDefault(c => c.Id == request.ConnectionId)) ?? throw new KeyNotFoundException($"External connection '{request.ConnectionId}' for member '{request.Identifier}' was not found.");
+        
+        return new ExternalConnectionDto(
+            connection.Id,
+            connection.MemberId,
+            connection.Provider.Id,
+            connection.Type.Id,
+            connection.ExternalUserId,
+            connection.Status.Id,
+            connection.ConnectedAt,
+            connection.DisconnectedAt);
     }
 }
