@@ -4,8 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Adapters.Strava;
 using Adapters.Strava.Client;
-using NSubstitute;
 using NodaTime;
+using NSubstitute;
 
 namespace Adapters.Tests.Strava;
 

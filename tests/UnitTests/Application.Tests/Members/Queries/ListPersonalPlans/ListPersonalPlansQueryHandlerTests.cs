@@ -7,8 +7,8 @@ using Application.Members.PersonalPlans.Queries.List;
 using Application.Shared;
 using Domain.Members;
 using Domain.Plans;
-using NSubstitute;
 using NodaTime;
+using NSubstitute;
 
 namespace Application.Tests.Members.Queries.ListPersonalPlans;
 

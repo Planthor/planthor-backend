@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Controllers;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -26,6 +27,7 @@ public class StravaControllerTests
     private readonly IStravaApiClient _stravaClient;
     private readonly IClock _clock;
     private readonly IOptions<StravaOptions> _options;
+    private readonly ISender _sender;
     private readonly ILogger<StravaController> _logger;
     private readonly StravaController _controller;
 
@@ -43,16 +45,19 @@ public class StravaControllerTests
             ClientId = "test-client",
             StateEncryptionKey = "12345678901234567890123456789012", // 32 chars
             FrontendErrorUrl = "https://frontend.com/error",
-            FrontendSuccessUrl = "https://frontend.com/success"
+            FrontendSuccessUrl = "https://frontend.com/success",
+            Scopes = "read,activity:read"
         };
         _options = Options.Create(options);
         
+        _sender = Substitute.For<ISender>();
         _logger = Substitute.For<ILogger<StravaController>>();
 
         _controller = new StravaController(
             _stravaClient,
             _clock,
             _options,
+            _sender,
             _logger
         );
 
@@ -248,6 +253,9 @@ public class StravaControllerTests
         // Assert
         var redirectResult = Assert.IsType<RedirectResult>(result);
         Assert.Equal("https://frontend.com/success", redirectResult.Url);
+        await _sender.Received(1).Send(Arg.Is<Application.Members.Commands.ConnectExternalProvider.ConnectExternalProviderCommand>(
+            c => c.IdentifyName == "test-user" && c.ExternalUserId == "777" && c.Scopes.Count == 2
+        ), Arg.Any<CancellationToken>());
     }
 
     /// <summary>

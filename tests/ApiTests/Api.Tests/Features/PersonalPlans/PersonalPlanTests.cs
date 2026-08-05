@@ -1,8 +1,8 @@
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using System.Net.Http;
 using Api.Requests;
 using Application.Dtos;
 using Xunit;

@@ -3,11 +3,14 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
-using Microsoft.AspNetCore.WebUtilities;
 using Adapters.Strava.Webhook;
+using Application.Members.Commands.ConnectExternalProvider;
+using Domain.Members;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -24,6 +27,7 @@ public sealed partial class StravaController(
     IStravaApiClient stravaClient,
     IClock clock,
     IOptions<StravaOptions> options,
+    ISender sender,
     ILogger<StravaController> logger) : ControllerBase
 {
     private readonly StravaOptions _options = options.Value;
@@ -143,6 +147,16 @@ public sealed partial class StravaController(
             LogCallbackTokenExchangeFailed(payload.IdentifyName);
             return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "exchange_failed"));
         }
+
+        var scopesList = _options.Scopes.Split(',').Select(s => s.Trim()).ToList();
+
+        await sender.Send(new ConnectExternalProviderCommand(
+            payload.IdentifyName,
+            ExternalProvider.Strava.Id,
+            ExternalConnectionType.ActivitiesSync.Id,
+            tokenResponse.Athlete.Id.ToString(),
+            scopesList
+        ), cancellationToken);
 
         LogCallbackSuccess(payload.IdentifyName, tokenResponse.Athlete.Id);
         return Redirect(_options.FrontendSuccessUrl);

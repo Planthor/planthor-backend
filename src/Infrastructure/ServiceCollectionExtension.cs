@@ -1,16 +1,16 @@
 using System;
 using Application.Shared;
-using Quartz;
 using Domain.Members;
 using Domain.Plans;
 using Infrastructure.BackgroundJobClient;
+using Infrastructure.BackgroundJobClient.Jobs;
 using Infrastructure.Context;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Infrastructure.BackgroundJobClient.Jobs;
+using Quartz;
 
 namespace Infrastructure;
 

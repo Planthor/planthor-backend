@@ -7,8 +7,8 @@ using Application.Dtos;
 using Application.Members.Queries.Details;
 using Application.Shared;
 using Domain.Members;
-using NSubstitute;
 using NodaTime;
+using NSubstitute;
 
 namespace Application.Tests.Members.Queries.Details;
 

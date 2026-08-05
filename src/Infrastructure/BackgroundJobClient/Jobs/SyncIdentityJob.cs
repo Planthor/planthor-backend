@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Infrastructure.Services;
 using Domain.Members;
+using Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using Quartz;

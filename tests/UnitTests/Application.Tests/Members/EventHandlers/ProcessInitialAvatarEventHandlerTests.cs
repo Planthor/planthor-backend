@@ -3,8 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.EventHandler;
 using Domain.Members.Events;
-using NSubstitute;
 using NodaTime;
+using NSubstitute;
 
 namespace Application.Tests.Members.EventHandlers;
 

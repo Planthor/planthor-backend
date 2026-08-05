@@ -3,8 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.Commands.Create;
 using Domain.Members;
-using NSubstitute;
 using NodaTime;
+using NSubstitute;
 
 namespace Application.Tests.Members.Commands.Create;
 

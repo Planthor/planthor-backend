@@ -1,12 +1,12 @@
 using System.Net;
-using Xunit;
-using WireMock.RequestBuilders;
-using WireMock.ResponseBuilders;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.Threading.Tasks;
-using System.Net.Http;
+using WireMock.RequestBuilders;
+using WireMock.ResponseBuilders;
+using Xunit;
 
 namespace Api.Tests.Features.Members;
 

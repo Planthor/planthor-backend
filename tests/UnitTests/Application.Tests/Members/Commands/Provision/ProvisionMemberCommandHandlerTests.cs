@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using Application.Members.Commands.Provision;
 using Application.Shared;
 using Domain.Members;
-using NSubstitute;
 using NodaTime;
+using NSubstitute;
 
 namespace Application.Tests.Members.Commands.Provision;
 
