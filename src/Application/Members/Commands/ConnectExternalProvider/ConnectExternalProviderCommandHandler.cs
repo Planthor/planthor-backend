@@ -27,5 +27,6 @@ public sealed class ConnectExternalProviderCommandHandler(
             clock);
 
         await memberRepository.UpdateAsync(member, cancellationToken);
+        await memberRepository.SaveChangesAsync(cancellationToken);
     }
 }
