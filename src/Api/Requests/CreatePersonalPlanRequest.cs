@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace Api.Requests;
 
@@ -20,14 +21,14 @@ namespace Api.Requests;
 public record CreatePersonalPlanRequest(
     string Name,
     string Unit,
-    double Target,
-    DateTimeOffset FromDate,
-    DateTimeOffset ToDate,
+    [property: JsonRequired] double Target,
+    [property: JsonRequired] DateTimeOffset FromDate,
+    [property: JsonRequired] DateTimeOffset ToDate,
     string StartDateLocal,
     string EndDateLocal,
     string Timezone,
-    bool EnableActivityLog,
-    bool DisplayOnProfile,
-    int Prioritize,
-    bool LinkUserAdapter
+    [property: JsonRequired] bool EnableActivityLog,
+    [property: JsonRequired] bool DisplayOnProfile,
+    [property: JsonRequired] int Prioritize,
+    [property: JsonRequired] bool LinkUserAdapter
 );

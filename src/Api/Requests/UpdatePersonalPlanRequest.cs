@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace Api.Requests;
 
@@ -7,9 +8,9 @@ namespace Api.Requests;
 /// </summary>
 public record UpdatePersonalPlanRequest(
     string Unit,
-    double Target,
-    double Current,
-    DateTimeOffset FromDate,
-    DateTimeOffset ToDate,
+    [property: JsonRequired] double Target,
+    [property: JsonRequired] double Current,
+    [property: JsonRequired] DateTimeOffset FromDate,
+    [property: JsonRequired] DateTimeOffset ToDate,
     string PeriodType
 );
