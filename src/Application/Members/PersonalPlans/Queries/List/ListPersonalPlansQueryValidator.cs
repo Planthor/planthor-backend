@@ -2,7 +2,6 @@ using FluentValidation;
 
 namespace Application.Members.PersonalPlans.Queries.List;
 
-// TODO - Trung: Revisit when verify details.
 /// <summary>
 /// Validator for the <see cref="ListPersonalPlansQuery"/> to ensure pagination limits and member identity are valid.
 /// </summary>

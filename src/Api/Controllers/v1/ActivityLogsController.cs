@@ -18,7 +18,6 @@ namespace Api.Controllers.v1;
 
 /// <summary>
 /// Controller for manipulating Activity Logs associated with a Plan.
-/// TODO - Trung: Update details
 /// </summary>
 /// <param name="sender">The mediator used to send commands and queries.</param>
 /// <param name="createActivityLogCommandValidator">The validator for <see cref="CreateActivityLogCommand"/>.</param>

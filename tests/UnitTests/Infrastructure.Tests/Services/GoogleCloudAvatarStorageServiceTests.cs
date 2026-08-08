@@ -109,7 +109,7 @@ public class GoogleCloudAvatarStorageServiceTests
 
         await service.DeleteAvatarAsync(new Uri(uri), CancellationToken.None);
 
-        mockClient.Received(1).DeleteObjectAsync(
+        await mockClient.Received(1).DeleteObjectAsync(
             BucketName, objectPath, Arg.Any<DeleteObjectOptions>(), Arg.Any<CancellationToken>());
     }
 
@@ -131,7 +131,7 @@ public class GoogleCloudAvatarStorageServiceTests
             new Uri("https://storage.googleapis.com/wrong-bucket/avatars/file.jpg"),
             CancellationToken.None);
 
-        mockClient.DidNotReceive().DeleteObjectAsync(
+        await mockClient.DidNotReceive().DeleteObjectAsync(
             Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<DeleteObjectOptions>(), Arg.Any<CancellationToken>());
     }

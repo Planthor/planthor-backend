@@ -47,8 +47,8 @@ public partial class StravaApiClient : IStravaApiClient
         _logger = logger;
     }
 
-    private Uri TokenEndpoint => new($"{_options.BaseUrl.TrimEnd('/')}/oauth/token");
-    private Uri DeauthorizeEndpoint => new($"{_options.BaseUrl.TrimEnd('/')}/oauth/deauthorize");
+    private Uri TokenEndpoint => new(new Uri(_options.BaseUrl.AbsoluteUri.TrimEnd('/') + "/"), "oauth/token");
+    private Uri DeauthorizeEndpoint => new(new Uri(_options.BaseUrl.AbsoluteUri.TrimEnd('/') + "/"), "oauth/deauthorize");
 
     /// <summary>
     /// Exchanges an authorization code for access and refresh tokens,

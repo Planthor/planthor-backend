@@ -230,6 +230,6 @@ public class ListPersonalPlansQueryHandlerTests
 
         await _handler.Handle(new ListPersonalPlansQuery("user1"), cancellationToken);
 
-        _mockContext.Received(1).FirstOrDefaultAsync(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
+        await _mockContext.Received(1).FirstOrDefaultAsync(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
     }
 }

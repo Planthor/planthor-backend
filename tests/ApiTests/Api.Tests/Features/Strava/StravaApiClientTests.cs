@@ -38,7 +38,7 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
         var response = await _apiClient.ExchangeCodeAsync("dummy_code", memberId, CancellationToken.None);
         
         Assert.NotNull(response);
-        Assert.Equal("acc_123", response.AccessToken);
+        Assert.Equal("acc_123", response?.AccessToken);
         
         // Refresh Token
         _factory.WireMockServer
@@ -50,7 +50,7 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         var refresh = await _apiClient.RefreshTokenAsync(memberId, CancellationToken.None);
         Assert.NotNull(refresh);
-        Assert.Equal("acc_new", refresh.AccessToken);
+        Assert.Equal("acc_new", refresh?.AccessToken);
         
         // GetValidToken - Should get from DB without refresh if not expired
         // But the previous refresh set expires_at = 1234567890 which is in the past! 
@@ -65,12 +65,12 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         var valid = await _apiClient.GetValidTokenAsync(memberId, CancellationToken.None);
         Assert.NotNull(valid);
-        Assert.Equal("acc_fresh", valid.AccessToken);
+        Assert.Equal("acc_fresh", valid?.AccessToken);
 
         // Call again - this time it shouldn't expire
         var validAgain = await _apiClient.GetValidTokenAsync(memberId, CancellationToken.None);
         Assert.NotNull(validAgain);
-        Assert.Equal("acc_fresh", validAgain.AccessToken);
+        Assert.Equal("acc_fresh", validAgain?.AccessToken);
 
         // Deauthorize
         _factory.WireMockServer

@@ -21,6 +21,8 @@ public class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContext
         Func<IQueryable<TEntity>, IQueryable<TResult>> queryBuilder,
         CancellationToken cancellationToken) where TEntity : class
     {
+        ArgumentNullException.ThrowIfNull(queryBuilder);
+
         var query = _context.Set<TEntity>().AsNoTracking();
         return await queryBuilder(query).ToListAsync(cancellationToken);
     }
@@ -30,6 +32,8 @@ public class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContext
         Func<IQueryable<TEntity>, IQueryable<TResult>> queryBuilder,
         CancellationToken cancellationToken) where TEntity : class
     {
+        ArgumentNullException.ThrowIfNull(queryBuilder);
+
         var query = _context.Set<TEntity>().AsNoTracking();
         return await queryBuilder(query).FirstOrDefaultAsync(cancellationToken);
     }
@@ -39,6 +43,8 @@ public class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContext
         Func<IQueryable<TEntity>, IQueryable<TEntity>> queryBuilder,
         CancellationToken cancellationToken) where TEntity : class
     {
+        ArgumentNullException.ThrowIfNull(queryBuilder);
+
         var query = _context.Set<TEntity>().AsNoTracking();
         return await queryBuilder(query).AnyAsync(cancellationToken);
     }

@@ -44,8 +44,8 @@ public class StravaControllerTests
         {
             ClientId = "test-client",
             StateEncryptionKey = "12345678901234567890123456789012", // 32 chars
-            FrontendErrorUrl = "https://frontend.com/error",
-            FrontendSuccessUrl = "https://frontend.com/success",
+            FrontendErrorUrl = new Uri("https://frontend.com/error"),
+            FrontendSuccessUrl = new Uri("https://frontend.com/success"),
             Scopes = "read,activity:read"
         };
         _options = Options.Create(options);
@@ -254,7 +254,7 @@ public class StravaControllerTests
         var redirectResult = Assert.IsType<RedirectResult>(result);
         Assert.Equal("https://frontend.com/success", redirectResult.Url);
         await _sender.Received(1).Send(Arg.Is<Application.Members.Commands.ConnectExternalProvider.ConnectExternalProviderCommand>(
-            c => c.IdentifyName == "test-user" && c.ExternalUserId == "777" && c.Scopes.Count == 2
+            c => c != null && c.IdentifyName == "test-user" && c.ExternalUserId == "777" && c.Scopes != null && c.Scopes.Count == 2
         ), Arg.Any<CancellationToken>());
     }
 

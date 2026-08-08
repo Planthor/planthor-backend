@@ -2,7 +2,6 @@ using FluentValidation;
 
 namespace Application.Members.PersonalPlans.Commands.Update;
 
-// TODO - Trung: Revisit when verify details.
 /// <summary>
 /// Validator for the <see cref="UpdatePersonalPlanCommand"/> to ensure all properties like target, current progress, and date ranges are valid.
 /// </summary>

@@ -30,19 +30,19 @@ public class StravaOptions
     /// Gets or sets the URL Strava redirects to after the user authorizes.
     /// </summary>
     /// <example>https://your-domain.com/strava/callback</example>
-    public string RedirectUri { get; set; } = default!;
+    public Uri RedirectUri { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the URL the frontend should be redirected to after a successful OAuth callback.
     /// </summary>
     /// <example>https://app.planthor.space/settings/connections</example>
-    public string FrontendSuccessUrl { get; set; } = default!;
+    public Uri FrontendSuccessUrl { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the URL the frontend should be redirected to after a failed OAuth callback.
     /// </summary>
     /// <example>https://app.planthor.space/settings/connections?error=strava</example>
-    public string FrontendErrorUrl { get; set; } = default!;
+    public Uri FrontendErrorUrl { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the secret token used to verify Strava webhook subscription handshakes.
@@ -64,5 +64,5 @@ public class StravaOptions
     /// <summary>
     /// Gets or sets the Strava API Base URL (useful for mocking).
     /// </summary>
-    public string BaseUrl { get; set; } = "https://www.strava.com";
+    public Uri BaseUrl { get; set; } = new Uri("https://www.strava.com");
 }

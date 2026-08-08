@@ -2,7 +2,6 @@ using FluentValidation;
 
 namespace Application.Members.PersonalPlans.Queries.Details;
 
-// TODO - Trung: Revisit when verify details
 /// <summary>
 /// Validator for the <see cref="PersonalPlanDetailsQuery"/> to ensure both the member identity and plan ID are provided.
 /// </summary>

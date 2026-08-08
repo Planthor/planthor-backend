@@ -24,6 +24,8 @@ public partial class SyncIdentityJob(
 
     public async Task Execute(IJobExecutionContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         var dataMap = context.MergedJobDataMap;
         var memberIdString = dataMap.GetString("MemberId");
         var identifyName = dataMap.GetString("IdentifyName");

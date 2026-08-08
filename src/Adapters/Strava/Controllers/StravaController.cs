@@ -130,13 +130,13 @@ public sealed partial class StravaController : ControllerBase
         if (!string.IsNullOrEmpty(error))
         {
             LogCallbackDenied(error);
-            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", error));
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", error));
         }
 
         if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
         {
             LogCallbackMissingParams();
-            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "missing_params"));
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", "missing_params"));
         }
 
         OAuthStatePayload? payload = null;
@@ -158,21 +158,21 @@ public sealed partial class StravaController : ControllerBase
             {
                 LogCallbackInvalidState(new InvalidOperationException("Decrypted state payload was null or empty."));
             }
-            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "invalid_state"));
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", "invalid_state"));
         }
 
         var nowEpoch = _clock.GetCurrentInstant().ToUnixTimeSeconds();
         if (nowEpoch - payload.TimestampUtc > 900) // 15 minutes expiration
         {
             LogCallbackStateExpired(payload.IdentifyName);
-            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "state_expired"));
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", "state_expired"));
         }
 
         var tokenResponse = await _stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
         if (tokenResponse == null)
         {
             LogCallbackTokenExchangeFailed(payload.IdentifyName);
-            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "exchange_failed"));
+            return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", "exchange_failed"));
         }
 
         var scopesList = _options.Scopes.Split(',').Select(s => s.Trim()).ToList();
@@ -186,7 +186,7 @@ public sealed partial class StravaController : ControllerBase
         ), cancellationToken);
 
         LogCallbackSuccess(payload.IdentifyName, tokenResponse.Athlete.Id);
-        return Redirect(_options.FrontendSuccessUrl);
+        return Redirect(_options.FrontendSuccessUrl.ToString());
     }
 
     // ────────────────────────────────────────────────────────────────

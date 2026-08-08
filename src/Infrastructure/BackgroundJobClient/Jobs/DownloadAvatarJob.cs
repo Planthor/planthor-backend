@@ -33,6 +33,8 @@ public partial class DownloadAvatarJob(
     /// <exception cref="JobExecutionException">Thrown when the download or upload process fails.</exception>
     public async Task Execute(IJobExecutionContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         var memberIdString = context.MergedJobDataMap.GetString("MemberId");
         var urlString = context.MergedJobDataMap.GetString("Url");
 

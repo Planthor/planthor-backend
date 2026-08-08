@@ -33,6 +33,8 @@ public class PlanthorDbContext(DbContextOptions options, IPublisher publisher) :
     /// <inheritdoc/>
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
+        ArgumentNullException.ThrowIfNull(configurationBuilder);
+
         base.ConfigureConventions(configurationBuilder);
 
         configurationBuilder

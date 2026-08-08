@@ -116,6 +116,8 @@ public class MembersController(
         [FromBody] UpdateMemberRequest request,
         CancellationToken token)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var command = new UpdateMemberCommand(
             id,
             request.FirstName,
