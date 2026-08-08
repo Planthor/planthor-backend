@@ -16,19 +16,24 @@ public class ListMembersQueryHandler(IReadOnlyContext readOnlyContext)
     : IQueryHandler<ListMembersQuery, IEnumerable<MemberDto>>
 {
     /// <inheritdoc />
-    public async Task<IEnumerable<MemberDto>> Handle(ListMembersQuery request, CancellationToken cancellationToken)
+    public Task<IEnumerable<MemberDto>> Handle(ListMembersQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        return await readOnlyContext.QueryAsync<Member, MemberDto>(
-            q => q.Select(m => new MemberDto(
-                m.Id,
-                m.FirstName,
-                m.MiddleName,
-                m.LastName,
-                m.Description,
-                m.PathAvatar ?? string.Empty
-            )),
-            cancellationToken);
+        return Core();
+
+        async Task<IEnumerable<MemberDto>> Core()
+        {
+            return await readOnlyContext.QueryAsync<Member, MemberDto>(
+                q => q.Select(m => new MemberDto(
+                    m.Id,
+                    m.FirstName,
+                    m.MiddleName,
+                    m.LastName,
+                    m.Description,
+                    m.PathAvatar ?? string.Empty
+                )),
+                cancellationToken);
+        }
     }
 }

@@ -17,13 +17,12 @@ public sealed class StravaActivitySyncAdapter(IStravaApiClient client) : IActivi
     public string ProviderId => "STRAVA";
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
+    public Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
         Guid memberId,
         Instant since,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(client);
-        await Task.CompletedTask;
-        return [];
+        return Task.FromResult<IReadOnlyList<AdapterActivityDto>>([]);
     }
 }

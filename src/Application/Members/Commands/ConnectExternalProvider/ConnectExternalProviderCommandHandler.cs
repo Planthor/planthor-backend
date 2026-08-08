@@ -24,24 +24,29 @@ public sealed class ConnectExternalProviderCommandHandler : ICommandHandler<Conn
         _clock = clock;
     }
 
-    public async Task Handle(ConnectExternalProviderCommand request, CancellationToken cancellationToken)
+    public Task Handle(ConnectExternalProviderCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
-            ?? throw new KeyNotFoundException($"Member with Identity {request.IdentifyName} not found.");
+        return Core();
 
-        var provider = ExternalProvider.FromId(request.ProviderId);
-        var connectionType = ExternalConnectionType.FromId(request.ConnectionTypeId);
+        async Task Core()
+        {
+            var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
+                ?? throw new KeyNotFoundException($"Member with Identity {request.IdentifyName} not found.");
 
-        member.ConnectExternalProvider(
-            provider,
-            connectionType,
-            request.ExternalUserId,
-            request.Scopes,
-            _clock);
+            var provider = ExternalProvider.FromId(request.ProviderId);
+            var connectionType = ExternalConnectionType.FromId(request.ConnectionTypeId);
 
-        await _memberRepository.UpdateAsync(member, cancellationToken);
-        await _memberRepository.SaveChangesAsync(cancellationToken);
+            member.ConnectExternalProvider(
+                provider,
+                connectionType,
+                request.ExternalUserId,
+                request.Scopes,
+                _clock);
+
+            await _memberRepository.UpdateAsync(member, cancellationToken);
+            await _memberRepository.SaveChangesAsync(cancellationToken);
+        }
     }
 }

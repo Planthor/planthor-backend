@@ -32,42 +32,47 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
     }
 
     /// <inheritdoc />
-    public async Task<Guid> Handle(ProvisionMemberCommand request, CancellationToken cancellationToken)
+    public Task<Guid> Handle(ProvisionMemberCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var existing = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken);
+        return Core();
 
-        var memberToSave = existing ?? Member.Create(
-            request.IdentifyName,
-            request.FirstName,
-            "", // Middle name not provided by external sources
-            request.LastName,
-            "JIT Provisioned",
-            "UTC", //default timezone for JIT-provisioned accounts, can be updated by user
-            _clock);
-
-        if (existing is null)
+        async Task<Guid> Core()
         {
-            await _memberRepository.AddAsync(memberToSave, cancellationToken);
+            var existing = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken);
+
+            var memberToSave = existing ?? Member.Create(
+                request.IdentifyName,
+                request.FirstName,
+                "", // Middle name not provided by external sources
+                request.LastName,
+                "JIT Provisioned",
+                "UTC", //default timezone for JIT-provisioned accounts, can be updated by user
+                _clock);
+
+            if (existing is null)
+            {
+                await _memberRepository.AddAsync(memberToSave, cancellationToken);
+            }
+
+            bool hasChanges = existing is null;
+
+            if (hasChanges)
+            {
+                await _memberRepository.SaveChangesAsync(cancellationToken);
+            }
+
+            // Always sync identities in the background (idempotent operation).
+            await _backgroundJobClient.EnqueueIdentitySyncAsync(memberToSave.Id, request.IdentifyName, cancellationToken);
+
+            // Enqueue avatar download if a URL was provided
+            if (request.AvatarUrl is not null && memberToSave.PathAvatar is null)
+            {
+                await _backgroundJobClient.EnqueueAvatarDownloadAsync(memberToSave.Id, request.AvatarUrl, cancellationToken);
+            }
+
+            return memberToSave.Id;
         }
-
-        bool hasChanges = existing is null;
-
-        if (hasChanges)
-        {
-            await _memberRepository.SaveChangesAsync(cancellationToken);
-        }
-
-        // Always sync identities in the background (idempotent operation).
-        await _backgroundJobClient.EnqueueIdentitySyncAsync(memberToSave.Id, request.IdentifyName, cancellationToken);
-
-        // Enqueue avatar download if a URL was provided
-        if (request.AvatarUrl is not null && memberToSave.PathAvatar is null)
-        {
-            await _backgroundJobClient.EnqueueAvatarDownloadAsync(memberToSave.Id, request.AvatarUrl, cancellationToken);
-        }
-
-        return memberToSave.Id;
     }
 }

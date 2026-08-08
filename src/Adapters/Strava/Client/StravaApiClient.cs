@@ -61,7 +61,7 @@ public partial class StravaApiClient : IStravaApiClient
     /// A <see cref="StravaTokenResponse"/> containing the tokens and athlete information,
     /// or <c>null</c> if the exchange failed.
     /// </returns>
-    public async Task<StravaTokenResponse?> ExchangeCodeAsync(
+    public Task<StravaTokenResponse?> ExchangeCodeAsync(
         string code,
         string identifyName,
         CancellationToken cancellationToken)
@@ -69,45 +69,50 @@ public partial class StravaApiClient : IStravaApiClient
         ArgumentNullException.ThrowIfNull(code);
         ArgumentNullException.ThrowIfNull(identifyName);
 
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["client_id"] = _options.ClientId,
-            ["client_secret"] = _options.ClientSecret,
-            ["code"] = code,
-            ["grant_type"] = "authorization_code"
-        });
+        return Core();
 
-        var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
+        async Task<StravaTokenResponse?> Core()
         {
-            LogTokenExchangeFailed(response.StatusCode);
-            return null;
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["client_id"] = _options.ClientId,
+                ["client_secret"] = _options.ClientSecret,
+                ["code"] = code,
+                ["grant_type"] = "authorization_code"
+            });
+
+            var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                LogTokenExchangeFailed(response.StatusCode);
+                return null;
+            }
+
+            var tokenResponse = await response.Content
+                .ReadFromJsonAsync<StravaTokenResponse>(cancellationToken);
+
+            if (tokenResponse is null)
+            {
+                LogTokenResponseDeserializationFailed();
+                return null;
+            }
+
+            var document = new StravaTokenDocument
+            {
+                Id = identifyName,
+                AthleteId = tokenResponse.Athlete.Id,
+                AccessToken = tokenResponse.AccessToken,
+                RefreshToken = tokenResponse.RefreshToken,
+                ExpiresAt = tokenResponse.ExpiresAt,
+                LastRefreshedAtUtc = DateTime.UtcNow
+            };
+
+            await _tokenDb.UpsertAsync(document, cancellationToken);
+
+            LogTokenExchangeSucceeded(identifyName, tokenResponse.Athlete.Id);
+            return tokenResponse;
         }
-
-        var tokenResponse = await response.Content
-            .ReadFromJsonAsync<StravaTokenResponse>(cancellationToken);
-
-        if (tokenResponse is null)
-        {
-            LogTokenResponseDeserializationFailed();
-            return null;
-        }
-
-        var document = new StravaTokenDocument
-        {
-            Id = identifyName,
-            AthleteId = tokenResponse.Athlete.Id,
-            AccessToken = tokenResponse.AccessToken,
-            RefreshToken = tokenResponse.RefreshToken,
-            ExpiresAt = tokenResponse.ExpiresAt,
-            LastRefreshedAtUtc = DateTime.UtcNow
-        };
-
-        await _tokenDb.UpsertAsync(document, cancellationToken);
-
-        LogTokenExchangeSucceeded(identifyName, tokenResponse.Athlete.Id);
-        return tokenResponse;
     }
 
     /// <summary>
@@ -123,54 +128,59 @@ public partial class StravaApiClient : IStravaApiClient
     /// Strava may rotate the refresh token on every response. This method
     /// always persists the latest <c>refresh_token</c> from the response.
     /// </remarks>
-    public async Task<StravaTokenDocument?> RefreshTokenAsync(
+    public Task<StravaTokenDocument?> RefreshTokenAsync(
         string identifyName,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(identifyName);
 
-        var existing = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
-        if (existing is null)
+        return Core();
+
+        async Task<StravaTokenDocument?> Core()
         {
-            LogNoTokenFound(identifyName);
-            return null;
+            var existing = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+            if (existing is null)
+            {
+                LogNoTokenFound(identifyName);
+                return null;
+            }
+
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["client_id"] = _options.ClientId,
+                ["client_secret"] = _options.ClientSecret,
+                ["refresh_token"] = existing.RefreshToken,
+                ["grant_type"] = "refresh_token"
+            });
+
+            var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                LogTokenRefreshFailed(identifyName, response.StatusCode);
+                return null;
+            }
+
+            var refreshResponse = await response.Content
+                .ReadFromJsonAsync<StravaRefreshResponse>(cancellationToken);
+
+            if (refreshResponse is null)
+            {
+                LogTokenResponseDeserializationFailed();
+                return null;
+            }
+
+            // CRITICAL: Persist the new refresh token immediately.
+            existing.AccessToken = refreshResponse.AccessToken;
+            existing.RefreshToken = refreshResponse.RefreshToken;
+            existing.ExpiresAt = refreshResponse.ExpiresAt;
+            existing.LastRefreshedAtUtc = DateTime.UtcNow;
+
+            await _tokenDb.UpsertAsync(existing, cancellationToken);
+
+            LogTokenRefreshSucceeded(identifyName);
+            return existing;
         }
-
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["client_id"] = _options.ClientId,
-            ["client_secret"] = _options.ClientSecret,
-            ["refresh_token"] = existing.RefreshToken,
-            ["grant_type"] = "refresh_token"
-        });
-
-        var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            LogTokenRefreshFailed(identifyName, response.StatusCode);
-            return null;
-        }
-
-        var refreshResponse = await response.Content
-            .ReadFromJsonAsync<StravaRefreshResponse>(cancellationToken);
-
-        if (refreshResponse is null)
-        {
-            LogTokenResponseDeserializationFailed();
-            return null;
-        }
-
-        // CRITICAL: Persist the new refresh token immediately.
-        existing.AccessToken = refreshResponse.AccessToken;
-        existing.RefreshToken = refreshResponse.RefreshToken;
-        existing.ExpiresAt = refreshResponse.ExpiresAt;
-        existing.LastRefreshedAtUtc = DateTime.UtcNow;
-
-        await _tokenDb.UpsertAsync(existing, cancellationToken);
-
-        LogTokenRefreshSucceeded(identifyName);
-        return existing;
     }
 
     /// <summary>
@@ -183,26 +193,31 @@ public partial class StravaApiClient : IStravaApiClient
     /// The current <see cref="StravaTokenDocument"/> with a valid access token,
     /// or <c>null</c> if no token exists or refresh failed.
     /// </returns>
-    public async Task<StravaTokenDocument?> GetValidTokenAsync(
+    public Task<StravaTokenDocument?> GetValidTokenAsync(
         string identifyName,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(identifyName);
 
-        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
-        if (token is null)
-        {
-            return null;
-        }
+        return Core();
 
-        // Proactive refresh: refresh if within 60 seconds of expiry
-        var nowEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        if (nowEpoch > token.ExpiresAt - 60)
+        async Task<StravaTokenDocument?> Core()
         {
-            return await RefreshTokenAsync(identifyName, cancellationToken);
-        }
+            var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+            if (token is null)
+            {
+                return null;
+            }
 
-        return token;
+            // Proactive refresh: refresh if within 60 seconds of expiry
+            var nowEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (nowEpoch > token.ExpiresAt - 60)
+            {
+                return await RefreshTokenAsync(identifyName, cancellationToken);
+            }
+
+            return token;
+        }
     }
 
     /// <summary>
@@ -212,39 +227,44 @@ public partial class StravaApiClient : IStravaApiClient
     /// <param name="identifyName">The Planthor member identifier to deauthorize.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns><c>true</c> if deauthorization succeeded or token was already removed; otherwise <c>false</c>.</returns>
-    public async Task<bool> DeauthorizeAsync(
+    public Task<bool> DeauthorizeAsync(
         string identifyName,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(identifyName);
 
-        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
-        if (token is null)
+        return Core();
+
+        async Task<bool> Core()
         {
-            // Already disconnected
+            var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+            if (token is null)
+            {
+                // Already disconnected
+                return true;
+            }
+
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["access_token"] = token.AccessToken
+            });
+
+            var response = await _httpClient.PostAsync(DeauthorizeEndpoint, content, cancellationToken);
+
+            // Delete tokens regardless — if deauth failed, user may have already revoked on Strava
+            await _tokenDb.DeleteAsync(identifyName, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                LogDeauthorizationFailed(identifyName, response.StatusCode);
+            }
+            else
+            {
+                LogDeauthorizationSucceeded(identifyName);
+            }
+
             return true;
         }
-
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["access_token"] = token.AccessToken
-        });
-
-        var response = await _httpClient.PostAsync(DeauthorizeEndpoint, content, cancellationToken);
-
-        // Delete tokens regardless — if deauth failed, user may have already revoked on Strava
-        await _tokenDb.DeleteAsync(identifyName, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            LogDeauthorizationFailed(identifyName, response.StatusCode);
-        }
-        else
-        {
-            LogDeauthorizationSucceeded(identifyName);
-        }
-
-        return true;
     }
 
     // ────────────────────────────────────────────────────────────────

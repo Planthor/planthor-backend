@@ -59,20 +59,25 @@ public class ActivityLogsController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ActivityLogDto>> Create(
+    public Task<ActionResult<ActivityLogDto>> Create(
         [FromRoute] Guid planId,
         [FromBody] CreateActivityLogRequest request,
         CancellationToken token)
     {
-        var identifyName = CurrentUserIdentifyName;
-        if (string.IsNullOrEmpty(identifyName))
-        {
-            return Unauthorized();
-        }
-
         ArgumentNullException.ThrowIfNull(request);
 
-        return await CreateAsync(planId, request, identifyName, token);
+        return Core();
+
+        async Task<ActionResult<ActivityLogDto>> Core()
+        {
+            var identifyName = CurrentUserIdentifyName;
+            if (string.IsNullOrEmpty(identifyName))
+            {
+                return Unauthorized();
+            }
+
+            return await CreateAsync(planId, request, identifyName, token);
+        }
     }
 
     private async Task<ActionResult<ActivityLogDto>> CreateAsync(

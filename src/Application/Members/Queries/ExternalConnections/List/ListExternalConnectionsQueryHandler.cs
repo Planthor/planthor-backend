@@ -24,43 +24,48 @@ public class ListExternalConnectionsQueryHandler : IQueryHandler<ListExternalCon
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<ExternalConnectionDto>> Handle(ListExternalConnectionsQuery request, CancellationToken cancellationToken)
+    public Task<IEnumerable<ExternalConnectionDto>> Handle(ListExternalConnectionsQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var members = await _readOnlyContext.QueryAsync<Member, Member>(
-            q => {
-                var memberQuery = q;
-                if (request.Identifier.Equals("@me", StringComparison.OrdinalIgnoreCase))
-                {
-                    memberQuery = memberQuery.Where(m => m.IdentifyName == request.CurrentIdentifyName);
-                }
-                else if (Guid.TryParse(request.Identifier, out var memberId))
-                {
-                    memberQuery = memberQuery.Where(m => m.Id == memberId);
-                }
-                else
-                {
-                    // Invalid identifier format
-                    memberQuery = memberQuery.Where(m => false);
-                }
+        return Core();
 
-                return memberQuery;
-            },
-            cancellationToken);
+        async Task<IEnumerable<ExternalConnectionDto>> Core()
+        {
+            var members = await _readOnlyContext.QueryAsync<Member, Member>(
+                q => {
+                    var memberQuery = q;
+                    if (request.Identifier.Equals("@me", StringComparison.OrdinalIgnoreCase))
+                    {
+                        memberQuery = memberQuery.Where(m => m.IdentifyName == request.CurrentIdentifyName);
+                    }
+                    else if (Guid.TryParse(request.Identifier, out var memberId))
+                    {
+                        memberQuery = memberQuery.Where(m => m.Id == memberId);
+                    }
+                    else
+                    {
+                        // Invalid identifier format
+                        memberQuery = memberQuery.Where(m => false);
+                    }
 
-        var dtos = members
-            .SelectMany(m => m.ExternalConnections)
-            .Select(c => new ExternalConnectionDto(
-                c.Id,
-                c.MemberId,
-                c.Provider.Id,
-                c.Type.Id,
-                c.ExternalUserId,
-                c.Status.Id,
-                c.ConnectedAt,
-                c.DisconnectedAt));
+                    return memberQuery;
+                },
+                cancellationToken);
 
-        return dtos;
+            var dtos = members
+                .SelectMany(m => m.ExternalConnections)
+                .Select(c => new ExternalConnectionDto(
+                    c.Id,
+                    c.MemberId,
+                    c.Provider.Id,
+                    c.Type.Id,
+                    c.ExternalUserId,
+                    c.Status.Id,
+                    c.ConnectedAt,
+                    c.DisconnectedAt));
+
+            return dtos;
+        }
     }
 }

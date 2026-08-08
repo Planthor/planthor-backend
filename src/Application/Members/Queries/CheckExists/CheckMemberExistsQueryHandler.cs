@@ -22,11 +22,11 @@ public class CheckMemberExistsQueryHandler : IQueryHandler<CheckMemberExistsQuer
     }
 
     /// <inheritdoc />
-    public async Task<bool> Handle(CheckMemberExistsQuery request, CancellationToken cancellationToken)
+    public Task<bool> Handle(CheckMemberExistsQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        return await _readOnlyContext.AnyAsync<Member>(
+        return _readOnlyContext.AnyAsync<Member>(
             q => q.Where(m => m.IdentifyName == request.IdentifyName),
             cancellationToken);
     }

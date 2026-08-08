@@ -27,37 +27,42 @@ public class PersonalPlanDetailsQueryHandler : IQueryHandler<PersonalPlanDetails
     private const int RoundingDecimals = 2;
 
     /// <inheritdoc />
-    public async Task<PersonalPlanDto> Handle(PersonalPlanDetailsQuery request, CancellationToken cancellationToken)
+    public Task<PersonalPlanDto> Handle(PersonalPlanDetailsQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var member = await _readOnlyContext.FirstOrDefaultAsync<Member, Member>(
-            q => q.Where(m => m.IdentifyName == request.IdentifyName),
-            cancellationToken);
+        return Core();
 
-        var personalPlan = (member?.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId))
-            ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
+        async Task<PersonalPlanDto> Core()
+        {
+            var member = await _readOnlyContext.FirstOrDefaultAsync<Member, Member>(
+                q => q.Where(m => m.IdentifyName == request.IdentifyName),
+                cancellationToken);
 
-        var plan = await _readOnlyContext.FirstOrDefaultAsync<Plan, Plan>(
-            q => q.Where(p => p.Id == request.PlanId),
-            cancellationToken) ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
+            var personalPlan = (member?.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId))
+                ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
 
-        var progressPercentage = Math.Round((double)plan.CurrentValue / plan.Target * PercentageMultiplier, RoundingDecimals);
+            var plan = await _readOnlyContext.FirstOrDefaultAsync<Plan, Plan>(
+                q => q.Where(p => p.Id == request.PlanId),
+                cancellationToken) ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
 
-        return new PersonalPlanDto(
-            personalPlan.PlanId,
-            personalPlan.MemberId,
-            personalPlan.DisplayOnProfile,
-            personalPlan.Prioritize,
-            personalPlan.LinkUserAdapter,
-            plan.Name,
-            plan.Unit,
-            plan.Target,
-            plan.CurrentValue,
-            progressPercentage,
-            plan.Status.I18NKey,
-            DateTimeOffset.FromUnixTimeSeconds(plan.From.ToUnixTimeSeconds()),
-            DateTimeOffset.FromUnixTimeSeconds(plan.To.ToUnixTimeSeconds())
-        );
+            var progressPercentage = Math.Round((double)plan.CurrentValue / plan.Target * PercentageMultiplier, RoundingDecimals);
+
+            return new PersonalPlanDto(
+                personalPlan.PlanId,
+                personalPlan.MemberId,
+                personalPlan.DisplayOnProfile,
+                personalPlan.Prioritize,
+                personalPlan.LinkUserAdapter,
+                plan.Name,
+                plan.Unit,
+                plan.Target,
+                plan.CurrentValue,
+                progressPercentage,
+                plan.Status.I18NKey,
+                DateTimeOffset.FromUnixTimeSeconds(plan.From.ToUnixTimeSeconds()),
+                DateTimeOffset.FromUnixTimeSeconds(plan.To.ToUnixTimeSeconds())
+            );
+        }
     }
 }

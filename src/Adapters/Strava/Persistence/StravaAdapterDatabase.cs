@@ -60,17 +60,23 @@ public class StravaAdapterDatabase
     /// </summary>
     /// <param name="document">The token document to persist.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    public async Task UpsertAsync(
+    public Task UpsertAsync(
         StravaTokenDocument document,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
-        var filter = Builders<StravaTokenDocument>.Filter.Eq(t => t.Id, document.Id);
-        await _tokens.ReplaceOneAsync(
-            filter,
-            document,
-            new ReplaceOptions { IsUpsert = true },
-            cancellationToken);
+
+        return Core();
+
+        async Task Core()
+        {
+            var filter = Builders<StravaTokenDocument>.Filter.Eq(t => t.Id, document.Id);
+            await _tokens.ReplaceOneAsync(
+                filter,
+                document,
+                new ReplaceOptions { IsUpsert = true },
+                cancellationToken);
+        }
     }
 
     /// <summary>

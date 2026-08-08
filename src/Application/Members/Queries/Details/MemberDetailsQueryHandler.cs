@@ -23,27 +23,32 @@ public class MemberDetailsQueryHandler : IQueryHandler<MemberDetailsQuery, Membe
     }
 
     /// <inheritdoc />
-    public async Task<MemberDto> Handle(MemberDetailsQuery request, CancellationToken cancellationToken)
+    public Task<MemberDto> Handle(MemberDetailsQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var memberDto = await _readOnlyContext.FirstOrDefaultAsync<Member, MemberDto>(
-            q => q.Where(m => m.Id == request.Id)
-                .Select(m => new MemberDto(
-                    m.Id,
-                    m.FirstName,
-                    m.MiddleName,
-                    m.LastName,
-                    m.Description,
-                    m.PathAvatar ?? string.Empty
-                )),
-            cancellationToken);
+        return Core();
 
-        if (memberDto == null)
+        async Task<MemberDto> Core()
         {
-            throw new KeyNotFoundException($"Member with ID '{request.Id}' was not found.");
-        }
+            var memberDto = await _readOnlyContext.FirstOrDefaultAsync<Member, MemberDto>(
+                q => q.Where(m => m.Id == request.Id)
+                    .Select(m => new MemberDto(
+                        m.Id,
+                        m.FirstName,
+                        m.MiddleName,
+                        m.LastName,
+                        m.Description,
+                        m.PathAvatar ?? string.Empty
+                    )),
+                cancellationToken);
 
-        return memberDto;
+            if (memberDto == null)
+            {
+                throw new KeyNotFoundException($"Member with ID '{request.Id}' was not found.");
+            }
+
+            return memberDto;
+        }
     }
 }

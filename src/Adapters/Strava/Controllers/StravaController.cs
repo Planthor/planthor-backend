@@ -254,15 +254,20 @@ public sealed partial class StravaController : ControllerBase
     [HttpPost("webhook")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ReceiveEvent(
+    public Task<IActionResult> ReceiveEvent(
         [FromBody] StravaWebhookPayload payload,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(payload);
 
-        // Phase 3: Will enqueue a Quartz job for async processing
-        await Task.CompletedTask;
-        throw new NotSupportedException("Webhook event processing will be implemented in Phase 3.");
+        return Core();
+
+        async Task<IActionResult> Core()
+        {
+            // Phase 3: Will enqueue a Quartz job for async processing
+            await Task.CompletedTask;
+            throw new NotSupportedException("Webhook event processing will be implemented in Phase 3.");
+        }
     }
 
     /// <summary>

@@ -57,25 +57,30 @@ public class MembersController(
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<MemberDto>> Create([FromBody] CreateMemberRequest request, CancellationToken token)
+    public Task<ActionResult<MemberDto>> Create([FromBody] CreateMemberRequest request, CancellationToken token)
     {
-        var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(identifyName))
-        {
-            return Unauthorized();
-        }
-
         ArgumentNullException.ThrowIfNull(request);
 
-        var command = new CreateMemberCommand(
-            identifyName,
-            request.FirstName,
-            request.MiddleName,
-            request.LastName,
-            request.Description,
-            request.PreferredTimezone);
+        return Core();
 
-        return await CreateInternalAsync(command, token);
+        async Task<ActionResult<MemberDto>> Core()
+        {
+            var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(identifyName))
+            {
+                return Unauthorized();
+            }
+
+            var command = new CreateMemberCommand(
+                identifyName,
+                request.FirstName,
+                request.MiddleName,
+                request.LastName,
+                request.Description,
+                request.PreferredTimezone);
+
+            return await CreateInternalAsync(command, token);
+        }
     }
 
     private async Task<ActionResult<MemberDto>> CreateInternalAsync(CreateMemberCommand command, CancellationToken token)

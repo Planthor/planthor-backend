@@ -12,31 +12,41 @@ namespace Infrastructure.BackgroundJobClient;
 public class QuartzBackgroundJobClient(ISchedulerFactory schedulerFactory) : IBackgroundJobClient
 {
     /// <inheritdoc />
-    public async Task EnqueueAvatarDownloadAsync(Guid memberId, Uri avatarUrl, CancellationToken cancellationToken)
+    public Task EnqueueAvatarDownloadAsync(Guid memberId, Uri avatarUrl, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(avatarUrl);
 
-        var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+        return Core();
 
-        // Your logic to bridge the Application need to the Infrastructure capability
-        await scheduler.TriggerJob(new JobKey("DownloadAvatar"), new JobDataMap
+        async Task Core()
         {
-            { "MemberId", memberId.ToString() },
-            { "Url", avatarUrl.ToString() }
-        }, cancellationToken);
+            var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+
+            // Your logic to bridge the Application need to the Infrastructure capability
+            await scheduler.TriggerJob(new JobKey("DownloadAvatar"), new JobDataMap
+            {
+                { "MemberId", memberId.ToString() },
+                { "Url", avatarUrl.ToString() }
+            }, cancellationToken);
+        }
     }
 
     /// <inheritdoc />
-    public async Task EnqueueIdentitySyncAsync(Guid memberId, string identifyName, CancellationToken cancellationToken)
+    public Task EnqueueIdentitySyncAsync(Guid memberId, string identifyName, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
 
-        var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+        return Core();
 
-        await scheduler.TriggerJob(new JobKey("SyncIdentity"), new JobDataMap
+        async Task Core()
         {
-            { "MemberId", memberId.ToString() },
-            { "IdentifyName", identifyName }
-        }, cancellationToken);
+            var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+
+            await scheduler.TriggerJob(new JobKey("SyncIdentity"), new JobDataMap
+            {
+                { "MemberId", memberId.ToString() },
+                { "IdentifyName", identifyName }
+            }, cancellationToken);
+        }
     }
 }
