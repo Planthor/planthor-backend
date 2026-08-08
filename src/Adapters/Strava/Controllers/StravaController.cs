@@ -31,6 +31,14 @@ public sealed partial class StravaController : ControllerBase
     private readonly ISender _sender;
     private readonly ILogger<StravaController> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StravaController"/> class.
+    /// </summary>
+    /// <param name="stravaClient">The Strava API client.</param>
+    /// <param name="clock">The system clock.</param>
+    /// <param name="options">The Strava options.</param>
+    /// <param name="sender">The MediatR sender.</param>
+    /// <param name="logger">The logger.</param>
     public StravaController(
         IStravaApiClient stravaClient,
         IClock clock,

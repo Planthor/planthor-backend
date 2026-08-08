@@ -23,6 +23,13 @@ public partial class StravaApiClient : IStravaApiClient
     private readonly StravaOptions _options;
     private readonly ILogger<StravaApiClient> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StravaApiClient"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client.</param>
+    /// <param name="tokenDb">The Strava token database.</param>
+    /// <param name="options">The Strava options.</param>
+    /// <param name="logger">The logger.</param>
     public StravaApiClient(
         HttpClient httpClient,
         StravaAdapterDatabase tokenDb,
@@ -40,8 +47,8 @@ public partial class StravaApiClient : IStravaApiClient
         _logger = logger;
     }
 
-    private string TokenEndpoint => $"{_options.BaseUrl.TrimEnd('/')}/oauth/token";
-    private string DeauthorizeEndpoint => $"{_options.BaseUrl.TrimEnd('/')}/oauth/deauthorize";
+    private Uri TokenEndpoint => new($"{_options.BaseUrl.TrimEnd('/')}/oauth/token");
+    private Uri DeauthorizeEndpoint => new($"{_options.BaseUrl.TrimEnd('/')}/oauth/deauthorize");
 
     /// <summary>
     /// Exchanges an authorization code for access and refresh tokens,

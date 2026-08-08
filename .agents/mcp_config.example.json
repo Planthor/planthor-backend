@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "sonarqube": {
+      "serverUrl": "https://api.sonarcloud.io/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_SONARCLOUD_TOKEN>",
+        "SONARQUBE_ORG": "planthor"
+      }
+    }
+  }
+}
