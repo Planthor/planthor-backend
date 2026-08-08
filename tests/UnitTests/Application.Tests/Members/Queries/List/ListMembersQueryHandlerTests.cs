@@ -65,7 +65,7 @@ public class ListMembersQueryHandlerTests
 
         await _handler.Handle(new ListMembersQuery(), ct);
 
-        _mockContext.Received(1).QueryAsync(
+        await _mockContext.Received(1).QueryAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<MemberDto>>>(),
                 ct);
     }

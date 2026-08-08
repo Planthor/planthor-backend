@@ -27,7 +27,7 @@ public class DomainEventNotificationHandlerTests
 
         await _sut.Handle(notification, CancellationToken.None);
 
-        _mockHandler.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
+        await _mockHandler.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -49,8 +49,8 @@ public class DomainEventNotificationHandlerTests
 
         await multi.Handle(notification, CancellationToken.None);
 
-        _mockHandler.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
-        handler2.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
+        await _mockHandler.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
+        await handler2.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
     }
 
     [Fact]

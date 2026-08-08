@@ -38,8 +38,8 @@ public class UpdateMemberAvatarCommandHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         Assert.Equal("https://storage.example.com/new.jpg", member.PathAvatar);
-        _mockRepository.Received(1).UpdateAsync(member, Arg.Any<CancellationToken>());
-        _mockRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _mockRepository.Received(1).UpdateAsync(member, Arg.Any<CancellationToken>());
+        await _mockRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -65,6 +65,6 @@ public class UpdateMemberAvatarCommandHandlerTests
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _handler.Handle(new UpdateMemberAvatarCommand(memberId, "https://example.com/img.jpg"), CancellationToken.None));
 
-        _mockRepository.DidNotReceive().UpdateAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
+        await _mockRepository.DidNotReceive().UpdateAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
     }
 }

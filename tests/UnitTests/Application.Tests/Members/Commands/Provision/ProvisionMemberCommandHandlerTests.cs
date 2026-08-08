@@ -46,8 +46,8 @@ public class ProvisionMemberCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.NotEqual(Guid.Empty, result);
-        _mockRepository.Received(1).AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
-        _mockRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _mockRepository.Received(1).AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
+        await _mockRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -77,8 +77,8 @@ public class ProvisionMemberCommandHandlerTests
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockRepository.DidNotReceive().AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
-        _mockRepository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _mockRepository.DidNotReceive().AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
+        await _mockRepository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class ProvisionMemberCommandHandlerTests
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockJobClient.Received(1).EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), avatarUrl, Arg.Any<CancellationToken>());
+        await _mockJobClient.Received(1).EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), avatarUrl, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class ProvisionMemberCommandHandlerTests
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockJobClient.DidNotReceive().EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), Arg.Any<Uri>(), Arg.Any<CancellationToken>());
+        await _mockJobClient.DidNotReceive().EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), Arg.Any<Uri>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class ProvisionMemberCommandHandlerTests
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockJobClient.Received(1).EnqueueAvatarDownloadAsync(existingMember.Id, avatarUrl, Arg.Any<CancellationToken>());
+        await _mockJobClient.Received(1).EnqueueAvatarDownloadAsync(existingMember.Id, avatarUrl, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -149,6 +149,6 @@ public class ProvisionMemberCommandHandlerTests
 
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockJobClient.DidNotReceive().EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), Arg.Any<Uri>(), Arg.Any<CancellationToken>());
+        await _mockJobClient.DidNotReceive().EnqueueAvatarDownloadAsync(Arg.Any<Guid>(), Arg.Any<Uri>(), Arg.Any<CancellationToken>());
     }
 }

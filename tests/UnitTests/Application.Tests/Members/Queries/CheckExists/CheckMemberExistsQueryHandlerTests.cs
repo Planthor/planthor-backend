@@ -33,7 +33,7 @@ public class CheckMemberExistsQueryHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         Assert.False(result);
-        _mockReadOnlyContext.Received(1).AnyAsync(
+        await _mockReadOnlyContext.Received(1).AnyAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 Arg.Any<CancellationToken>());
     }
@@ -51,7 +51,7 @@ public class CheckMemberExistsQueryHandlerTests
 
         _ = await _handler.Handle(query, cancellationToken);
 
-        _mockReadOnlyContext.Received(1).AnyAsync(
+        await _mockReadOnlyContext.Received(1).AnyAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
                 cancellationToken);
     }

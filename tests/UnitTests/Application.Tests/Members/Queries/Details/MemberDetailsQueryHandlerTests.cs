@@ -66,7 +66,7 @@ public class MemberDetailsQueryHandlerTests
         await Assert.ThrowsAsync<KeyNotFoundException>(
             () => _handler.Handle(new MemberDetailsQuery(Guid.NewGuid()), ct));
 
-        _mockContext.Received(1).FirstOrDefaultAsync(
+        await _mockContext.Received(1).FirstOrDefaultAsync(
                 Arg.Any<Func<IQueryable<Member>, IQueryable<MemberDto>>>(),
                 ct);
     }
