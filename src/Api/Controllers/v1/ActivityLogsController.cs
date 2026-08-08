@@ -21,6 +21,7 @@ namespace Api.Controllers.v1;
 /// </summary>
 /// <param name="sender">The mediator used to send commands and queries.</param>
 /// <param name="createActivityLogCommandValidator">The validator for <see cref="CreateActivityLogCommand"/>.</param>
+/// <param name="activityLogDetailsQueryValidator">The validator for <see cref="ActivityLogDetailsQuery"/>.</param>
 [Authorize]
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
@@ -107,7 +108,7 @@ public class ActivityLogsController(
         await activityLogDetailsQueryValidator.ValidateAndThrowAsync(query, token);
         var activityLogDto = await _sender.Send(query, token);
 
-        return CreatedAtAction(nameof(Read), new { planId = planId, logId = newLogGuid }, activityLogDto);
+        return CreatedAtAction(nameof(Read), new { planId, logId = newLogGuid }, activityLogDto);
     }
 
     /// <summary>

@@ -33,18 +33,34 @@ public class CreatePersonalPlanCommandHandler(
         var fromInstant = Instant.FromDateTimeOffset(request.FromDate);
         var toInstant = Instant.FromDateTimeOffset(request.ToDate);
 
-        var plan = Plan.Create(
-            request.Name,
-            request.Unit,
-            (float)request.Target,
-            fromInstant,
-            toInstant,
-            request.StartDateLocal,
-            request.EndDateLocal,
-            request.Timezone,
-            request.EnableActivityLog,
-            clock,
-            member.Id);
+        var plan = request.PlanDetails switch
+        {
+            CreateSportPlanDetailsCommand sportDetails => Plan.CreateSportPlan(
+                request.Name,
+                request.Unit,
+                (float)request.Target,
+                fromInstant,
+                toInstant,
+                request.StartDateLocal,
+                request.EndDateLocal,
+                request.Timezone,
+                request.EnableActivityLog,
+                new SportPlanDetails(request.Unit, [.. sportDetails.SportTypes]),
+                clock,
+                member.Id),
+            _ => Plan.Create(
+                request.Name,
+                request.Unit,
+                (float)request.Target,
+                fromInstant,
+                toInstant,
+                request.StartDateLocal,
+                request.EndDateLocal,
+                request.Timezone,
+                request.EnableActivityLog,
+                clock,
+                member.Id)
+        };
 
         member.SubscribeToPlan(
             plan.Id,

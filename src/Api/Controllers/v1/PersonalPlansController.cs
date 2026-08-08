@@ -29,6 +29,7 @@ namespace Api.Controllers.v1;
 /// <param name="personalPlansQueryValidator">The validator for <see cref="ListPersonalPlansQuery"/>.</param>
 /// <param name="personalPlanDetailsQueryValidator">The validator for <see cref="PersonalPlanDetailsQuery"/>.</param>
 /// <param name="activatePlanCommandValidator">The validator for <see cref="ActivatePersonalPlanCommand"/>.</param>
+/// <param name="cancelPlanCommandValidator">The validator for <see cref="CancelPlanCommand"/>.</param>
 [Authorize]
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
@@ -87,6 +88,12 @@ public class PersonalPlansController(
             return Forbid();
         }
 
+        CreatePlanDetailsCommand? planDetailsCommand = request.PlanDetails switch
+        {
+            CreateSportPlanDetailsRequest sportReq => new CreateSportPlanDetailsCommand(sportReq.SportTypes),
+            _ => null
+        };
+
         var createPlanCommand = new CreatePersonalPlanCommand(
             targetIdentifyName,
             request.Name,
@@ -100,7 +107,8 @@ public class PersonalPlansController(
             request.EnableActivityLog,
             request.DisplayOnProfile,
             request.Prioritize,
-            request.LinkUserAdapter);
+            request.LinkUserAdapter,
+            planDetailsCommand);
 
         await createPersonalPlanCommandValidator.ValidateAndThrowAsync(createPlanCommand, token);
         var newPlanGuid = await _sender.Send(createPlanCommand, token);
@@ -108,7 +116,7 @@ public class PersonalPlansController(
         var query = new PersonalPlanDetailsQuery(targetIdentifyName, newPlanGuid);
         var personalPlanDto = await _sender.Send(query, token);
 
-        return CreatedAtAction(nameof(Read), new { identifier = identifier, planId = newPlanGuid }, personalPlanDto);
+        return CreatedAtAction(nameof(Read), new { identifier, planId = newPlanGuid }, personalPlanDto);
     }
 
     /// <summary>

@@ -18,6 +18,7 @@ namespace Api.Requests;
 /// <param name="DisplayOnProfile">Whether this plan is displayed on the member's public profile.</param>
 /// <param name="Prioritize">The display priority of this plan on the member's profile (0-999).</param>
 /// <param name="LinkUserAdapter">Whether Strava or other external activity sync is enabled for this plan.</param>
+/// <param name="PlanDetails">Optional specific details for the plan (e.g. sport types).</param>
 public record CreatePersonalPlanRequest(
     string Name,
     string Unit,
@@ -30,5 +31,6 @@ public record CreatePersonalPlanRequest(
     [property: JsonRequired] bool EnableActivityLog,
     [property: JsonRequired] bool DisplayOnProfile,
     [property: JsonRequired] int Prioritize,
-    [property: JsonRequired] bool LinkUserAdapter
+    [property: JsonRequired] bool LinkUserAdapter,
+    CreatePlanDetailsRequest? PlanDetails
 );

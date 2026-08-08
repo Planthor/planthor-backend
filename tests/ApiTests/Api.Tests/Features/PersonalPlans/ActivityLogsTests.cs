@@ -34,7 +34,8 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
             EnableActivityLog: true,
             DisplayOnProfile: true,
             Prioritize: 1,
-            LinkUserAdapter: false
+            LinkUserAdapter: false,
+            PlanDetails: new CreateSportPlanDetailsRequest(["Run", "Ride"])
         );
 
         var createPlanResponse = await _client.PostAsJsonAsync("/v1/members/me/personalPlans", createPlanCmd);

@@ -47,7 +47,8 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
             EnableActivityLog: true,
             DisplayOnProfile: true,
             Prioritize: 1,
-            LinkUserAdapter: false
+            LinkUserAdapter: false,
+            PlanDetails: new CreateSportPlanDetailsRequest(["Run"])
         );
 
         var createResponse = await _client.PostAsJsonAsync("/v1/members/me/personalPlans", createCmd);
@@ -96,6 +97,34 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
     }
 
     [Fact]
+    public async Task PersonalPlan_Generic_Lifecycle_Tests()
+    {
+        // 1. Create Personal Plan without PlanDetails
+        var createCmd = new CreatePersonalPlanRequest(
+            Name: "Generic Plan",
+            Unit: "tasks",
+            Target: 50.0,
+            FromDate: DateTimeOffset.UtcNow,
+            ToDate: DateTimeOffset.UtcNow.AddDays(30),
+            StartDateLocal: "2026-07-01",
+            EndDateLocal: "2026-07-31",
+            Timezone: "UTC",
+            EnableActivityLog: true,
+            DisplayOnProfile: false,
+            Prioritize: 2,
+            LinkUserAdapter: false,
+            PlanDetails: null // Null explicitly to test the generic branch
+        );
+
+        var createResponse = await _client.PostAsJsonAsync("/v1/members/me/personalPlans", createCmd);
+        createResponse.EnsureSuccessStatusCode();
+        
+        var createdPlan = await createResponse.Content.ReadFromJsonAsync<PersonalPlanDto>();
+        Assert.NotNull(createdPlan);
+        Assert.Equal(50.0, createdPlan.Target);
+    }
+
+    [Fact]
     public async Task PersonalPlan_Security_Tests()
     {
         // 1. Unauthorized due to missing NameIdentifier (controller logic)
@@ -107,7 +136,7 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
         var getSingle = await _client.GetAsync("/v1/members/me/personalPlans/00000000-0000-0000-0000-000000000000");
         Assert.Equal(HttpStatusCode.Unauthorized, getSingle.StatusCode);
 
-        var createCmd = new CreatePersonalPlanRequest("Test", "km", 10.0, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "2026-07-01", "2026-07-31", "UTC", true, true, 1, false);
+        var createCmd = new CreatePersonalPlanRequest("Test", "km", 10.0, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "2026-07-01", "2026-07-31", "UTC", true, true, 1, false, new CreateSportPlanDetailsRequest(["Run"]));
         var createRes = await _client.PostAsJsonAsync("/v1/members/me/personalPlans", createCmd);
         Assert.Equal(HttpStatusCode.Unauthorized, createRes.StatusCode);
 
