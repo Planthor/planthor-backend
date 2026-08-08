@@ -16,13 +16,29 @@ namespace Adapters.Strava.Client;
 /// The underlying <see cref="HttpClient"/> is managed by the <c>IHttpClientFactory</c>
 /// infrastructure and should not be disposed manually.
 /// </remarks>
-public partial class StravaApiClient(
-    HttpClient httpClient,
-    StravaAdapterDatabase tokenDb,
-    IOptions<StravaOptions> options,
-    ILogger<StravaApiClient> logger) : IStravaApiClient
+public partial class StravaApiClient : IStravaApiClient
 {
-    private readonly StravaOptions _options = options.Value;
+    private readonly HttpClient _httpClient;
+    private readonly StravaAdapterDatabase _tokenDb;
+    private readonly StravaOptions _options;
+    private readonly ILogger<StravaApiClient> _logger;
+
+    public StravaApiClient(
+        HttpClient httpClient,
+        StravaAdapterDatabase tokenDb,
+        IOptions<StravaOptions> options,
+        ILogger<StravaApiClient> logger)
+    {
+        ArgumentNullException.ThrowIfNull(httpClient);
+        ArgumentNullException.ThrowIfNull(tokenDb);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _httpClient = httpClient;
+        _tokenDb = tokenDb;
+        _options = options.Value;
+        _logger = logger;
+    }
 
     private string TokenEndpoint => $"{_options.BaseUrl.TrimEnd('/')}/oauth/token";
     private string DeauthorizeEndpoint => $"{_options.BaseUrl.TrimEnd('/')}/oauth/deauthorize";
@@ -43,6 +59,9 @@ public partial class StravaApiClient(
         string identifyName,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(code);
+        ArgumentNullException.ThrowIfNull(identifyName);
+
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["client_id"] = _options.ClientId,
@@ -51,7 +70,7 @@ public partial class StravaApiClient(
             ["grant_type"] = "authorization_code"
         });
 
-        var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
+        var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -78,7 +97,7 @@ public partial class StravaApiClient(
             LastRefreshedAtUtc = DateTime.UtcNow
         };
 
-        await tokenDb.UpsertAsync(document, cancellationToken);
+        await _tokenDb.UpsertAsync(document, cancellationToken);
 
         LogTokenExchangeSucceeded(identifyName, tokenResponse.Athlete.Id);
         return tokenResponse;
@@ -101,7 +120,9 @@ public partial class StravaApiClient(
         string identifyName,
         CancellationToken cancellationToken)
     {
-        var existing = await tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        ArgumentNullException.ThrowIfNull(identifyName);
+
+        var existing = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
         if (existing is null)
         {
             LogNoTokenFound(identifyName);
@@ -116,7 +137,7 @@ public partial class StravaApiClient(
             ["grant_type"] = "refresh_token"
         });
 
-        var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
+        var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -139,7 +160,7 @@ public partial class StravaApiClient(
         existing.ExpiresAt = refreshResponse.ExpiresAt;
         existing.LastRefreshedAtUtc = DateTime.UtcNow;
 
-        await tokenDb.UpsertAsync(existing, cancellationToken);
+        await _tokenDb.UpsertAsync(existing, cancellationToken);
 
         LogTokenRefreshSucceeded(identifyName);
         return existing;
@@ -159,7 +180,9 @@ public partial class StravaApiClient(
         string identifyName,
         CancellationToken cancellationToken)
     {
-        var token = await tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        ArgumentNullException.ThrowIfNull(identifyName);
+
+        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
         if (token is null)
         {
             return null;
@@ -186,7 +209,9 @@ public partial class StravaApiClient(
         string identifyName,
         CancellationToken cancellationToken)
     {
-        var token = await tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        ArgumentNullException.ThrowIfNull(identifyName);
+
+        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
         if (token is null)
         {
             // Already disconnected
@@ -198,10 +223,10 @@ public partial class StravaApiClient(
             ["access_token"] = token.AccessToken
         });
 
-        var response = await httpClient.PostAsync(DeauthorizeEndpoint, content, cancellationToken);
+        var response = await _httpClient.PostAsync(DeauthorizeEndpoint, content, cancellationToken);
 
         // Delete tokens regardless — if deauth failed, user may have already revoked on Strava
-        await tokenDb.DeleteAsync(identifyName, cancellationToken);
+        await _tokenDb.DeleteAsync(identifyName, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {

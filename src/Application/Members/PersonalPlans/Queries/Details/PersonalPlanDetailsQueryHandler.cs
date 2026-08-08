@@ -13,9 +13,16 @@ namespace Application.Members.PersonalPlans.Queries.Details;
 /// <summary>
 /// Handler for retrieving details of a specific personal plan.
 /// </summary>
-public class PersonalPlanDetailsQueryHandler(IReadOnlyContext readOnlyContext)
-    : IQueryHandler<PersonalPlanDetailsQuery, PersonalPlanDto>
+public class PersonalPlanDetailsQueryHandler : IQueryHandler<PersonalPlanDetailsQuery, PersonalPlanDto>
 {
+    private readonly IReadOnlyContext _readOnlyContext;
+
+    public PersonalPlanDetailsQueryHandler(IReadOnlyContext readOnlyContext)
+    {
+        ArgumentNullException.ThrowIfNull(readOnlyContext);
+        _readOnlyContext = readOnlyContext;
+    }
+
     private const double PercentageMultiplier = 100;
     private const int RoundingDecimals = 2;
 
@@ -24,14 +31,14 @@ public class PersonalPlanDetailsQueryHandler(IReadOnlyContext readOnlyContext)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var member = await readOnlyContext.FirstOrDefaultAsync<Member, Member>(
+        var member = await _readOnlyContext.FirstOrDefaultAsync<Member, Member>(
             q => q.Where(m => m.IdentifyName == request.IdentifyName),
             cancellationToken);
 
         var personalPlan = (member?.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId))
             ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
 
-        var plan = await readOnlyContext.FirstOrDefaultAsync<Plan, Plan>(
+        var plan = await _readOnlyContext.FirstOrDefaultAsync<Plan, Plan>(
             q => q.Where(p => p.Id == request.PlanId),
             cancellationToken) ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
 

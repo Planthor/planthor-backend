@@ -23,14 +23,33 @@ namespace Adapters.Strava.Controllers;
 /// </summary>
 [ApiController]
 [Route("v1/[controller]")]
-public sealed partial class StravaController(
-    IStravaApiClient stravaClient,
-    IClock clock,
-    IOptions<StravaOptions> options,
-    ISender sender,
-    ILogger<StravaController> logger) : ControllerBase
+public sealed partial class StravaController : ControllerBase
 {
-    private readonly StravaOptions _options = options.Value;
+    private readonly IStravaApiClient _stravaClient;
+    private readonly IClock _clock;
+    private readonly StravaOptions _options;
+    private readonly ISender _sender;
+    private readonly ILogger<StravaController> _logger;
+
+    public StravaController(
+        IStravaApiClient stravaClient,
+        IClock clock,
+        IOptions<StravaOptions> options,
+        ISender sender,
+        ILogger<StravaController> logger)
+    {
+        ArgumentNullException.ThrowIfNull(stravaClient);
+        ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _stravaClient = stravaClient;
+        _clock = clock;
+        _options = options.Value;
+        _sender = sender;
+        _logger = logger;
+    }
 
     /// <summary>
     /// Initiates the Strava OAuth authorization flow by redirecting the user
@@ -56,7 +75,7 @@ public sealed partial class StravaController(
         {
             IdentifyName = identifyName,
             Nonce = Guid.NewGuid().ToString("N"),
-            TimestampUtc = clock.GetCurrentInstant().ToUnixTimeSeconds()
+            TimestampUtc = _clock.GetCurrentInstant().ToUnixTimeSeconds()
         };
 
         var json = JsonSerializer.Serialize(payload);
@@ -134,14 +153,14 @@ public sealed partial class StravaController(
             return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "invalid_state"));
         }
 
-        var nowEpoch = clock.GetCurrentInstant().ToUnixTimeSeconds();
+        var nowEpoch = _clock.GetCurrentInstant().ToUnixTimeSeconds();
         if (nowEpoch - payload.TimestampUtc > 900) // 15 minutes expiration
         {
             LogCallbackStateExpired(payload.IdentifyName);
             return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl, "error", "state_expired"));
         }
 
-        var tokenResponse = await stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
+        var tokenResponse = await _stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
         if (tokenResponse == null)
         {
             LogCallbackTokenExchangeFailed(payload.IdentifyName);
@@ -150,7 +169,7 @@ public sealed partial class StravaController(
 
         var scopesList = _options.Scopes.Split(',').Select(s => s.Trim()).ToList();
 
-        await sender.Send(new ConnectExternalProviderCommand(
+        await _sender.Send(new ConnectExternalProviderCommand(
             payload.IdentifyName,
             ExternalProvider.Strava.Id,
             ExternalConnectionType.ActivitiesSync.Id,
@@ -205,6 +224,8 @@ public sealed partial class StravaController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult VerifyWebhook([FromQuery] StravaVerifyRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         if (request.VerifyToken != _options.WebhookVerifyToken)
         {
             LogWebhookVerifyFailed();
@@ -229,6 +250,8 @@ public sealed partial class StravaController(
         [FromBody] StravaWebhookPayload payload,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(payload);
+
         // Phase 3: Will enqueue a Quartz job for async processing
         await Task.CompletedTask;
         throw new NotSupportedException("Webhook event processing will be implemented in Phase 3.");

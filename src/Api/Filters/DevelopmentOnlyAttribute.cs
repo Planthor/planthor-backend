@@ -20,6 +20,8 @@ public class DevelopmentOnlyAttribute : Attribute, IAuthorizationFilter
     /// <param name="context">The authorization filter context.</param>
     public void OnAuthorization(AuthorizationFilterContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         var env = context.HttpContext.RequestServices.GetService<IWebHostEnvironment>();
 
         if (env == null || !env.IsDevelopment())

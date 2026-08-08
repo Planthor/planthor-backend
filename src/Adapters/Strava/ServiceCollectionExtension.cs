@@ -23,6 +23,9 @@ public static class ServiceCollectionExtension
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+
         try
         {
             MongoDB.Bson.Serialization.BsonSerializer.RegisterSerializer(

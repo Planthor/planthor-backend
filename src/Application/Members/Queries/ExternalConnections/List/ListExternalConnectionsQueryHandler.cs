@@ -13,15 +13,22 @@ namespace Application.Members.Queries.ExternalConnections.List;
 /// Handler for retrieving the list of external connections for a member.
 /// </summary>
 /// <param name="readOnlyContext">The read-only context.</param>
-public class ListExternalConnectionsQueryHandler(IReadOnlyContext readOnlyContext)
-    : IQueryHandler<ListExternalConnectionsQuery, IEnumerable<ExternalConnectionDto>>
+public class ListExternalConnectionsQueryHandler : IQueryHandler<ListExternalConnectionsQuery, IEnumerable<ExternalConnectionDto>>
 {
+    private readonly IReadOnlyContext _readOnlyContext;
+
+    public ListExternalConnectionsQueryHandler(IReadOnlyContext readOnlyContext)
+    {
+        ArgumentNullException.ThrowIfNull(readOnlyContext);
+        _readOnlyContext = readOnlyContext;
+    }
+
     /// <inheritdoc />
     public async Task<IEnumerable<ExternalConnectionDto>> Handle(ListExternalConnectionsQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var members = await readOnlyContext.QueryAsync<Member, Member>(
+        var members = await _readOnlyContext.QueryAsync<Member, Member>(
             q => {
                 var memberQuery = q;
                 if (request.Identifier.Equals("@me", StringComparison.OrdinalIgnoreCase))

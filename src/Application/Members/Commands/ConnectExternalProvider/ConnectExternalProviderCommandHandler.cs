@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,13 +8,27 @@ using NodaTime;
 
 namespace Application.Members.Commands.ConnectExternalProvider;
 
-public sealed class ConnectExternalProviderCommandHandler(
-    IMemberRepository memberRepository,
-    IClock clock) : ICommandHandler<ConnectExternalProviderCommand>
+public sealed class ConnectExternalProviderCommandHandler : ICommandHandler<ConnectExternalProviderCommand>
 {
+    private readonly IMemberRepository _memberRepository;
+    private readonly IClock _clock;
+
+    public ConnectExternalProviderCommandHandler(
+        IMemberRepository memberRepository,
+        IClock clock)
+    {
+        ArgumentNullException.ThrowIfNull(memberRepository);
+        ArgumentNullException.ThrowIfNull(clock);
+
+        _memberRepository = memberRepository;
+        _clock = clock;
+    }
+
     public async Task Handle(ConnectExternalProviderCommand request, CancellationToken cancellationToken)
     {
-        var member = await memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
+        ArgumentNullException.ThrowIfNull(request);
+
+        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
             ?? throw new KeyNotFoundException($"Member with Identity {request.IdentifyName} not found.");
 
         var provider = ExternalProvider.FromId(request.ProviderId);
@@ -24,9 +39,9 @@ public sealed class ConnectExternalProviderCommandHandler(
             connectionType,
             request.ExternalUserId,
             request.Scopes,
-            clock);
+            _clock);
 
-        await memberRepository.UpdateAsync(member, cancellationToken);
-        await memberRepository.SaveChangesAsync(cancellationToken);
+        await _memberRepository.UpdateAsync(member, cancellationToken);
+        await _memberRepository.SaveChangesAsync(cancellationToken);
     }
 }
