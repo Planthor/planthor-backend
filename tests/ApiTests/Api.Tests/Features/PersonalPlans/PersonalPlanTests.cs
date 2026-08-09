@@ -51,7 +51,7 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
             PlanDetails: new CreateSportPlanDetailsRequest(["Run"])
         );
 
-        var createResponse = await _client.PostAsJsonAsync("/v1/members/me/personalPlans", createCmd);
+        var createResponse = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", createCmd);
         createResponse.EnsureSuccessStatusCode();
         
         var createdPlan = await createResponse.Content.ReadFromJsonAsync<PersonalPlanDto>();
@@ -61,7 +61,7 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
         var planId = createdPlan.PlanId;
         
         // 2. Read Plan
-        var getResponse = await _client.GetAsync($"/v1/members/me/personalPlans/{planId}");
+        var getResponse = await _client.GetAsync($"/v1/members/me/personal-plans/{planId}");
         getResponse.EnsureSuccessStatusCode();
 
         // 3. Update Plan
@@ -73,26 +73,26 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
             ToDate: DateTimeOffset.UtcNow.AddDays(30),
             PeriodType: "Custom"
         );
-        var updateResponse = await _client.PutAsJsonAsync($"/v1/members/me/personalPlans/{planId}", updateCmd);
+        var updateResponse = await _client.PutAsJsonAsync($"/v1/members/me/personal-plans/{planId}", updateCmd);
         if (!updateResponse.IsSuccessStatusCode)
         {
             var err = await updateResponse.Content.ReadAsStringAsync();
             throw new Exception($"Update failed with {updateResponse.StatusCode}: {err}");
         }
         // 4. Read All Plans
-        var listResponse = await _client.GetAsync("/v1/members/me/personalPlans");
+        var listResponse = await _client.GetAsync("/v1/members/me/personal-plans");
         listResponse.EnsureSuccessStatusCode();
 
         // 5. Cancel Plan
-        var cancelResponse = await _client.PostAsync($"/v1/members/me/personalPlans/{planId}:cancel", null);
+        var cancelResponse = await _client.PostAsync($"/v1/members/me/personal-plans/{planId}:cancel", null);
         cancelResponse.EnsureSuccessStatusCode();
 
         // 6. Patch Plan (Not Supported)
-        var patchResponse = await _client.PatchAsync("/v1/members/me/personalPlans", null);
+        var patchResponse = await _client.PatchAsync("/v1/members/me/personal-plans", null);
         Assert.Equal(HttpStatusCode.InternalServerError, patchResponse.StatusCode);
 
         // 6. Activate Plan
-        var activateResponse = await _client.PostAsync($"/v1/members/me/personalPlans/{planId}:activate", null);
+        var activateResponse = await _client.PostAsync($"/v1/members/me/personal-plans/{planId}:activate", null);
         activateResponse.EnsureSuccessStatusCode();
     }
 
@@ -116,7 +116,7 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
             PlanDetails: null // Null explicitly to test the generic branch
         );
 
-        var createResponse = await _client.PostAsJsonAsync("/v1/members/me/personalPlans", createCmd);
+        var createResponse = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", createCmd);
         createResponse.EnsureSuccessStatusCode();
         
         var createdPlan = await createResponse.Content.ReadFromJsonAsync<PersonalPlanDto>();
@@ -130,46 +130,74 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
         // 1. Unauthorized due to missing NameIdentifier (controller logic)
         _client.DefaultRequestHeaders.Add("X-Omit-NameIdentifier", "true");
         
-        var getList = await _client.GetAsync("/v1/members/me/personalPlans");
+        var getList = await _client.GetAsync("/v1/members/me/personal-plans");
         Assert.Equal(HttpStatusCode.Unauthorized, getList.StatusCode);
 
-        var getSingle = await _client.GetAsync("/v1/members/me/personalPlans/00000000-0000-0000-0000-000000000000");
+        var getSingle = await _client.GetAsync("/v1/members/me/personal-plans/00000000-0000-0000-0000-000000000000");
         Assert.Equal(HttpStatusCode.Unauthorized, getSingle.StatusCode);
 
         var createCmd = new CreatePersonalPlanRequest("Test", "km", 10.0, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "2026-07-01", "2026-07-31", "UTC", true, true, 1, false, new CreateSportPlanDetailsRequest(["Run"]));
-        var createRes = await _client.PostAsJsonAsync("/v1/members/me/personalPlans", createCmd);
+        var createRes = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", createCmd);
         Assert.Equal(HttpStatusCode.Unauthorized, createRes.StatusCode);
 
         var updateCmd = new UpdatePersonalPlanRequest("km", 10.0, 5.0, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), "Custom");
-        var updateRes = await _client.PutAsJsonAsync("/v1/members/me/personalPlans/00000000-0000-0000-0000-000000000000", updateCmd);
+        var updateRes = await _client.PutAsJsonAsync("/v1/members/me/personal-plans/00000000-0000-0000-0000-000000000000", updateCmd);
         Assert.Equal(HttpStatusCode.Unauthorized, updateRes.StatusCode);
 
-        var cancelRes = await _client.PostAsync("/v1/members/me/personalPlans/00000000-0000-0000-0000-000000000000:cancel", null);
+        var cancelRes = await _client.PostAsync("/v1/members/me/personal-plans/00000000-0000-0000-0000-000000000000:cancel", null);
         Assert.Equal(HttpStatusCode.Unauthorized, cancelRes.StatusCode);
 
-        var activateRes = await _client.PostAsync("/v1/members/me/personalPlans/00000000-0000-0000-0000-000000000000:activate", null);
+        var activateRes = await _client.PostAsync("/v1/members/me/personal-plans/00000000-0000-0000-0000-000000000000:activate", null);
         Assert.Equal(HttpStatusCode.Unauthorized, activateRes.StatusCode);
 
         _client.DefaultRequestHeaders.Remove("X-Omit-NameIdentifier");
 
         // 2. Forbid (using another-user identifier)
-        var createForbid = await _client.PostAsJsonAsync("/v1/members/another-user/personalPlans", createCmd);
+        var createForbid = await _client.PostAsJsonAsync("/v1/members/another-user/personal-plans", createCmd);
         Assert.Equal(HttpStatusCode.Forbidden, createForbid.StatusCode);
 
-        var updateForbid = await _client.PutAsJsonAsync("/v1/members/another-user/personalPlans/00000000-0000-0000-0000-000000000000", updateCmd);
+        var updateForbid = await _client.PutAsJsonAsync("/v1/members/another-user/personal-plans/00000000-0000-0000-0000-000000000000", updateCmd);
         Assert.Equal(HttpStatusCode.Forbidden, updateForbid.StatusCode);
 
-        var cancelForbid = await _client.PostAsync("/v1/members/another-user/personalPlans/00000000-0000-0000-0000-000000000000:cancel", null);
+        var cancelForbid = await _client.PostAsync("/v1/members/another-user/personal-plans/00000000-0000-0000-0000-000000000000:cancel", null);
         Assert.Equal(HttpStatusCode.Forbidden, cancelForbid.StatusCode);
 
-        var activateForbid = await _client.PostAsync("/v1/members/another-user/personalPlans/00000000-0000-0000-0000-000000000000:activate", null);
+        var activateForbid = await _client.PostAsync("/v1/members/another-user/personal-plans/00000000-0000-0000-0000-000000000000:activate", null);
         Assert.Equal(HttpStatusCode.Forbidden, activateForbid.StatusCode);
 
         // 3. BadRequest (Null command) handled by ASP.NET Core MVC
-        var nullUpdate = await _client.PutAsJsonAsync<UpdatePersonalPlanRequest>("/v1/members/me/personalPlans/00000000-0000-0000-0000-000000000000", null);
+        var nullUpdate = await _client.PutAsJsonAsync<UpdatePersonalPlanRequest>("/v1/members/me/personal-plans/00000000-0000-0000-0000-000000000000", null);
         Assert.Equal(HttpStatusCode.BadRequest, nullUpdate.StatusCode);    
         // 4. Create BadRequest (Null command)
-        var res4 = await _client.PostAsJsonAsync<CreatePersonalPlanRequest>("/v1/members/me/personalPlans", null);
+        var res4 = await _client.PostAsJsonAsync<CreatePersonalPlanRequest>("/v1/members/me/personal-plans", null);
         Assert.Equal(HttpStatusCode.BadRequest, res4.StatusCode);
+    }
+    [Fact]
+    public async Task PersonalPlan_Validation_Tests()
+    {
+        // 1. Validation error: empty sport types
+        var emptySportTypesCmd = new CreatePersonalPlanRequest(
+            Name: "Test Plan", Unit: "km", Target: 100.0, FromDate: DateTimeOffset.UtcNow, ToDate: DateTimeOffset.UtcNow.AddDays(30),
+            StartDateLocal: "2026-07-01", EndDateLocal: "2026-07-31", Timezone: "UTC", EnableActivityLog: true, DisplayOnProfile: true, Prioritize: 1, LinkUserAdapter: false,
+            PlanDetails: new CreateSportPlanDetailsRequest([]) // empty
+        );
+        var emptyRes = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", emptySportTypesCmd);
+        Assert.Equal(HttpStatusCode.BadRequest, emptyRes.StatusCode);
+        var emptyErr = await emptyRes.Content.ReadAsStringAsync();
+        Assert.Contains("error_sport_types_required", emptyErr);
+
+        // 2. Validation error: Invalid sport type
+        var invalidSportTypesCmd = emptySportTypesCmd with { PlanDetails = new CreateSportPlanDetailsRequest(["INVALID"]) };
+        var invalidRes = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", invalidSportTypesCmd);
+        Assert.Equal(HttpStatusCode.BadRequest, invalidRes.StatusCode);
+        var invalidErr = await invalidRes.Content.ReadAsStringAsync();
+        Assert.Contains("error_sport_type_invalid", invalidErr);
+
+        // 3. Validation error: Cannot combine ALL
+        var combineAllCmd = emptySportTypesCmd with { PlanDetails = new CreateSportPlanDetailsRequest(["ALL", "RUN"]) };
+        var combineRes = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", combineAllCmd);
+        Assert.Equal(HttpStatusCode.BadRequest, combineRes.StatusCode);
+        var combineErr = await combineRes.Content.ReadAsStringAsync();
+        Assert.Contains("error_sport_types_cannot_combine_all", combineErr);
     }
 }

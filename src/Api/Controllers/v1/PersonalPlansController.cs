@@ -33,7 +33,7 @@ namespace Api.Controllers.v1;
 [Authorize]
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
-[Route("v1/members/{identifier}/[controller]")]
+[Route("v1/members/{identifier}/personal-plans")]
 public class PersonalPlansController(
     ISender sender,
     IValidator<CreatePersonalPlanCommand> createPersonalPlanCommandValidator,

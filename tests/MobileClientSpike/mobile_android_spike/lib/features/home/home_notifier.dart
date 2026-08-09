@@ -69,7 +69,7 @@ class HomeNotifier extends _$HomeNotifier {
           "Prioritize": 1,
           "LinkUserAdapter": true
         };
-        final response = await dio.post('/v1/members/me/PersonalPlans', data: payload);
+        final response = await dio.post('/v1/members/me/personal-plans', data: payload);
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
         final res = e.response;
@@ -86,7 +86,7 @@ class HomeNotifier extends _$HomeNotifier {
     state = await AsyncValue.guard(() async {
       final dio = ref.read(apiClientProvider);
       try {
-        final response = await dio.post('/v1/members/me/PersonalPlans/$planId:cancel');
+        final response = await dio.post('/v1/members/me/personal-plans/$planId:cancel');
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
         final res = e.response;
@@ -103,7 +103,7 @@ class HomeNotifier extends _$HomeNotifier {
     state = await AsyncValue.guard(() async {
       final dio = ref.read(apiClientProvider);
       try {
-        final response = await dio.post('/v1/members/me/PersonalPlans/$planId:activate');
+        final response = await dio.post('/v1/members/me/personal-plans/$planId:activate');
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
         final res = e.response;
@@ -120,7 +120,7 @@ class HomeNotifier extends _$HomeNotifier {
     state = await AsyncValue.guard(() async {
       final dio = ref.read(apiClientProvider);
       try {
-        final response = await dio.get('/v1/members/me/PersonalPlans');
+        final response = await dio.get('/v1/members/me/personal-plans');
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
         final res = e.response;

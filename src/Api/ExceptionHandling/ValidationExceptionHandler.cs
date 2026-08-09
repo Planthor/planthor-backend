@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Domain.Shared.Exceptions;
@@ -23,7 +23,7 @@ internal sealed class ValidationExceptionHandler : IExceptionHandler
             errors = [];
             foreach (var failure in fluentEx.Errors)
             {
-                errors.Add(new { field = failure.PropertyName, message = failure.ErrorMessage });
+                errors.Add(new { field = failure.PropertyName, message = failure.ErrorMessage, code = failure.ErrorCode });
             }
         }
         else if (exception is DomainValidationException domainEx)

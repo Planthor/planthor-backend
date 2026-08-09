@@ -38,7 +38,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
             PlanDetails: new CreateSportPlanDetailsRequest(["Run", "Ride"])
         );
 
-        var createPlanResponse = await _client.PostAsJsonAsync("/v1/members/me/personalPlans", createPlanCmd);
+        var createPlanResponse = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", createPlanCmd);
         createPlanResponse.EnsureSuccessStatusCode();
         var createdPlan = await createPlanResponse.Content.ReadFromJsonAsync<PersonalPlanDto>();
         var planId = createdPlan!.PlanId;

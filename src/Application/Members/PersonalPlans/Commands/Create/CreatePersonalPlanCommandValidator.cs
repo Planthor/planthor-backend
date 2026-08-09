@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Domain.Plans;
 using FluentValidation;
 using NodaTime;
 
@@ -51,5 +53,47 @@ public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePerson
 
         RuleFor(x => x.Prioritize)
             .InclusiveBetween(MinPriority, MaxPriority).WithErrorCode("error_priority_invalid");
+
+        When(x => x.PlanDetails is CreateSportPlanDetailsCommand, () =>
+        {
+            RuleFor(x => x.PlanDetails)
+                .Must(pd => (pd as CreateSportPlanDetailsCommand)?.SportTypes?.Count > 0)
+                .WithErrorCode("error_sport_types_required")
+                .OverridePropertyName("SportTypes");
+
+            RuleFor(x => x.PlanDetails)
+                .Must(pd =>
+                {
+                    if (pd is not CreateSportPlanDetailsCommand sportDetails) return true;
+                    var st = sportDetails.SportTypes;
+                    if (st == null) return true;
+                    var hasAll = st.Any(s => string.Equals(s, PlanthorSportType.All.Id, StringComparison.OrdinalIgnoreCase));
+                    return !hasAll || st.Count == 1;
+                })
+                .WithErrorCode("error_sport_types_cannot_combine_all")
+                .OverridePropertyName("SportTypes");
+
+            RuleFor(x => x.PlanDetails)
+                .Must(pd =>
+                {
+                    if (pd is not CreateSportPlanDetailsCommand sportDetails) return true;
+                    var st = sportDetails.SportTypes;
+                    if (st == null) return true;
+                    return st.All(s => !string.IsNullOrWhiteSpace(s));
+                })
+                .WithErrorCode("error_sport_type_empty")
+                .OverridePropertyName("SportTypes");
+
+            RuleFor(x => x.PlanDetails)
+                .Must(pd =>
+                {
+                    if (pd is not CreateSportPlanDetailsCommand sportDetails) return true;
+                    var st = sportDetails.SportTypes;
+                    if (st == null) return true;
+                    return st.All(s => string.IsNullOrWhiteSpace(s) || PlanthorSportType.TryFromId(s, out _));
+                })
+                .WithErrorCode("error_sport_type_invalid")
+                .OverridePropertyName("SportTypes");
+        });
     }
 }
