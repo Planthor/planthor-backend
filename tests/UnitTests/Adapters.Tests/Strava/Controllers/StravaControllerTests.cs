@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Controllers;
+using Adapters.Strava.Webhook;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -85,7 +86,7 @@ public class StravaControllerTests
     public async Task Authorize_ShouldRedirectToStravaWithEncryptedState()
     {
         // Act
-        var result = await _controller.Authorize(CancellationToken.None);
+        var result = _controller.Authorize();
 
         // Assert
         var redirectResult = Assert.IsType<RedirectResult>(result);
@@ -104,7 +105,7 @@ public class StravaControllerTests
         _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
 
         // Act
-        var result = await _controller.Authorize(CancellationToken.None);
+        var result = _controller.Authorize();
 
         // Assert
         Assert.IsType<UnauthorizedResult>(result);
@@ -122,7 +123,7 @@ public class StravaControllerTests
         _controller.Url = urlHelper;
 
         // Act
-        var result = await _controller.Authorize(CancellationToken.None);
+        var result = _controller.Authorize();
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -300,7 +301,6 @@ public class StravaControllerTests
     public async Task NotImplementedEndpoints_ShouldThrowExceptions()
     {
         await Assert.ThrowsAsync<NotImplementedException>(() => _controller.Disconnect(CancellationToken.None));
-        await Assert.ThrowsAsync<NotSupportedException>(() => _controller.ReceiveEvent(new Adapters.Strava.Webhook.StravaWebhookPayload(), CancellationToken.None));
-        await Assert.ThrowsAsync<NotSupportedException>(() => _controller.ManualSync(CancellationToken.None));
+        await Assert.ThrowsAsync<NotSupportedException>(() => _controller.ReceiveEvent(new StravaWebhookPayload(), CancellationToken.None));
     }
 }

@@ -18,6 +18,5 @@
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\Adapters\Facebook\Adapters.Facebook.csproj" />
     <ProjectReference Include="..\Adapters\Strava\Adapters.Strava.csproj" />
-    <ProjectReference Include="..\Adapters\Abstraction\Adapters.Abstraction.csproj" />
   </ItemGroup>
 </Project>

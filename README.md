@@ -230,10 +230,16 @@ curl -H "Authorization: Bearer <your-jwt-token>" https://localhost:5001/v1/membe
 
 #### Personal Plans
 
-- `GET /v1/members/{memberId}/personalplans` — List member's training plans
-- `POST /v1/members/{memberId}/personalplans` — Create new training plan
-- `GET /v1/members/{memberId}/personalplans/{planId}` — Get specific plan
-- `PUT /v1/members/{memberId}/personalplans/{planId}` — Update training plan
+- `GET /v1/members/{memberId}/personal-plans` — List member's training plans
+- `POST /v1/members/{memberId}/personal-plans` — Create new training plan
+- `GET /v1/members/{memberId}/personal-plans/{planId}` — Get specific plan
+- `PUT /v1/members/{memberId}/personal-plans/{planId}` — Update training plan
+- `POST /v1/members/{memberId}/personal-plans/{planId}:cancel` — Cancel training plan
+- `POST /v1/members/{memberId}/personal-plans/{planId}:activate` — Activate training plan
+
+#### Sport Types
+
+- `GET /v1/sport-types` — List supported Planthor sport types (e.g. ALL, RUN, WALK, HIKE, RIDE, SWIM)
 
 ### Interactive API Documentation
 

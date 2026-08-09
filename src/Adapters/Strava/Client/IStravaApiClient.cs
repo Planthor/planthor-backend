@@ -51,4 +51,15 @@ public interface IStravaApiClient
     /// The task result is true if deauthorization succeeds or the token is already removed; otherwise, false.
     /// </returns>
     Task<bool> DeauthorizeAsync(string identifyName, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Fetches activities for the authenticated athlete.
+    /// </summary>
+    /// <param name="identifyName">The Keycloak identify name.</param>
+    /// <param name="afterEpoch">Optional timestamp (epoch seconds) to fetch activities after.</param>
+    /// <param name="page">Page number.</param>
+    /// <param name="perPage">Items per page (max 200).</param>
+    /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
+    /// <returns>A list of activities.</returns>
+    Task<IReadOnlyList<StravaActivityResponse>> GetAthleteActivitiesAsync(string identifyName, long? afterEpoch, int page, int perPage, CancellationToken cancellationToken);
 }

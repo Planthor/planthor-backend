@@ -1,5 +1,5 @@
 using System;
-using Adapters.Abstraction;
+using Application.Interfaces;
 using Adapters.Facebook;
 using Adapters.Strava;
 using Api.ExceptionHandling;

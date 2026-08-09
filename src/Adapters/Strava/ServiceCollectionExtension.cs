@@ -1,6 +1,7 @@
-using Adapters.Abstraction;
+using Application.Interfaces;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
+using Adapters.Strava.Mapping;
 using Adapters.Strava.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +46,7 @@ public static class ServiceCollectionExtension
         services.AddHttpClient<IStravaApiClient, StravaApiClient>();
 
         services.AddKeyedScoped<IActivitySyncAdapter, StravaActivitySyncAdapter>("STRAVA");
+        services.AddKeyedSingleton<IProviderSportTypeMapper, StravaSportTypeMapper>("STRAVA");
 
         return services;
     }

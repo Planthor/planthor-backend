@@ -1,4 +1,8 @@
-namespace Adapters.Abstraction;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Application.Interfaces;
 
 /// <summary>
 /// Defines the contract for an adapter that interacts with external APIs to retrieve social profile data.

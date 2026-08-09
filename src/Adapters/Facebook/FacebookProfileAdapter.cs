@@ -1,4 +1,4 @@
-using Adapters.Abstraction;
+using Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 
 namespace Adapters.Facebook;

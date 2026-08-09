@@ -1,6 +1,6 @@
-﻿using NodaTime;
+using NodaTime;
 
-namespace Adapters.Abstraction;
+namespace Application.Dtos;
 
 /// <summary>
 /// Normalized activity returned by any <see cref="IActivitySyncAdapter"/>.

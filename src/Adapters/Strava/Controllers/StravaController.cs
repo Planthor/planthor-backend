@@ -4,6 +4,7 @@ using System.Text.Json;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Webhook;
+using Application.ExternalSync.Commands.SyncStravaActivities;
 using Application.Members.Commands.ConnectExternalProvider;
 using Domain.Members;
 using MediatR;
@@ -63,7 +64,6 @@ public sealed partial class StravaController : ControllerBase
     /// Initiates the Strava OAuth authorization flow by redirecting the user
     /// to Strava's consent page.
     /// </summary>
-    /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns>A redirect to the Strava authorization URL.</returns>
     /// <response code="302">Redirects to Strava's OAuth consent page.</response>
     /// <response code="401">If the user is not authenticated.</response>
@@ -71,7 +71,7 @@ public sealed partial class StravaController : ControllerBase
     [Authorize]
     [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Authorize(CancellationToken cancellationToken)
+    public IActionResult Authorize()
     {
         var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(identifyName))
@@ -285,9 +285,16 @@ public sealed partial class StravaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> ManualSync(CancellationToken cancellationToken)
     {
-        // Phase 2: Will dispatch SyncStravaActivitiesCommand via MediatR
-        await Task.CompletedTask;
-        throw new NotSupportedException("Manual sync will be implemented in Phase 2.");
+        var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(identifyName))
+        {
+            return Unauthorized();
+        }
+
+        var command = new SyncStravaActivitiesCommand(identifyName);
+        var newLogsCreated = await _sender.Send(command, cancellationToken);
+        
+        return Ok(new { newLogsCreated });
     }
 
     // ────────────────────────────────────────────────────────────────

@@ -32,7 +32,7 @@ public class StravaAdapterDatabase
     /// <param name="identifyName">The Planthor member's Keycloak Identity Name.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns>The token document, or <c>null</c> if no document exists for the member.</returns>
-    public async Task<StravaTokenDocument?> GetByIdentifyNameAsync(
+    public virtual async Task<StravaTokenDocument?> GetByIdentifyNameAsync(
         string identifyName,
         CancellationToken cancellationToken)
     {
@@ -47,7 +47,7 @@ public class StravaAdapterDatabase
     /// <param name="athleteId">The Strava athlete numeric identifier.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns>The token document, or <c>null</c> if no document exists for the athlete.</returns>
-    public async Task<StravaTokenDocument?> GetByAthleteIdAsync(
+    public virtual async Task<StravaTokenDocument?> GetByAthleteIdAsync(
         long athleteId,
         CancellationToken cancellationToken)
     {
@@ -60,7 +60,7 @@ public class StravaAdapterDatabase
     /// </summary>
     /// <param name="document">The token document to persist.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    public Task UpsertAsync(
+    public virtual Task UpsertAsync(
         StravaTokenDocument document,
         CancellationToken cancellationToken)
     {
@@ -84,7 +84,7 @@ public class StravaAdapterDatabase
     /// </summary>
     /// <param name="identifyName">The Planthor member's Keycloak Identity Name whose tokens should be removed.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    public async Task DeleteAsync(
+    public virtual async Task DeleteAsync(
         string identifyName,
         CancellationToken cancellationToken)
     {

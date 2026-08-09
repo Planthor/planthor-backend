@@ -37,8 +37,8 @@ public abstract class ValueObject : IEquatable<ValueObject>
             return false;
         }
 
-        var thisComponents = EqualityComponents ?? Enumerable.Empty<object>();
-        var otherComponents = other.EqualityComponents ?? Enumerable.Empty<object>();
+        var thisComponents = EqualityComponents ?? [];
+        var otherComponents = other.EqualityComponents ?? [];
 
         return thisComponents.SequenceEqual(
             otherComponents,
@@ -61,7 +61,7 @@ public abstract class ValueObject : IEquatable<ValueObject>
     /// </remarks>
     public override int GetHashCode()
     {
-        var components = EqualityComponents ?? Enumerable.Empty<object>();
+        var components = EqualityComponents ?? [];
 
         unchecked
         {

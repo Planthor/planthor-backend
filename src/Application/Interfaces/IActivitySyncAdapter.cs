@@ -1,6 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using NodaTime;
 
-namespace Adapters.Abstraction;
+using Application.Dtos;
+
+namespace Application.Interfaces;
 
 /// <summary>
 /// Provider-agnostic contract for fetching external activity data on behalf of a member.
@@ -19,11 +25,13 @@ public interface IActivitySyncAdapter
     /// Returns an empty list if the member has no active connection for this provider.
     /// </summary>
     /// <param name="memberId">The unique identifier of the member.</param>
-    /// <param name="since">The start instant from which to fetch activities.</param>
+    /// <param name="identifyName">The member's identify name (e.g. from identity provider).</param>
+    /// <param name="since">Optional start instant. If null, the adapter manages its own watermark.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task representing the asynchronous operation, returning a read-only list of activity DTOs.</returns>
     Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
         Guid memberId,
-        Instant since,
-        CancellationToken cancellationToken);
+        string identifyName,
+        Instant? since = null,
+        CancellationToken cancellationToken = default);
 }

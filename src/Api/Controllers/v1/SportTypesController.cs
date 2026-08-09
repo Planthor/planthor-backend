@@ -19,6 +19,7 @@ public class SportTypesController : ControllerBase
     /// </summary>
     /// <returns>A collection of supported sport types.</returns>
     [HttpGet]
+    [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any)]
     [ProducesResponseType(typeof(IEnumerable<SportTypeResponse>), StatusCodes.Status200OK)]
     public IActionResult List()
     {

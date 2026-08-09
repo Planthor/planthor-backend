@@ -6,7 +6,6 @@
     <Project Path="src/Infrastructure/Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Adapters/">
-    <Project Path="src/Adapters/Abstraction/Adapters.Abstraction.csproj" />
     <Project Path="src/Adapters/Facebook/Adapters.Facebook.csproj" />
     <Project Path="src/Adapters/Strava/Adapters.Strava.csproj" />
   </Folder>

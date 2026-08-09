@@ -47,7 +47,14 @@ public partial class StravaApiClient : IStravaApiClient
         _logger = logger;
     }
 
+    /// <summary>
+    /// Gets the Strava OAuth token endpoint URI.
+    /// </summary>
     private Uri TokenEndpoint => new(new Uri(_options.BaseUrl.AbsoluteUri.TrimEnd('/') + "/"), "oauth/token");
+
+    /// <summary>
+    /// Gets the Strava OAuth deauthorize endpoint URI.
+    /// </summary>
     private Uri DeauthorizeEndpoint => new(new Uri(_options.BaseUrl.AbsoluteUri.TrimEnd('/') + "/"), "oauth/deauthorize");
 
     /// <summary>
@@ -264,6 +271,61 @@ public partial class StravaApiClient : IStravaApiClient
             }
 
             return true;
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Athlete Activities
+    // ────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Retrieves a paginated list of activities for the specified member.
+    /// </summary>
+    /// <param name="identifyName">The Planthor member identifier.</param>
+    /// <param name="afterEpoch">An epoch timestamp to use for filtering activities that have taken place after a certain time.</param>
+    /// <param name="page">Page number to fetch.</param>
+    /// <param name="perPage">Number of items per page.</param>
+    /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
+    /// <returns>A list of <see cref="StravaActivityResponse"/>.</returns>
+    public Task<IReadOnlyList<StravaActivityResponse>> GetAthleteActivitiesAsync(
+        string identifyName,
+        long? afterEpoch,
+        int page,
+        int perPage,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(identifyName);
+        
+        return Core();
+
+        async Task<IReadOnlyList<StravaActivityResponse>> Core()
+        {
+            var token = await GetValidTokenAsync(identifyName, cancellationToken);
+            if (token is null)
+            {
+                _logger.LogWarning("Cannot fetch activities: no valid token for member {IdentifyName}", identifyName);
+                return Array.Empty<StravaActivityResponse>();
+            }
+
+            var requestUri = $"athlete/activities?page={page}&per_page={perPage}";
+            if (afterEpoch.HasValue)
+            {
+                requestUri += $"&after={afterEpoch.Value}";
+            }
+
+            var request = new HttpRequestMessage(HttpMethod.Get, new Uri(new Uri(_options.BaseUrl.AbsoluteUri.TrimEnd('/') + "/"), requestUri));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.AccessToken);
+
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to fetch activities for {IdentifyName}. Status: {StatusCode}", identifyName, response.StatusCode);
+                return Array.Empty<StravaActivityResponse>();
+            }
+
+            var activities = await response.Content.ReadFromJsonAsync<List<StravaActivityResponse>>(cancellationToken);
+            return activities ?? (IReadOnlyList<StravaActivityResponse>)Array.Empty<StravaActivityResponse>();
         }
     }
 

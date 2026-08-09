@@ -1,4 +1,4 @@
-using Adapters.Abstraction;
+using Application.Dtos;
 using NodaTime;
 
 namespace Adapters.Tests.Abstraction;

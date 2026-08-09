@@ -23,7 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Adapters\Abstraction\Adapters.Abstraction.csproj" />
     <ProjectReference Include="..\..\..\src\Adapters\Facebook\Adapters.Facebook.csproj" />
     <ProjectReference Include="..\..\..\src\Adapters\Strava\Adapters.Strava.csproj" />
   </ItemGroup>
