@@ -55,6 +55,7 @@ public class ActivityLogsController(
     /// This endpoint is primarily preserved here for testing purposes.
     /// </remarks>
     [HttpPost]
+    [DevelopmentOnly]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

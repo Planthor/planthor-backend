@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 import '../auth/auth_notifier.dart';
 import 'home_notifier.dart';
 
@@ -21,8 +20,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () =>
-                ref.read(authProvider.notifier).logout(),
+            onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
         ],
       ),
@@ -159,13 +157,16 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // Call API button
+            // Members API
+            Text(
+              'Members API',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: homeState is AsyncLoading
                   ? null
-                  : () => ref
-                      .read(homeProvider.notifier)
-                      .callProtectedApi(),
+                  : () => ref.read(homeProvider.notifier).callProtectedApi(),
               icon: homeState is AsyncLoading
                   ? const SizedBox(
                       width: 20,
@@ -179,14 +180,34 @@ class HomeScreen extends ConsumerWidget {
               label: const Text('Call Protected API (GET /v1/Members)'),
             ),
             const SizedBox(height: 16),
-            
-            // Create Personal Plan button
+
+            // Plans API
+            Text(
+              'Personal Plans API',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: homeState is AsyncLoading
                   ? null
-                  : () => ref
-                      .read(homeProvider.notifier)
-                      .createPersonalPlan(),
+                  : () => ref.read(homeProvider.notifier).getPersonalPlans(),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.list),
+              label: const Text('Get Personal Plans (GET)'),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => ref.read(homeProvider.notifier).createPersonalPlan(),
               icon: homeState is AsyncLoading
                   ? const SizedBox(
                       width: 20,
@@ -199,28 +220,7 @@ class HomeScreen extends ConsumerWidget {
                   : const Icon(Icons.add_task),
               label: const Text('Create Personal Plan (POST)'),
             ),
-            const SizedBox(height: 16),
-
-            // Create Activity Log button
-            FilledButton.icon(
-              onPressed: homeState is AsyncLoading
-                  ? null
-                  : () => _showCreateActivityLogDialog(context, ref),
-              icon: homeState is AsyncLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.add_chart),
-              label: const Text('Create Activity Log (POST)'),
-            ),
-            const SizedBox(height: 16),
-
-            // Cancel Personal Plan button
+            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: homeState is AsyncLoading
                   ? null
@@ -240,9 +240,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               label: const Text('Cancel Personal Plan (POST)'),
             ),
-            const SizedBox(height: 16),
-
-            // Activate Personal Plan button
+            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: homeState is AsyncLoading
                   ? null
@@ -264,13 +262,97 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
+            // Activity Logs API
+            Text(
+              'Activity Logs API',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => _showCreateActivityLogDialog(context, ref),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.add_chart),
+              label: const Text('Create Activity Log (POST)'),
+            ),
+            const SizedBox(height: 16),
+
+            // External Connections API
+            Text(
+              'External Connections API',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => ref.read(homeProvider.notifier).getExternalConnections(),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.link),
+              label: const Text('Get External Connections (GET)'),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => ref.read(homeProvider.notifier).getStravaAuthorizeUrl(),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.login),
+              label: const Text('Get Strava Authorize URL (GET)'),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: homeState is AsyncLoading
+                  ? null
+                  : () => ref.read(homeProvider.notifier).disconnectStrava(),
+              icon: homeState is AsyncLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.link_off),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              label: const Text('Disconnect Strava (DELETE)'),
+            ),
+            const SizedBox(height: 16),
+
             // API response
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: homeState.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const Center(child: CircularProgressIndicator()),
                   error: (e, _) => SelectableText(
                     'Error: $e',
                     style: TextStyle(
@@ -455,13 +537,16 @@ class _TokenRow extends StatelessWidget {
                   icon: const Icon(Icons.copy, size: 16),
                   tooltip: 'Copy $label',
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: value!));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('$label copied to clipboard'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    final val = value;
+                    if (val != null) {
+                      Clipboard.setData(ClipboardData(text: val));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$label copied to clipboard'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
                 ),
               ),

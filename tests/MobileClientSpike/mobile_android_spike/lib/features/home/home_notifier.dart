@@ -20,8 +20,9 @@ class HomeNotifier extends _$HomeNotifier {
         final response = await dio.get('/v1/Members');
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
-        if (e.response != null) {
-          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
         }
         rethrow;
       }
@@ -40,8 +41,9 @@ class HomeNotifier extends _$HomeNotifier {
         final response = await dio.post('/v1/plans/$planId/ActivityLogs', data: payload);
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
-        if (e.response != null) {
-          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
         }
         rethrow;
       }
@@ -54,7 +56,6 @@ class HomeNotifier extends _$HomeNotifier {
       final dio = ref.read(apiClientProvider);
       try {
         final payload = {
-          "IdentifyName": "me",
           "Name": "Flutter Spike Plan",
           "Unit": "km",
           "Target": 100.0,
@@ -71,8 +72,9 @@ class HomeNotifier extends _$HomeNotifier {
         final response = await dio.post('/v1/members/me/PersonalPlans', data: payload);
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
-        if (e.response != null) {
-          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
         }
         rethrow;
       }
@@ -87,8 +89,9 @@ class HomeNotifier extends _$HomeNotifier {
         final response = await dio.post('/v1/members/me/PersonalPlans/$planId:cancel');
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
-        if (e.response != null) {
-          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
         }
         rethrow;
       }
@@ -103,8 +106,84 @@ class HomeNotifier extends _$HomeNotifier {
         final response = await dio.post('/v1/members/me/PersonalPlans/$planId:activate');
         return 'Status: ${response.statusCode}\n\n${response.data}';
       } on DioException catch (e) {
-        if (e.response != null) {
-          return 'Error ${e.response!.statusCode}: ${e.response!.data}';
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
+        }
+        rethrow;
+      }
+    });
+  }
+
+  Future<void> getPersonalPlans() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final dio = ref.read(apiClientProvider);
+      try {
+        final response = await dio.get('/v1/members/me/PersonalPlans');
+        return 'Status: ${response.statusCode}\n\n${response.data}';
+      } on DioException catch (e) {
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
+        }
+        rethrow;
+      }
+    });
+  }
+
+  Future<void> getExternalConnections() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final dio = ref.read(apiClientProvider);
+      try {
+        final response = await dio.get('/v1/members/me/ExternalConnections');
+        return 'Status: ${response.statusCode}\n\n${response.data}';
+      } on DioException catch (e) {
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
+        }
+        rethrow;
+      }
+    });
+  }
+
+  Future<void> getStravaAuthorizeUrl() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final dio = ref.read(apiClientProvider);
+      final dioNoRedirect = Dio(dio.options.copyWith(
+        followRedirects: false,
+        validateStatus: (status) => status != null && status < 400,
+      ));
+      dioNoRedirect.interceptors.addAll(dio.interceptors);
+
+      try {
+        final response = await dioNoRedirect.get('/v1/Strava/authorize');
+        final authorizeUrl = response.headers.value('location');
+        return 'Status: ${response.statusCode}\nLocation: $authorizeUrl';
+      } on DioException catch (e) {
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
+        }
+        rethrow;
+      }
+    });
+  }
+
+  Future<void> disconnectStrava() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final dio = ref.read(apiClientProvider);
+      try {
+        final response = await dio.delete('/v1/Strava/disconnect');
+        return 'Status: ${response.statusCode}\n\n${response.data}';
+      } on DioException catch (e) {
+        final res = e.response;
+        if (res != null) {
+          return 'Error ${res.statusCode}: ${res.data}';
         }
         rethrow;
       }
@@ -149,8 +228,9 @@ class TokenDebugInfo {
   }
 
   String get expiryDisplay {
-    if (expiry == null) return 'Unknown';
-    final remaining = expiry!.difference(DateTime.now());
+    final exp = expiry;
+    if (exp == null) return 'Unknown';
+    final remaining = exp.difference(DateTime.now());
     if (remaining.isNegative) return 'EXPIRED';
     return '${remaining.inMinutes}m ${remaining.inSeconds % 60}s remaining';
   }

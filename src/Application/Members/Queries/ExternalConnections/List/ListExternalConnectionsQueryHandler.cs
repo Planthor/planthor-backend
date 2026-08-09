@@ -35,7 +35,7 @@ public class ListExternalConnectionsQueryHandler : IQueryHandler<ListExternalCon
             var members = await _readOnlyContext.QueryAsync<Member, Member>(
                 q => {
                     var memberQuery = q;
-                    if (request.Identifier.Equals("@me", StringComparison.OrdinalIgnoreCase))
+                    if (request.Identifier.Equals("me", StringComparison.OrdinalIgnoreCase))
                     {
                         memberQuery = memberQuery.Where(m => m.IdentifyName == request.CurrentIdentifyName);
                     }
