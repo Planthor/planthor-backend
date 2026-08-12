@@ -7,14 +7,9 @@ using Xunit;
 
 namespace Api.Tests.Features.SportTypes;
 
-public class SportTypesTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class SportTypesTests(CustomWebApplicationFactory<Program> factory) : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    private readonly HttpClient _client;
-
-    public SportTypesTests(CustomWebApplicationFactory<Program> factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task GetSportTypes_ReturnsListOfAvailableTypes()

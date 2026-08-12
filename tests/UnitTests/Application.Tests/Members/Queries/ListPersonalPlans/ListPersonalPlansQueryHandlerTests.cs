@@ -67,6 +67,19 @@ public class ListPersonalPlansQueryHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenContextIsNull_ThrowsArgumentNullException()
+    {
+        var handler = new ListPersonalPlansQueryHandler(null!);
+        await Assert.ThrowsAsync<ArgumentNullException>(() => handler.Handle(new ListPersonalPlansQuery("user1"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_WhenRequestIsNull_ThrowsArgumentNullException()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _handler.Handle(null!, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Handle_WhenMemberHasNoPersonalPlans_ReturnsEmptyResult()
     {
         SetupMemberContext(CreateMember());
@@ -100,6 +113,25 @@ public class ListPersonalPlansQueryHandlerTests
         Assert.Equal("km", dto.Unit);
         Assert.Equal(100f, dto.Target);
         Assert.Equal(0f, dto.CurrentValue);
+        Assert.Equal(0.0, dto.ProgressPercentage);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPlanTargetIsZero_ProgressPercentageIsZero()
+    {
+        var plan = Plan.Create("Run 0km", "km", 10f, _from, _to, "2024-01-01", "2024-12-31", "UTC", true, _clock, Guid.NewGuid());
+        // Use reflection to bypass validation
+        typeof(Plan).GetProperty("Target")!.SetValue(plan, 0f);
+
+        var member = CreateMember();
+        member.SubscribeToPlan(plan.Id, displayOnProfile: true, prioritize: 5, linkUserAdapter: false, _clock);
+
+        SetupMemberContext(member);
+        SetupPlansContext([plan]);
+
+        var result = await _handler.Handle(new ListPersonalPlansQuery("user1"), CancellationToken.None);
+
+        var dto = Assert.Single(result.Items);
         Assert.Equal(0.0, dto.ProgressPercentage);
     }
 

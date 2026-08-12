@@ -1,10 +1,10 @@
 using System;
-using Application.Interfaces;
 using Adapters.Facebook;
 using Adapters.Strava;
 using Api.ExceptionHandling;
 using Api.Filters;
 using Application;
+using Application.Interfaces;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;

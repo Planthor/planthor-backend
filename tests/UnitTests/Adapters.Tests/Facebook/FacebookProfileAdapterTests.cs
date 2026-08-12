@@ -27,8 +27,8 @@ public class FacebookProfileAdapterTests
 
     private class TestHttpMessageHandler : HttpMessageHandler
     {
-        public Dictionary<string, HttpResponseMessage> Responses { get; } = new();
-        public List<string> Requests { get; } = new();
+        public Dictionary<string, HttpResponseMessage> Responses { get; } = [];
+        public List<string> Requests { get; } = [];
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

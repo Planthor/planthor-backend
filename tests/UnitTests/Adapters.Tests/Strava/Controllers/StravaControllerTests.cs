@@ -267,7 +267,7 @@ public class StravaControllerTests
     {
         // Arrange
         _options.Value.WebhookVerifyToken = "valid_token";
-        var request = new Adapters.Strava.Webhook.StravaVerifyRequest { VerifyToken = "valid_token", Challenge = "test_challenge" };
+        var request = new StravaVerifyRequest { VerifyToken = "valid_token", Challenge = "test_challenge" };
 
         // Act
         var result = _controller.VerifyWebhook(request);
@@ -285,7 +285,7 @@ public class StravaControllerTests
     {
         // Arrange
         _options.Value.WebhookVerifyToken = "valid_token";
-        var request = new Adapters.Strava.Webhook.StravaVerifyRequest { VerifyToken = "invalid_token", Challenge = "test_challenge" };
+        var request = new StravaVerifyRequest { VerifyToken = "invalid_token", Challenge = "test_challenge" };
 
         // Act
         var result = _controller.VerifyWebhook(request);

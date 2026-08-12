@@ -102,4 +102,40 @@ public class CreateMemberCommandHandlerTests
         Assert.NotNull(captured);
         Assert.Equal(string.Empty, captured.Description);
     }
+
+    [Fact]
+    public async Task Handle_NewMember_UsesProvidedMiddleNameAndDescription()
+    {
+        var command = new CreateMemberCommand("user1", "John", "Mid", "Doe", "Desc", "UTC");
+        Member? captured = null;
+        _mockRepository
+            .GetByIdentifyNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((Member?)null);
+        _mockRepository
+            .AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>())
+            .Returns(c => 
+            {
+                captured = c.ArgAt<Member>(0);
+                return Task.FromResult(c.ArgAt<Member>(0));
+            });
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        Assert.NotNull(captured);
+        Assert.Equal("Mid", captured.MiddleName);
+        Assert.Equal("Desc", captured.Description);
+    }
+
+    [Fact]
+    public async Task Handle_NullRequest_ThrowsArgumentNullException()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _handler.Handle(null!, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Constructor_NullRepository_ThrowsArgumentNullException()
+    {
+        var handler = new CreateMemberCommandHandler(null!, _mockClock);
+        await Assert.ThrowsAsync<ArgumentNullException>(() => handler.Handle(ValidCommand(), CancellationToken.None));
+    }
 }

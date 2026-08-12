@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Api.Filters;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -32,7 +31,7 @@ public class DevelopmentOnlyAttributeTests
             new ActionDescriptor()
         );
 
-        var context = new AuthorizationFilterContext(actionContext, new List<IFilterMetadata>());
+        var context = new AuthorizationFilterContext(actionContext, []);
         var attribute = new DevelopmentOnlyAttribute();
 
         // Act
@@ -64,7 +63,7 @@ public class DevelopmentOnlyAttributeTests
             new ActionDescriptor()
         );
 
-        var context = new AuthorizationFilterContext(actionContext, new List<IFilterMetadata>());
+        var context = new AuthorizationFilterContext(actionContext, []);
         var attribute = new DevelopmentOnlyAttribute();
 
         // Act
@@ -91,7 +90,7 @@ public class DevelopmentOnlyAttributeTests
             new ActionDescriptor()
         );
 
-        var context = new AuthorizationFilterContext(actionContext, new List<IFilterMetadata>());
+        var context = new AuthorizationFilterContext(actionContext, []);
         var attribute = new DevelopmentOnlyAttribute();
 
         // Act

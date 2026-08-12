@@ -1,8 +1,8 @@
-using Application.Interfaces;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Mapping;
 using Adapters.Strava.Persistence;
+using Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

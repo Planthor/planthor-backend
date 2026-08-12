@@ -183,6 +183,29 @@ public class PlanTests
     }
 
     [Fact]
+    public void AddActivityLog_NullClock_ThrowsArgumentNullException()
+    {
+        var plan = CreateValid();
+        Assert.Throws<ArgumentNullException>(() => plan.AddActivityLog(10f, "2026-01-02", null, null!, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void MarkAsExpired_NullClock_ThrowsArgumentNullException()
+    {
+        var plan = CreateValid();
+        Assert.Throws<ArgumentNullException>(() => plan.MarkAsExpired(null!));
+    }
+
+    [Fact]
+    public void MarkAsExpired_WhenNotActive_DoesNothing()
+    {
+        var plan = CreateValid(); // Planned
+        var futureClock = new TestClock(To.Plus(Duration.FromDays(1)));
+        plan.MarkAsExpired(futureClock);
+        Assert.Equal(PlanStatus.Planned, plan.Status);
+    }
+
+    [Fact]
     public void MarkAsExpired_WhenActiveAndTargetNotReachedAndPastEnd_SetsStatusToExpired()
     {
         var plan = CreateValid(target: 10f);
@@ -194,5 +217,79 @@ public class PlanTests
         plan.MarkAsExpired(futureClock);
         
         Assert.Equal(PlanStatus.Expired, plan.Status);
+    }
+
+    [Fact]
+    public void Update_NullClock_ThrowsArgumentNullException()
+    {
+        var plan = CreateValid();
+        Assert.Throws<ArgumentNullException>(() => plan.Update("m", 200f, 10f, From, To, Guid.NewGuid(), null!));
+    }
+
+    [Fact]
+    public void Update_ValidInput_UpdatesPlan()
+    {
+        var plan = CreateValid();
+        var byUserId = Guid.NewGuid();
+        plan.Update("m", 200f, 10f, From, To, byUserId, Clock);
+        
+        Assert.Equal("m", plan.Unit);
+        Assert.Equal(200f, plan.Target);
+        Assert.Equal(10f, plan.CurrentValue);
+        Assert.Equal(byUserId, plan.LastUpdatedBy);
+    }
+
+    [Fact]
+    public void Activate_NullClock_ThrowsArgumentNullException()
+    {
+        var plan = CreateValid();
+        Assert.Throws<ArgumentNullException>(() => plan.Activate(Guid.NewGuid(), null!));
+    }
+
+    [Fact]
+    public void Activate_WhenNotPlanned_DoesNothing()
+    {
+        var plan = CreateValid();
+        typeof(Plan).GetProperty("Status")!.SetValue(plan, PlanStatus.Completed);
+        plan.Activate(Guid.NewGuid(), Clock);
+        Assert.Equal(PlanStatus.Completed, plan.Status);
+    }
+
+    [Fact]
+    public void Activate_WhenPlanned_SetsStatusToActive()
+    {
+        var plan = CreateValid();
+        plan.Activate(Guid.NewGuid(), Clock);
+        Assert.Equal(PlanStatus.Active, plan.Status);
+    }
+
+    [Fact]
+    public void Cancel_NullClock_ThrowsArgumentNullException()
+    {
+        var plan = CreateValid();
+        Assert.Throws<ArgumentNullException>(() => plan.Cancel(Guid.NewGuid(), null!));
+    }
+
+    [Fact]
+    public void Cancel_WhenCompleted_DoesNothing()
+    {
+        var plan = CreateValid();
+        typeof(Plan).GetProperty("Status")!.SetValue(plan, PlanStatus.Completed);
+        plan.Cancel(Guid.NewGuid(), Clock);
+        Assert.Equal(PlanStatus.Completed, plan.Status);
+    }
+
+    [Fact]
+    public void Cancel_WhenPlanned_SetsStatusToCancelled()
+    {
+        var plan = CreateValid();
+        plan.Cancel(Guid.NewGuid(), Clock);
+        Assert.Equal(PlanStatus.Cancelled, plan.Status);
+    }
+
+    [Fact]
+    public void Create_NullClock_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => Plan.Create("Run", "km", 10f, From, To, "2026-01-01", "2026-12-31", "UTC", true, null!, Guid.NewGuid()));
     }
 }

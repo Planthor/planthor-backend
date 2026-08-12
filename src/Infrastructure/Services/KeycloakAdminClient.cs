@@ -76,7 +76,7 @@ public partial class KeycloakAdminClient(HttpClient httpClient, IConfiguration c
         if (!response.IsSuccessStatusCode)
         {
             LogFetchFailed(identifyName, response.StatusCode);
-            return new List<FederatedIdentityDto>();
+            return [];
         }
 
         var result = await response.Content.ReadFromJsonAsync<List<FederatedIdentityDto>>(cancellationToken: cancellationToken);

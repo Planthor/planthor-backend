@@ -67,4 +67,17 @@ public class UpdateMemberAvatarCommandHandlerTests
 
         await _mockRepository.DidNotReceive().UpdateAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task Handle_NullRequest_ThrowsArgumentNullException()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _handler.Handle(null!, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Constructor_NullRepository_ThrowsArgumentNullException()
+    {
+        var handler = new UpdateMemberAvatarCommandHandler(null!, _mockClock);
+        await Assert.ThrowsAsync<ArgumentNullException>(() => handler.Handle(new UpdateMemberAvatarCommand(Guid.NewGuid(), ""), CancellationToken.None));
+    }
 }

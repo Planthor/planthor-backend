@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using NodaTime;
-
 using Application.Dtos;
+using NodaTime;
 
 namespace Application.Interfaces;
 
@@ -32,6 +31,21 @@ public interface IActivitySyncAdapter
     Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
         Guid memberId,
         string identifyName,
-        Instant? since = null,
-        CancellationToken cancellationToken = default);
+        Instant? since,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Fetches activities for a member that occurred after <paramref name="since"/>.
+    /// </summary>
+    Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
+        Guid memberId,
+        string identifyName,
+        Instant? since) => FetchActivitiesAsync(memberId, identifyName, since, default);
+
+    /// <summary>
+    /// Fetches activities for a member.
+    /// </summary>
+    Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
+        Guid memberId,
+        string identifyName) => FetchActivitiesAsync(memberId, identifyName, null, default);
 }

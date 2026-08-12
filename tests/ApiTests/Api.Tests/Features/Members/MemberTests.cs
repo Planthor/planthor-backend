@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading.Tasks;
 using Api.Requests;
 using Application.Dtos;
@@ -8,16 +9,9 @@ using Xunit;
 
 namespace Api.Tests.Features.Members;
 
-public class MemberTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    private readonly CustomWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-
-    public MemberTests(CustomWebApplicationFactory<Program> factory)
-    {
-        _factory = factory;
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task Member_Lifecycle_Tests()
@@ -77,7 +71,8 @@ public class MemberTests : IClassFixture<CustomWebApplicationFactory<Program>>
         _client.DefaultRequestHeaders.Remove("X-Omit-NameIdentifier");
 
         // 2. BadRequest Update
-        var res2 = await _client.PutAsJsonAsync<UpdateMemberRequest>("/v1/members/00000000-0000-0000-0000-000000000000", null);
+        var content = new StringContent("null", Encoding.UTF8, "application/json");
+        var res2 = await _client.PutAsync("/v1/members/00000000-0000-0000-0000-000000000000", content);
         Assert.Equal(HttpStatusCode.BadRequest, res2.StatusCode);
     }
 }

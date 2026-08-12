@@ -16,6 +16,7 @@ public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePerson
     private const int MinTarget = 0;
     private const int MinPriority = 0;
     private const int MaxPriority = 999;
+    private const string SportTypesPropertyName = "SportTypes";
 
     public CreatePersonalPlanCommandValidator()
     {
@@ -41,7 +42,9 @@ public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePerson
             .NotEmpty().WithErrorCode("error_start_date_local_required");
 
         RuleFor(x => x.EndDateLocal)
-            .NotEmpty().WithErrorCode("error_end_date_local_required")
+            .NotEmpty().WithErrorCode("error_end_date_local_required");
+
+        RuleFor(x => x.EndDateLocal)
             .Must((cmd, endDate) => string.Compare(cmd.StartDateLocal, endDate, StringComparison.Ordinal) <= 0)
             .When(cmd => !string.IsNullOrEmpty(cmd.StartDateLocal) && !string.IsNullOrEmpty(cmd.EndDateLocal))
             .WithErrorCode("error_end_date_before_start_date");
@@ -57,43 +60,78 @@ public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePerson
         When(x => x.PlanDetails is CreateSportPlanDetailsCommand, () =>
         {
             RuleFor(x => x.PlanDetails)
-                .Must(pd => (pd as CreateSportPlanDetailsCommand)?.SportTypes?.Count > 0)
+                .Must(HasSportTypes)
                 .WithErrorCode("error_sport_types_required")
-                .OverridePropertyName("SportTypes");
+                .OverridePropertyName(SportTypesPropertyName);
 
             RuleFor(x => x.PlanDetails)
-                .Must(pd =>
-                {
-                    if (pd is not CreateSportPlanDetailsCommand sportDetails) return true;
-                    var st = sportDetails.SportTypes;
-                    if (st == null) return true;
-                    var hasAll = st.Any(s => string.Equals(s, PlanthorSportType.All.Id, StringComparison.OrdinalIgnoreCase));
-                    return !hasAll || st.Count == 1;
-                })
+                .Must(CannotCombineAll)
                 .WithErrorCode("error_sport_types_cannot_combine_all")
-                .OverridePropertyName("SportTypes");
+                .OverridePropertyName(SportTypesPropertyName);
 
             RuleFor(x => x.PlanDetails)
-                .Must(pd =>
-                {
-                    if (pd is not CreateSportPlanDetailsCommand sportDetails) return true;
-                    var st = sportDetails.SportTypes;
-                    if (st == null) return true;
-                    return st.All(s => !string.IsNullOrWhiteSpace(s));
-                })
+                .Must(SportTypeNotEmpty)
                 .WithErrorCode("error_sport_type_empty")
-                .OverridePropertyName("SportTypes");
+                .OverridePropertyName(SportTypesPropertyName);
 
             RuleFor(x => x.PlanDetails)
-                .Must(pd =>
-                {
-                    if (pd is not CreateSportPlanDetailsCommand sportDetails) return true;
-                    var st = sportDetails.SportTypes;
-                    if (st == null) return true;
-                    return st.All(s => string.IsNullOrWhiteSpace(s) || PlanthorSportType.TryFromId(s, out _));
-                })
+                .Must(SportTypeValid)
                 .WithErrorCode("error_sport_type_invalid")
-                .OverridePropertyName("SportTypes");
+                .OverridePropertyName(SportTypesPropertyName);
         });
+    }
+
+    private static bool HasSportTypes(object? pd)
+    {
+        return (pd as CreateSportPlanDetailsCommand)?.SportTypes?.Count > 0;
+    }
+
+    private static bool CannotCombineAll(object? pd)
+    {
+        if (pd is not CreateSportPlanDetailsCommand sportDetails)
+        {
+            return true;
+        }
+
+        var st = sportDetails.SportTypes;
+        if (st == null)
+        {
+            return true;
+        }
+
+        var hasAll = st.Any(s => string.Equals(s, PlanthorSportType.All.Id, StringComparison.OrdinalIgnoreCase));
+        return !hasAll || st.Count == 1;
+    }
+
+    private static bool SportTypeNotEmpty(object? pd)
+    {
+        if (pd is not CreateSportPlanDetailsCommand sportDetails)
+        {
+            return true;
+        }
+
+        var st = sportDetails.SportTypes;
+        if (st == null)
+        {
+            return true;
+        }
+
+        return st.All(s => !string.IsNullOrWhiteSpace(s));
+    }
+
+    private static bool SportTypeValid(object? pd)
+    {
+        if (pd is not CreateSportPlanDetailsCommand sportDetails)
+        {
+            return true;
+        }
+
+        var st = sportDetails.SportTypes;
+        if (st == null)
+        {
+            return true;
+        }
+
+        return st.All(s => string.IsNullOrWhiteSpace(s) || PlanthorSportType.TryFromId(s, out _));
     }
 }

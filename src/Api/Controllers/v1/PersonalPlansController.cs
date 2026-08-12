@@ -88,11 +88,9 @@ public class PersonalPlansController(
             return Forbid();
         }
 
-        CreatePlanDetailsCommand? planDetailsCommand = request.PlanDetails switch
-        {
-            CreateSportPlanDetailsRequest sportReq => new CreateSportPlanDetailsCommand(sportReq.SportTypes),
-            _ => null
-        };
+        CreatePlanDetailsCommand? planDetailsCommand = request.PlanDetails is CreateSportPlanDetailsRequest sportReq
+            ? new CreateSportPlanDetailsCommand(sportReq.SportTypes)
+            : null;
 
         var createPlanCommand = new CreatePersonalPlanCommand(
             targetIdentifyName,

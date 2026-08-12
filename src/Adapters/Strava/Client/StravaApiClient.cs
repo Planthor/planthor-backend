@@ -303,8 +303,8 @@ public partial class StravaApiClient : IStravaApiClient
             var token = await GetValidTokenAsync(identifyName, cancellationToken);
             if (token is null)
             {
-                _logger.LogWarning("Cannot fetch activities: no valid token for member {IdentifyName}", identifyName);
-                return Array.Empty<StravaActivityResponse>();
+                LogNoValidTokenForActivities(identifyName);
+                return [];
             }
 
             var requestUri = $"athlete/activities?page={page}&per_page={perPage}";
@@ -313,19 +313,20 @@ public partial class StravaApiClient : IStravaApiClient
                 requestUri += $"&after={afterEpoch.Value}";
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, new Uri(new Uri(_options.BaseUrl.AbsoluteUri.TrimEnd('/') + "/"), requestUri));
+            var baseUriString = string.Concat(_options.BaseUrl.AbsoluteUri.TrimEnd('/'), '/');
+            var request = new HttpRequestMessage(HttpMethod.Get, new Uri(new Uri(baseUriString), requestUri));
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.AccessToken);
 
             var response = await _httpClient.SendAsync(request, cancellationToken);
             
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Failed to fetch activities for {IdentifyName}. Status: {StatusCode}", identifyName, response.StatusCode);
-                return Array.Empty<StravaActivityResponse>();
+                LogFetchActivitiesFailed(identifyName, response.StatusCode);
+                return [];
             }
 
             var activities = await response.Content.ReadFromJsonAsync<List<StravaActivityResponse>>(cancellationToken);
-            return activities ?? (IReadOnlyList<StravaActivityResponse>)Array.Empty<StravaActivityResponse>();
+            return activities ?? (IReadOnlyList<StravaActivityResponse>)[];
         }
     }
 
@@ -356,4 +357,10 @@ public partial class StravaApiClient : IStravaApiClient
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Strava deauthorization succeeded for member {IdentifyName}")]
     private partial void LogDeauthorizationSucceeded(string identifyName);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Cannot fetch activities: no valid token for member {IdentifyName}")]
+    private partial void LogNoValidTokenForActivities(string identifyName);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to fetch activities for {IdentifyName}. Status: {StatusCode}")]
+    private partial void LogFetchActivitiesFailed(string identifyName, System.Net.HttpStatusCode statusCode);
 }

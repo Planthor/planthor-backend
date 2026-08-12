@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading.Tasks;
 using Api.Requests;
 using Application.Dtos;
@@ -9,16 +10,9 @@ using Xunit;
 
 namespace Api.Tests.Features.PersonalPlans;
 
-public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    private readonly CustomWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-
-    public PersonalPlanTests(CustomWebApplicationFactory<Program> factory)
-    {
-        _factory = factory;
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task PersonalPlan_Lifecycle_Tests()
@@ -166,10 +160,11 @@ public class PersonalPlanTests : IClassFixture<CustomWebApplicationFactory<Progr
         Assert.Equal(HttpStatusCode.Forbidden, activateForbid.StatusCode);
 
         // 3. BadRequest (Null command) handled by ASP.NET Core MVC
-        var nullUpdate = await _client.PutAsJsonAsync<UpdatePersonalPlanRequest>("/v1/members/me/personal-plans/00000000-0000-0000-0000-000000000000", null);
+        var content = new StringContent("null", Encoding.UTF8, "application/json");
+        var nullUpdate = await _client.PutAsync("/v1/members/me/personal-plans/00000000-0000-0000-0000-000000000000", content);
         Assert.Equal(HttpStatusCode.BadRequest, nullUpdate.StatusCode);    
         // 4. Create BadRequest (Null command)
-        var res4 = await _client.PostAsJsonAsync<CreatePersonalPlanRequest>("/v1/members/me/personal-plans", null);
+        var res4 = await _client.PostAsync("/v1/members/me/personal-plans", content);
         Assert.Equal(HttpStatusCode.BadRequest, res4.StatusCode);
     }
     [Fact]

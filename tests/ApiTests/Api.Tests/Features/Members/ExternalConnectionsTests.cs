@@ -8,16 +8,9 @@ using Xunit;
 
 namespace Api.Tests.Features.Members;
 
-public class ExternalConnectionsTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class ExternalConnectionsTests(CustomWebApplicationFactory<Program> factory) : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    private readonly CustomWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-
-    public ExternalConnectionsTests(CustomWebApplicationFactory<Program> factory)
-    {
-        _factory = factory;
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task ExternalConnections_Lifecycle_Tests()

@@ -1,9 +1,9 @@
+using System.Globalization;
+using Adapters.Strava.Client;
+using Adapters.Strava.Persistence;
 using Application.Dtos;
 using Application.Interfaces;
-using Adapters.Strava.Client;
 using NodaTime;
-
-using Adapters.Strava.Persistence;
 
 namespace Adapters.Strava;
 
@@ -12,15 +12,24 @@ namespace Adapters.Strava;
 /// Fetches activities via the Strava API and maps them to the provider-agnostic
 /// <see cref="AdapterActivityDto"/> shape.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="StravaActivitySyncAdapter"/> class.
+/// </remarks>
+/// <param name="client">The Strava API client to use for fetching activities.</param>
+/// <param name="tokenDb">The database used for managing Strava sync tokens.</param>
 public sealed class StravaActivitySyncAdapter(IStravaApiClient client, StravaAdapterDatabase tokenDb) : IActivitySyncAdapter
 {
+    private const int PageSize = 100;
+    private readonly IStravaApiClient _client = client ?? throw new ArgumentNullException(nameof(client));
+    private readonly StravaAdapterDatabase _tokenDb = tokenDb ?? throw new ArgumentNullException(nameof(tokenDb));
+
     /// <summary>
     /// Gets the provider ID for Strava.
     /// </summary>
     public string ProviderId => "STRAVA";
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
+    public Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
         Guid memberId,
         string identifyName,
         Instant? since = null,
@@ -28,7 +37,15 @@ public sealed class StravaActivitySyncAdapter(IStravaApiClient client, StravaAda
     {
         ArgumentNullException.ThrowIfNull(identifyName);
 
-        var tokenDoc = await tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        return FetchActivitiesInternalAsync(identifyName, since, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesInternalAsync(
+        string identifyName,
+        Instant? since,
+        CancellationToken cancellationToken)
+    {
+        var tokenDoc = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
         if (tokenDoc == null)
         {
             return [];
@@ -49,14 +66,16 @@ public sealed class StravaActivitySyncAdapter(IStravaApiClient client, StravaAda
         int page = 1;
         while (true)
         {
-            var stravaActivities = await client.GetAthleteActivitiesAsync(identifyName, sinceEpoch, page, 100, cancellationToken);
+            var stravaActivities = await _client.GetAthleteActivitiesAsync(identifyName, sinceEpoch, page, PageSize, cancellationToken);
             if (stravaActivities.Count == 0)
+            {
                 break;
+            }
 
             foreach (var sa in stravaActivities)
             {
                 var dto = new AdapterActivityDto(
-                    ExternalActivityId: sa.Id.ToString(),
+                    ExternalActivityId: sa.Id.ToString(CultureInfo.InvariantCulture),
                     ProviderId: ProviderId,
                     Name: string.IsNullOrEmpty(sa.Name) ? "Strava Activity" : sa.Name,
                     OccurredAt: Instant.FromDateTimeUtc(sa.StartDate.ToUniversalTime()),
@@ -74,8 +93,10 @@ public sealed class StravaActivitySyncAdapter(IStravaApiClient client, StravaAda
                 }
             }
 
-            if (stravaActivities.Count < 100)
+            if (stravaActivities.Count < PageSize)
+            {
                 break; // Last page
+            }
 
             page++;
         }
@@ -83,7 +104,7 @@ public sealed class StravaActivitySyncAdapter(IStravaApiClient client, StravaAda
         if (maxEpoch > sinceEpoch)
         {
             tokenDoc.LastSyncEpoch = maxEpoch;
-            await tokenDb.UpsertAsync(tokenDoc, cancellationToken);
+            await _tokenDb.UpsertAsync(tokenDoc, cancellationToken);
         }
 
         return activities;

@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
 using Domain.Shared;
+using NodaTime;
 using NSubstitute;
 
 namespace Application.Tests.Shared;
@@ -56,11 +56,33 @@ public class DomainEventNotificationHandlerTests
     [Fact]
     public async Task Handle_NoHandlers_CompletesWithoutError()
     {
-        var empty = new DomainEventNotificationHandler<IDomainEvent>(new List<IDomainEventHandler<IDomainEvent>>());
+        var empty = new DomainEventNotificationHandler<IDomainEvent>([]);
         var notification = new DomainEventNotification<IDomainEvent>(Substitute.For<IDomainEvent>());
 
         var exception = await Record.ExceptionAsync(() => empty.Handle(notification, CancellationToken.None));
 
         Assert.Null(exception);
+    }
+
+    public class TestEvent : IDomainEvent
+    {
+        public Guid EventId => Guid.NewGuid();
+        public Instant OccurredAt => SystemClock.Instance.GetCurrentInstant();
+        public string Source => "Test";
+        public string OccurredBy => "System";
+    }
+
+    [Fact]
+    public async Task Handle_WithConcreteEvent_CallsAllRegisteredHandlers()
+    {
+        var mockHandler = Substitute.For<IDomainEventHandler<TestEvent>>();
+        var sut = new DomainEventNotificationHandler<TestEvent>([mockHandler]);
+        
+        var domainEvent = new TestEvent();
+        var notification = new DomainEventNotification<TestEvent>(domainEvent);
+
+        await sut.Handle(notification, CancellationToken.None);
+
+        await mockHandler.Received(1).HandleAsync(domainEvent, Arg.Any<CancellationToken>());
     }
 }

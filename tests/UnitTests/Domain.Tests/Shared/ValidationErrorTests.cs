@@ -17,27 +17,30 @@ public class ValidationErrorTests
     }
 
     [Theory]
+    [InlineData(null, "msg", "CODE")]
     [InlineData("", "msg", "CODE")]
     [InlineData("  ", "msg", "CODE")]
-    public void Constructor_BlankField_Throws(string field, string msg, string code)
+    public void Constructor_BlankField_Throws(string? field, string msg, string code)
     {
-        Assert.Throws<ArgumentException>(() => new ValidationError(field, msg, code));
+        Assert.Throws<ArgumentException>(() => new ValidationError(field!, msg, code));
     }
 
     [Theory]
+    [InlineData("field", null, "CODE")]
     [InlineData("field", "", "CODE")]
     [InlineData("field", "  ", "CODE")]
-    public void Constructor_BlankMessage_Throws(string field, string msg, string code)
+    public void Constructor_BlankMessage_Throws(string field, string? msg, string code)
     {
-        Assert.Throws<ArgumentException>(() => new ValidationError(field, msg, code));
+        Assert.Throws<ArgumentException>(() => new ValidationError(field, msg!, code));
     }
 
     [Theory]
+    [InlineData("field", "msg", null)]
     [InlineData("field", "msg", "")]
     [InlineData("field", "msg", "  ")]
-    public void Constructor_BlankCode_Throws(string field, string msg, string code)
+    public void Constructor_BlankCode_Throws(string field, string msg, string? code)
     {
-        Assert.Throws<ArgumentException>(() => new ValidationError(field, msg, code));
+        Assert.Throws<ArgumentException>(() => new ValidationError(field, msg, code!));
     }
 
     [Fact]

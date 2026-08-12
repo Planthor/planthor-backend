@@ -154,6 +154,31 @@ public class MemberTests
         Assert.Equal("https://storage.example.com/new.jpg", member.PathAvatar);
     }
 
+    [Fact]
+    public void Update_WithValidParams_UpdatesProperties()
+    {
+        var member = CreateMember();
+        member.Update("Jane", "B", "Smith", "New Bio", "", "America/New_York", Clock);
+
+        Assert.Equal("Jane", member.FirstName);
+        Assert.Equal("B", member.MiddleName);
+        Assert.Equal("Smith", member.LastName);
+        Assert.Equal("New Bio", member.Description);
+        Assert.Equal("America/New_York", member.PreferredTimezone);
+        Assert.Null(member.PathAvatar);
+    }
+
+    [Fact]
+    public void Update_WithAvatarPath_UpdatesAvatarAndRaisesEvent()
+    {
+        var member = CreateMember();
+        member.ClearDomainEvents();
+        member.Update("Jane", "B", "Smith", "New Bio", "https://storage.example.com/new.jpg", "America/New_York", Clock);
+
+        Assert.Equal("https://storage.example.com/new.jpg", member.PathAvatar);
+        Assert.Single(member.DomainEvents);
+    }
+
     // --- ConnectExternalProvider ---
 
     [Fact]
