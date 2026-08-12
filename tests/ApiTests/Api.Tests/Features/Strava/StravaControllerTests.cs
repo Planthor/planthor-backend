@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Api.Tests.Features.Strava;
@@ -51,8 +52,43 @@ public class StravaControllerTests : IClassFixture<CustomWebApplicationFactory<P
 
         var disconnectRes = await _client.DeleteAsync("/v1/Strava/disconnect");
         Assert.Equal(HttpStatusCode.InternalServerError, disconnectRes.StatusCode);
+    }
 
-        var syncRes = await _client.PostAsync("/v1/Strava/sync", null);
-        Assert.Equal(HttpStatusCode.InternalServerError, syncRes.StatusCode);
+    [Fact]
+    public async Task ManualSync_ReturnsUnauthorized_WhenNoIdentifyName()
+    {
+        _client.DefaultRequestHeaders.Add("X-Omit-NameIdentifier", "true");
+        var res = await _client.PostAsync("/v1/Strava/sync", null);
+        Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+        _client.DefaultRequestHeaders.Remove("X-Omit-NameIdentifier");
+    }
+
+    [Fact]
+    public async Task ManualSync_ReturnsOk_WithNewLogsCreated()
+    {
+        var mockSender = NSubstitute.Substitute.For<MediatR.ISender>();
+        NSubstitute.SubstituteExtensions.Returns(mockSender.Send(NSubstitute.Arg.Any<Application.ExternalSync.Commands.SyncStravaActivities.SyncStravaActivitiesCommand>(), NSubstitute.Arg.Any<System.Threading.CancellationToken>()), 5);
+
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                // Remove the actual MediatR ISender
+                var descriptor = System.Linq.Enumerable.SingleOrDefault(services, d => d.ServiceType == typeof(MediatR.ISender));
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+                ServiceCollectionServiceExtensions.AddSingleton(services, mockSender);
+            });
+        }).CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        var res = await client.PostAsync("/v1/Strava/sync", null);
+        res.EnsureSuccessStatusCode();
+        var content = await res.Content.ReadAsStringAsync();
+        Assert.Contains("\"newLogsCreated\":5", content);
     }
 }

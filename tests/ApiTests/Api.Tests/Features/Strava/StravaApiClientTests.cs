@@ -109,4 +109,90 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
         var deauthFail = await _apiClient.DeauthorizeAsync(Guid.NewGuid().ToString("N"), CancellationToken.None);
         Assert.True(deauthFail);
     }
+
+    [Fact]
+    public async Task ApiClient_Error_And_Null_Responses()
+    {
+        var memberId = Guid.NewGuid().ToString("N");
+        
+        // Exchange returns literal null (deserializes to null)
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("null_exch")))
+            .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("null"));
+
+        var exchNull = await _apiClient.ExchangeCodeAsync("null_exch", memberId, CancellationToken.None);
+        Assert.Null(exchNull);
+
+        // Seed token for refresh and deauth tests
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("seed_exch")))
+            .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("{\"access_token\":\"acc\",\"refresh_token\":\"ref_err\",\"expires_at\":0,\"athlete\":{\"id\":1}}"));
+        await _apiClient.ExchangeCodeAsync("seed_exch", memberId, CancellationToken.None);
+
+        // Refresh Token Error (400)
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("refresh_token=ref_err")))
+            .RespondWith(Response.Create().WithStatusCode(400));
+        var refreshError = await _apiClient.RefreshTokenAsync(memberId, CancellationToken.None);
+        Assert.Null(refreshError);
+
+        // Update token to use ref_null
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("seed_null")))
+            .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("{\"access_token\":\"acc\",\"refresh_token\":\"ref_null\",\"expires_at\":0,\"athlete\":{\"id\":1}}"));
+        await _apiClient.ExchangeCodeAsync("seed_null", memberId, CancellationToken.None);
+
+        // Refresh Token returns literal null
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("refresh_token=ref_null")))
+            .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("null"));
+        var refreshNull = await _apiClient.RefreshTokenAsync(memberId, CancellationToken.None);
+        Assert.Null(refreshNull);
+
+        // Deauthorize error
+        // Deauth uses access_token, so let's match the token we got from seed_null
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/oauth/deauthorize").UsingPost().WithBody(b => b != null && b.Contains("access_token=acc")))
+            .RespondWith(Response.Create().WithStatusCode(400));
+        var deauthError = await _apiClient.DeauthorizeAsync(memberId, CancellationToken.None);
+        Assert.True(deauthError);
+    }
+
+    [Fact]
+    public async Task GetAthleteActivitiesAsync_Tests()
+    {
+        var memberId = Guid.NewGuid().ToString("N");
+        
+        // No token
+        var actsEmpty = await _apiClient.GetAthleteActivitiesAsync(memberId, null, 1, 30, CancellationToken.None);
+        Assert.Empty(actsEmpty);
+
+        // Seed valid token
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("valid_exch")))
+            .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("{\"access_token\":\"acc_val\",\"refresh_token\":\"ref_val\",\"expires_at\":2147483647,\"athlete\":{\"id\":1}}"));
+        await _apiClient.ExchangeCodeAsync("valid_exch", memberId, CancellationToken.None);
+
+        // API returns activities
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/athlete/activities").UsingGet().WithHeader("Authorization", "Bearer acc_val"))
+            .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("[{\"id\":101,\"name\":\"Morning Run\"}]"));
+        
+        var acts = await _apiClient.GetAthleteActivitiesAsync(memberId, 12345678, 1, 30, CancellationToken.None);
+        Assert.Single(acts);
+
+        // API returns 400
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/athlete/activities").UsingGet().WithHeader("Authorization", "Bearer acc_fail"))
+            .RespondWith(Response.Create().WithStatusCode(400));
+            
+        // Seed new token to hit 400
+        _factory.WireMockServer
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("fail_exch")))
+            .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("{\"access_token\":\"acc_fail\",\"refresh_token\":\"ref_fail\",\"expires_at\":2147483647,\"athlete\":{\"id\":2}}"));
+        await _apiClient.ExchangeCodeAsync("fail_exch", memberId, CancellationToken.None);
+
+        var actsFail = await _apiClient.GetAthleteActivitiesAsync(memberId, null, 1, 30, CancellationToken.None);
+        Assert.Empty(actsFail);
+    }
 }
