@@ -11,7 +11,7 @@ namespace Api.Controllers.v1;
 /// Provides metadata about the sport types supported by Planthor.
 /// </summary>
 [ApiController]
-[Route("v1/sport-types")]
+[Route("v1/[controller]")]
 public class SportTypesController : ControllerBase
 {
     /// <summary>

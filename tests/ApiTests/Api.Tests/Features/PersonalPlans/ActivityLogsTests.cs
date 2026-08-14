@@ -50,7 +50,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
             ExternalProviderId: "STRAVA",
             ExternalActivityId: "12345"
         );
-        var createLogResponse = await _client.PostAsJsonAsync($"/v1/plans/{planId}/ActivityLogs", createLogCmd);
+        var createLogResponse = await _client.PostAsJsonAsync($"/v1/plans/{planId}/activity-logs", createLogCmd);
         createLogResponse.EnsureSuccessStatusCode();
         
         var createdLog = await createLogResponse.Content.ReadFromJsonAsync<ActivityLogDto>();
@@ -58,23 +58,23 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
         var logId = createdLog.Id;
 
         // 4. Read Activity Log
-        var getResponse = await _client.GetAsync($"/v1/plans/{planId}/ActivityLogs/{logId}");
+        var getResponse = await _client.GetAsync($"/v1/plans/{planId}/activity-logs/{logId}");
         getResponse.EnsureSuccessStatusCode();
 
         // 5. Read All Activity Logs
-        var listResponse = await _client.GetAsync($"/v1/plans/{planId}/ActivityLogs");
+        var listResponse = await _client.GetAsync($"/v1/plans/{planId}/activity-logs");
         listResponse.EnsureSuccessStatusCode();
 
         // 6. Update Activity Log
-        var updateResponse = await _client.PutAsync($"/v1/plans/{planId}/ActivityLogs/{logId}", null);
+        var updateResponse = await _client.PutAsync($"/v1/plans/{planId}/activity-logs/{logId}", null);
         updateResponse.EnsureSuccessStatusCode();
 
         // 7. Delete Activity Log
-        var deleteResponse = await _client.DeleteAsync($"/v1/plans/{planId}/ActivityLogs/{logId}");
+        var deleteResponse = await _client.DeleteAsync($"/v1/plans/{planId}/activity-logs/{logId}");
         deleteResponse.EnsureSuccessStatusCode();
 
         // 8. Patch Activity Logs (Not Supported)
-        var patchResponse = await _client.PatchAsync($"/v1/plans/{planId}/ActivityLogs", null);
+        var patchResponse = await _client.PatchAsync($"/v1/plans/{planId}/activity-logs", null);
         Assert.Equal(HttpStatusCode.InternalServerError, patchResponse.StatusCode);
     }
     
@@ -87,19 +87,19 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
         _client.DefaultRequestHeaders.Add("X-Omit-NameIdentifier", "true");
         
         var createCmd = new CreateActivityLogRequest(5.5f, "2026-07-10");
-        var createRes = await _client.PostAsJsonAsync($"/v1/plans/{planId}/ActivityLogs", createCmd);
+        var createRes = await _client.PostAsJsonAsync($"/v1/plans/{planId}/activity-logs", createCmd);
         Assert.Equal(HttpStatusCode.Unauthorized, createRes.StatusCode);
 
-        var getList = await _client.GetAsync($"/v1/plans/{planId}/ActivityLogs");
+        var getList = await _client.GetAsync($"/v1/plans/{planId}/activity-logs");
         Assert.Equal(HttpStatusCode.Unauthorized, getList.StatusCode);
 
-        var getSingle = await _client.GetAsync($"/v1/plans/{planId}/ActivityLogs/{logId}");
+        var getSingle = await _client.GetAsync($"/v1/plans/{planId}/activity-logs/{logId}");
         Assert.Equal(HttpStatusCode.Unauthorized, getSingle.StatusCode);
         
-        var updateRes = await _client.PutAsync($"/v1/plans/{planId}/ActivityLogs/{logId}", null);
+        var updateRes = await _client.PutAsync($"/v1/plans/{planId}/activity-logs/{logId}", null);
         Assert.Equal(HttpStatusCode.Unauthorized, updateRes.StatusCode);
 
-        var deleteRes = await _client.DeleteAsync($"/v1/plans/{planId}/ActivityLogs/{logId}");
+        var deleteRes = await _client.DeleteAsync($"/v1/plans/{planId}/activity-logs/{logId}");
         Assert.Equal(HttpStatusCode.Unauthorized, deleteRes.StatusCode);
         
         _client.DefaultRequestHeaders.Remove("X-Omit-NameIdentifier");

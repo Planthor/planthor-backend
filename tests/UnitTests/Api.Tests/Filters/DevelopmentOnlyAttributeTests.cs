@@ -17,13 +17,13 @@ public class DevelopmentOnlyAttributeTests
     {
         // Arrange
         var envMock = Substitute.For<IWebHostEnvironment>();
-        envMock.Setup(e => e.EnvironmentName).Returns("Development");
+        envMock.EnvironmentName.Returns("Development");
 
         var serviceProviderMock = Substitute.For<IServiceProvider>();
         serviceProviderMock.GetService(typeof(IWebHostEnvironment)).Returns(envMock);
 
         var httpContextMock = Substitute.For<HttpContext>();
-        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock);
+        httpContextMock.RequestServices.Returns(serviceProviderMock);
 
         var actionContext = new ActionContext(
             httpContextMock,
@@ -49,13 +49,13 @@ public class DevelopmentOnlyAttributeTests
     {
         // Arrange
         var envMock = Substitute.For<IWebHostEnvironment>();
-        envMock.Setup(e => e.EnvironmentName).Returns(environment);
+        envMock.EnvironmentName.Returns(environment);
 
         var serviceProviderMock = Substitute.For<IServiceProvider>();
         serviceProviderMock.GetService(typeof(IWebHostEnvironment)).Returns(envMock);
 
         var httpContextMock = Substitute.For<HttpContext>();
-        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock);
+        httpContextMock.RequestServices.Returns(serviceProviderMock);
 
         var actionContext = new ActionContext(
             httpContextMock,
@@ -82,7 +82,7 @@ public class DevelopmentOnlyAttributeTests
         serviceProviderMock.GetService(typeof(IWebHostEnvironment)).Returns(null!);
 
         var httpContextMock = Substitute.For<HttpContext>();
-        httpContextMock.Setup(hc => hc.RequestServices).Returns(serviceProviderMock);
+        httpContextMock.RequestServices.Returns(serviceProviderMock);
 
         var actionContext = new ActionContext(
             httpContextMock,

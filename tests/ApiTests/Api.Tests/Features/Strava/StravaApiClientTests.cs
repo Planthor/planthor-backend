@@ -42,7 +42,7 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
         
         // Refresh Token
         _factory.WireMockServer
-            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b.Contains("grant_type=refresh_token")))
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("grant_type=refresh_token")))
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
@@ -57,7 +57,7 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
         // So GetValidToken will attempt refresh!
         // Let's setup the token endpoint again for refresh:
         _factory.WireMockServer
-            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b.Contains("grant_type=refresh_token")))
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("grant_type=refresh_token")))
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
@@ -91,7 +91,7 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
         
         // Exchange error
         _factory.WireMockServer
-            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b.Contains("error_test")))
+            .Given(Request.Create().WithPath("/oauth/token").UsingPost().WithBody(b => b != null && b.Contains("error_test")))
             .RespondWith(Response.Create().WithStatusCode(400));
 
         var exchFail = await _apiClient.ExchangeCodeAsync("error_test", memberId, CancellationToken.None);

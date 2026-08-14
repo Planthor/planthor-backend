@@ -59,6 +59,7 @@ The solution is divided into the following layers in the `src/` directory. Stric
 
 ## 4. Best Practices & Naming Conventions
 * **Handlers:** Name command/query handlers clearly, e.g., `CreateUserCommandHandler`.
+* **API Routes:** Use the `[controller]` token in route templates (e.g., `[Route("v1/[controller]")]`) instead of hardcoding kebab-case strings. The application is configured to automatically transform controller route parameters to kebab-case.
 * **Repositories:** Keep repositories simple. Return Aggregates, not partial models. (e.g., `Task<User?> GetByIdAsync(UserId id)`).
 * **Mapping:** Prefer manual mapping or use tools like Mapster/AutoMapper strictly at the boundary (e.g., API to Application, Application to Domain).
 * **Asynchronous:** Always use `async/await` for I/O operations (Database, External APIs).

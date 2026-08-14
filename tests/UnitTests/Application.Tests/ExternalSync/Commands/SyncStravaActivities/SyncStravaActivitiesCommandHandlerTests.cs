@@ -7,8 +7,8 @@ using Application.Interfaces;
 using Domain.Members;
 using Domain.Plans;
 using Microsoft.Extensions.DependencyInjection;
-using NSubstitute;
 using NodaTime;
+using NSubstitute;
 
 namespace Application.Tests.ExternalSync.Commands.SyncStravaActivities;
 

@@ -21,12 +21,12 @@ public class ExternalConnectionsTests(CustomWebApplicationFactory<Program> facto
         createMemberResponse.EnsureSuccessStatusCode();
 
         // 2. Read All External Connections
-        var listResponse = await _client.GetAsync("/v1/members/@me/ExternalConnections");
+        var listResponse = await _client.GetAsync("/v1/members/@me/external-connections");
         Assert.True(listResponse.IsSuccessStatusCode || listResponse.StatusCode == HttpStatusCode.InternalServerError);
 
         // 3. Read External Connection by ID
         var connectionId = Guid.NewGuid();
-        var getResponse = await _client.GetAsync($"/v1/members/@me/ExternalConnections/{connectionId}");
+        var getResponse = await _client.GetAsync($"/v1/members/@me/external-connections/{connectionId}");
         Assert.True(getResponse.StatusCode == HttpStatusCode.NotFound || getResponse.StatusCode == HttpStatusCode.InternalServerError);
     }
     
@@ -37,10 +37,10 @@ public class ExternalConnectionsTests(CustomWebApplicationFactory<Program> facto
         
         _client.DefaultRequestHeaders.Add("X-Omit-NameIdentifier", "true");
         
-        var getList = await _client.GetAsync("/v1/members/@me/ExternalConnections");
+        var getList = await _client.GetAsync("/v1/members/@me/external-connections");
         Assert.Equal(HttpStatusCode.Unauthorized, getList.StatusCode);
 
-        var getSingle = await _client.GetAsync($"/v1/members/@me/ExternalConnections/{connectionId}");
+        var getSingle = await _client.GetAsync($"/v1/members/@me/external-connections/{connectionId}");
         Assert.Equal(HttpStatusCode.Unauthorized, getSingle.StatusCode);
         
         _client.DefaultRequestHeaders.Remove("X-Omit-NameIdentifier");

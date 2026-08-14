@@ -3,11 +3,13 @@ using Adapters.Facebook;
 using Adapters.Strava;
 using Api.ExceptionHandling;
 using Api.Filters;
+using Api.Routing;
 using Application;
 using Application.Interfaces;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -80,7 +82,10 @@ try
     builder.Services.AddHealthChecks();
 
     // API Client
-    builder.Services.AddControllers();
+    builder.Services.AddControllers(options =>
+    {
+        options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
+    });
 
     builder.Services.AddEndpointsApiExplorer();
 

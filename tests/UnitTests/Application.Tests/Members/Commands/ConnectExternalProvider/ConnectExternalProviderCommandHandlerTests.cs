@@ -4,8 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.Commands.ConnectExternalProvider;
 using Domain.Members;
-using NSubstitute;
 using NodaTime;
+using NSubstitute;
 
 namespace Application.Tests.Members.Commands.ConnectExternalProvider;
 
