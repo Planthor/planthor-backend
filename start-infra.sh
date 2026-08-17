@@ -18,6 +18,9 @@ sed -e "s|\${FACEBOOK_CLIENT_SECRET}|$FACEBOOK_SECRET|g" \
     -e "s|\${PLANTHOR_BACKEND_SECRET}|$BACKEND_SECRET|g" \
     infrastructure/keycloak/realms/planthor-realm.json > infrastructure/keycloak/processed_realms/planthor-realm.json
 
+# Copy user seed files to the processed_realms directory so Keycloak can import them
+cp infrastructure/keycloak/realms/planthor-users-*.json infrastructure/keycloak/processed_realms/ 2>/dev/null || true
+
 echo "🚀 Starting Infrastructure..."
 # 4. Start Docker Compose
 docker compose -f infrastructure/compose.yaml up --build -d
