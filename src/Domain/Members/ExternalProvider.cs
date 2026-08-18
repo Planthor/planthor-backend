@@ -35,6 +35,11 @@ public class ExternalProvider
     public static readonly ExternalProvider Google = new("GOOGLE", "Google", "ExternalProvider_Google_Desc");
 
     /// <summary>
+    /// Keycloak Identity Broker platform.
+    /// </summary>
+    public static readonly ExternalProvider Keycloak = new("KEYCLOAK", "Keycloak", "ExternalProvider_Keycloak_Desc");
+
+    /// <summary>
     /// Gets the unique identifier for this external provider.
     /// </summary>
     public string Id { get; }
@@ -74,5 +79,5 @@ public class ExternalProvider
     /// <summary>
     /// Returns a collection of all available <see cref="ExternalProvider"/> definitions.
     /// </summary>
-    public static IReadOnlyCollection<ExternalProvider> All => [Strava, GitHub, Facebook, Google];
+    public static IReadOnlyCollection<ExternalProvider> All => [Strava, GitHub, Facebook, Google, Keycloak];
 }

@@ -3,7 +3,7 @@ using NodaTime;
 namespace Application.Dtos;
 
 /// <summary>
-/// Normalized activity returned by any <see cref="IActivitySyncAdapter"/>.
+/// Normalized activity returned by any an activity sync adapter.
 /// Maps to <c>ActivityLog</c> in the domain.
 /// </summary>
 public record AdapterActivityDto(

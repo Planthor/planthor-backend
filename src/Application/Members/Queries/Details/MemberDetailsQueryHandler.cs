@@ -16,6 +16,9 @@ public class MemberDetailsQueryHandler : IQueryHandler<MemberDetailsQuery, Membe
 {
     private readonly IReadOnlyContext _readOnlyContext;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MemberDetailsQueryHandler"/> class.
+    /// </summary>
     public MemberDetailsQueryHandler(IReadOnlyContext readOnlyContext)
     {
         ArgumentNullException.ThrowIfNull(readOnlyContext);

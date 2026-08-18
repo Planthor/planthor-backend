@@ -6,11 +6,13 @@ namespace Application.Members.Commands.Provision;
 /// <summary>
 /// Provisioning Member support Create member for JIT authentication.
 /// </summary>
+/// <param name="SubjectId"></param>
 /// <param name="IdentifyName"></param>
 /// <param name="FirstName"></param>
 /// <param name="LastName"></param>
 /// <param name="AvatarUrl"></param>
 public record ProvisionMemberCommand(
+    string SubjectId,
     string IdentifyName,
     string FirstName,
     string LastName,

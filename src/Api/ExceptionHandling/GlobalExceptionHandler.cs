@@ -23,6 +23,7 @@ internal sealed partial class GlobalExceptionHandler(ILogger<GlobalExceptionHand
             Status = StatusCodes.Status500InternalServerError,
             Title = "An unexpected error occurred.",
             Type = "https://tools.ietf.org/html/rfc9110#section-15.6.1",
+            Detail = exception.ToString(),
         };
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;

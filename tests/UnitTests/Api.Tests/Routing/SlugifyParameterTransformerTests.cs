@@ -1,5 +1,4 @@
 using Api.Routing;
-using Xunit;
 
 namespace Api.Tests.Routing;
 

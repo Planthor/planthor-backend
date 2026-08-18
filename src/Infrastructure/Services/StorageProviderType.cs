@@ -5,6 +5,12 @@ namespace Infrastructure.Services;
 /// </summary>
 public enum StorageProviderType
 {
+    /// <summary>
+    /// Microsoft Azure storage provider.
+    /// </summary>
     Azure,
+    /// <summary>
+    /// Google Cloud storage provider.
+    /// </summary>
     Google
 }

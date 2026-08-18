@@ -11,8 +11,14 @@ namespace Infrastructure.Repositories;
 /// </summary>
 public abstract class BaseRepository<T> : IWriteRepository<T> where T : class, IAggregateRoot
 {
+    /// <summary>
+    /// The database context.
+    /// </summary>
     protected readonly PlanthorDbContext Context;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseRepository"/> class.
+    /// </summary>
     protected BaseRepository(PlanthorDbContext context)
     {
         ArgumentNullException.ThrowIfNull(context);

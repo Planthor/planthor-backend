@@ -16,9 +16,16 @@ namespace Infrastructure.Context;
 /// Represents the database context for the Planthor application.
 /// </summary>
 /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
+/// <param name="publisher">The MediatR publisher for dispatching domain events.</param>
 public class PlanthorDbContext(DbContextOptions options, IPublisher publisher) : DbContext(options)
 {
+    /// <summary>
+    /// Gets or sets the dataset for Member entities.
+    /// </summary>
     public DbSet<Member> Members => Set<Member>();
+    /// <summary>
+    /// Gets or sets the dataset for Plan entities.
+    /// </summary>
     public DbSet<Plan> Plans => Set<Plan>();
 
     /// <inheritdoc/>

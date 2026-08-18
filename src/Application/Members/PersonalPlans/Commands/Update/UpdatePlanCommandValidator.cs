@@ -10,6 +10,9 @@ public class UpdatePlanCommandValidator : AbstractValidator<UpdatePersonalPlanCo
     private const int MinTarget = 0;
     private const int MinCurrent = 0;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdatePlanCommandValidator"/> class.
+    /// </summary>
     public UpdatePlanCommandValidator()
     {
         RuleFor(x => x.IdentifyName)

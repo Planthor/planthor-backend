@@ -20,6 +20,7 @@ public class CreatePersonalPlanCommandHandler(
     private readonly IPlanRepository _planRepository = planRepository ?? throw new ArgumentNullException(nameof(planRepository));
     private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
 
+    /// <inheritdoc />
     public Task<Guid> Handle(CreatePersonalPlanCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

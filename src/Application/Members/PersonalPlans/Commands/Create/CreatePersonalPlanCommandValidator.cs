@@ -18,6 +18,9 @@ public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePerson
     private const int MaxPriority = 999;
     private const string SportTypesPropertyName = "SportTypes";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreatePersonalPlanCommandValidator"/> class.
+    /// </summary>
     public CreatePersonalPlanCommandValidator()
     {
         RuleFor(x => x.IdentifyName)

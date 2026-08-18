@@ -8,11 +8,17 @@ using NodaTime;
 
 namespace Application.Members.Commands.ConnectExternalProvider;
 
+/// <summary>
+/// Handles the connection of an external provider to a member.
+/// </summary>
 public sealed class ConnectExternalProviderCommandHandler : ICommandHandler<ConnectExternalProviderCommand>
 {
     private readonly IMemberRepository _memberRepository;
     private readonly IClock _clock;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConnectExternalProviderCommandHandler"/> class.
+    /// </summary>
     public ConnectExternalProviderCommandHandler(
         IMemberRepository memberRepository,
         IClock clock)
@@ -24,6 +30,7 @@ public sealed class ConnectExternalProviderCommandHandler : ICommandHandler<Conn
         _clock = clock;
     }
 
+    /// <inheritdoc />
     public Task Handle(ConnectExternalProviderCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

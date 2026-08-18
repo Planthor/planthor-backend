@@ -25,7 +25,7 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
             PreferredTimezone: "UTC"
         );
         var createResponse = await _client.PostAsJsonAsync("/v1/members", createCmd);
-        createResponse.EnsureSuccessStatusCode();
+        Assert.True(createResponse.IsSuccessStatusCode, await createResponse.Content.ReadAsStringAsync());
         var createdMember = await createResponse.Content.ReadFromJsonAsync<MemberDto>();
         Assert.NotNull(createdMember);
         

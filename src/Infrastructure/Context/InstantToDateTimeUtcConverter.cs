@@ -9,6 +9,9 @@ namespace Infrastructure.Context;
 /// </summary>
 public class InstantToDateTimeUtcConverter : ValueConverter<Instant, DateTime>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InstantToDateTimeUtcConverter"/> class.
+    /// </summary>
     public InstantToDateTimeUtcConverter()
         : base(
             instant => instant.ToDateTimeUtc(),

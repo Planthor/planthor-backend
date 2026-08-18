@@ -17,6 +17,7 @@ public sealed class CreateActivityLogCommandHandler(
     IPlanRepository planRepository,
     IClock clock) : ICommandHandler<CreateActivityLogCommand, Guid>
 {
+    /// <inheritdoc />
     public Task<Guid> Handle(CreateActivityLogCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

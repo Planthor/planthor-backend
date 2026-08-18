@@ -21,7 +21,7 @@ public partial class SyncIdentityJob(
     private readonly IMemberRepository _memberRepository = memberRepository;
     private readonly IClock _clock = clock;
     private readonly ILogger<SyncIdentityJob> _logger = logger;
-
+    /// <inheritdoc />
     public async Task Execute(IJobExecutionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);

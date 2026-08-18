@@ -11,6 +11,9 @@ public class CreateMemberCommandValidator : AbstractValidator<CreateMemberComman
     private const int MaxFirstNameLength = 100;
     private const int MaxLastNameLength = 100;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateMemberCommandValidator"/> class.
+    /// </summary>
     public CreateMemberCommandValidator()
     {
         RuleFor(x => x.IdentifyName)

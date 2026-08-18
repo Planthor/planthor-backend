@@ -7,6 +7,9 @@ namespace Application.Members.PersonalPlans.Queries.Details;
 /// </summary>
 public class PersonalPlanDetailsQueryValidator : AbstractValidator<PersonalPlanDetailsQuery>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PersonalPlanDetailsQueryValidator"/> class.
+    /// </summary>
     public PersonalPlanDetailsQueryValidator()
     {
         RuleFor(x => x.IdentifyName)

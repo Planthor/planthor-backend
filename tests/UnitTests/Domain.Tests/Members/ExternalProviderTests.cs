@@ -34,9 +34,9 @@ public class ExternalProviderTests
     }
 
     [Fact]
-    public void All_ContainsFourProviders()
+    public void All_ContainsFiveProviders()
     {
-        Assert.Equal(4, ExternalProvider.All.Count);
+        Assert.Equal(5, ExternalProvider.All.Count);
     }
 
     [Fact]

@@ -4,6 +4,8 @@ services:
 
   mongodb1:
     image: mongo:8.3
+    environment:
+      - GLIBC_TUNABLES=glibc.pthread.rseq=1
     container_name: mongodb1
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
@@ -22,6 +24,8 @@ services:
 
   mongodb2:
     image: mongo:8.3
+    environment:
+      - GLIBC_TUNABLES=glibc.pthread.rseq=1
     container_name: mongodb2
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
@@ -40,6 +44,8 @@ services:
 
   mongodb3-arbiter:
     image: mongo:8.3
+    environment:
+      - GLIBC_TUNABLES=glibc.pthread.rseq=1
     container_name: mongodb3-arbiter
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
@@ -64,6 +70,8 @@ services:
   # ---------------------------------------------------------
   mongo-setup:
     image: mongo:8.3
+    environment:
+      - GLIBC_TUNABLES=glibc.pthread.rseq=1
     depends_on:
       mongodb1:
         condition: service_healthy

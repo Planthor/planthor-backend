@@ -8,6 +8,9 @@ namespace Application.Members.PersonalPlans.Commands.Activate;
 /// </summary>
 public class ActivatePersonalPlanCommandValidator : AbstractValidator<ActivatePersonalPlanCommand>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ActivatePersonalPlanCommandValidator"/> class.
+    /// </summary>
     public ActivatePersonalPlanCommandValidator()
     {
         RuleFor(x => x.IdentifyName)

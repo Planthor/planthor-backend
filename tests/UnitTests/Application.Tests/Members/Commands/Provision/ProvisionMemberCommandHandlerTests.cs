@@ -33,10 +33,10 @@ public class ProvisionMemberCommandHandlerTests
     [Fact]
     public async Task Handle_WhenMemberDoesNotExist_CreatesAndReturnsMemberId()
     {
-        var command = new ProvisionMemberCommand("new_user", "John", "Doe", null);
+        var command = new ProvisionMemberCommand("test-subject-id", "new_user", "John", "Doe", null);
 
         _mockRepository
-            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.SubjectId, Arg.Any<CancellationToken>())
             .Returns((Member?)null);
 
         _mockRepository
@@ -54,10 +54,10 @@ public class ProvisionMemberCommandHandlerTests
     public async Task Handle_WhenMemberAlreadyExists_ReturnsExistingMemberId()
     {
         var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
-        var command = new ProvisionMemberCommand("existing_user", "Jane", "Doe", null);
+        var command = new ProvisionMemberCommand("test-subject-id", "existing_user", "Jane", "Doe", null);
 
         _mockRepository
-            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.SubjectId, Arg.Any<CancellationToken>())
             .Returns(existingMember);
 
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -69,10 +69,10 @@ public class ProvisionMemberCommandHandlerTests
     public async Task Handle_WhenMemberAlreadyExists_DoesNotCreateDuplicate()
     {
         var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
-        var command = new ProvisionMemberCommand("existing_user", "Jane", "Doe", null);
+        var command = new ProvisionMemberCommand("test-subject-id", "existing_user", "Jane", "Doe", null);
 
         _mockRepository
-            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.SubjectId, Arg.Any<CancellationToken>())
             .Returns(existingMember);
 
         await _handler.Handle(command, CancellationToken.None);
@@ -85,10 +85,10 @@ public class ProvisionMemberCommandHandlerTests
     public async Task Handle_WhenNewMemberWithAvatarUrl_EnqueuesAvatarDownload()
     {
         var avatarUrl = new Uri("https://example.com/avatar.jpg");
-        var command = new ProvisionMemberCommand("new_user", "John", "Doe", avatarUrl);
+        var command = new ProvisionMemberCommand("test-subject-id", "new_user", "John", "Doe", avatarUrl);
 
         _mockRepository
-            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.SubjectId, Arg.Any<CancellationToken>())
             .Returns((Member?)null);
 
         _mockRepository
@@ -103,10 +103,10 @@ public class ProvisionMemberCommandHandlerTests
     [Fact]
     public async Task Handle_WhenNewMemberWithNoAvatarUrl_DoesNotEnqueueAvatarDownload()
     {
-        var command = new ProvisionMemberCommand("new_user", "John", "Doe", null);
+        var command = new ProvisionMemberCommand("test-subject-id", "new_user", "John", "Doe", null);
 
         _mockRepository
-            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.SubjectId, Arg.Any<CancellationToken>())
             .Returns((Member?)null);
 
         _mockRepository
@@ -123,10 +123,10 @@ public class ProvisionMemberCommandHandlerTests
     {
         var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
         var avatarUrl = new Uri("https://example.com/avatar.jpg");
-        var command = new ProvisionMemberCommand("existing_user", "Jane", "Doe", avatarUrl);
+        var command = new ProvisionMemberCommand("test-subject-id", "existing_user", "Jane", "Doe", avatarUrl);
 
         _mockRepository
-            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.SubjectId, Arg.Any<CancellationToken>())
             .Returns(existingMember);
 
         await _handler.Handle(command, CancellationToken.None);
@@ -141,10 +141,10 @@ public class ProvisionMemberCommandHandlerTests
         existingMember.UpdateAvatar("https://storage.example.com/stored-avatar.jpg", _mockClock);
 
         var avatarUrl = new Uri("https://example.com/avatar.jpg");
-        var command = new ProvisionMemberCommand("existing_user", "Jane", "Doe", avatarUrl);
+        var command = new ProvisionMemberCommand("test-subject-id", "existing_user", "Jane", "Doe", avatarUrl);
 
         _mockRepository
-            .GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+            .GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.SubjectId, Arg.Any<CancellationToken>())
             .Returns(existingMember);
 
         await _handler.Handle(command, CancellationToken.None);

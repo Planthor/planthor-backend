@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Domain.Members;
@@ -22,5 +23,17 @@ public class MemberRepository(PlanthorDbContext context) : BaseRepository<Member
     public async Task<Member?> GetByIdentifyNameAsync(string identifyName, CancellationToken cancellationToken)
     {
         return await Context.Members.FirstOrDefaultAsync(m => m.IdentifyName == identifyName, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Member?> GetByExternalIdentityAsync(string providerId, string externalUserId, CancellationToken cancellationToken)
+    {
+        var provider = ExternalProvider.FromId(providerId);
+        return await Context.Members.FirstOrDefaultAsync(m => 
+            m.ExternalConnections.Any(c => 
+                c.Provider == provider && 
+                c.Type == ExternalConnectionType.Identity && 
+                c.ExternalUserId == externalUserId &&
+                c.Status == ConnectionStatus.Active), cancellationToken);
     }
 }
