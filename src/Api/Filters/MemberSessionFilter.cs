@@ -54,11 +54,17 @@ public class MemberSessionFilter : IAsyncActionFilter
             return;
         }
 
-        var identifyName = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(identifyName))
+        var subjectId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(subjectId))
         {
             await next();
             return;
+        }
+
+        var identifyName = user.FindFirst("preferred_username")?.Value;
+        if (string.IsNullOrEmpty(identifyName))
+        {
+            identifyName = $"{user.FindFirst(ClaimTypes.GivenName)?.Value}_{Guid.NewGuid().ToString()[..8]}".ToLowerInvariant();
         }
 
         var avatarUrlString = user.FindFirst("avatarUrl")?.Value;
@@ -69,6 +75,7 @@ public class MemberSessionFilter : IAsyncActionFilter
         }
 
         await _sender.Send(new ProvisionMemberCommand(
+            SubjectId: subjectId,
             IdentifyName: identifyName,
             FirstName: user.FindFirst(ClaimTypes.GivenName)?.Value ?? "New",
             LastName: user.FindFirst(ClaimTypes.Surname)?.Value ?? "User",

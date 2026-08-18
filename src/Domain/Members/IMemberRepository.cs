@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Domain.Shared;
@@ -25,4 +25,13 @@ public interface IMemberRepository : IWriteRepository<Member>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the member, or null if not found.</returns>
     Task<Member?> GetByIdentifyNameAsync(string identifyName, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Gets a member by their external identity connection.
+    /// </summary>
+    /// <param name="providerId">The external provider ID.</param>
+    /// <param name="externalUserId">The external user ID.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the member, or null if not found.</returns>
+    Task<Member?> GetByExternalIdentityAsync(string providerId, string externalUserId, CancellationToken cancellationToken);
 }

@@ -28,6 +28,7 @@ public class CustomWebApplicationFactory<TProgram>
 {
     private readonly IContainer _mongoDbContainer = new ContainerBuilder()
         .WithImage("mongo:8.3")
+        .WithEnvironment("GLIBC_TUNABLES", "glibc.pthread.rseq=1")
         .WithCommand("mongod", "--replSet", "rs0", "--bind_ip_all")
         .WithPortBinding(27017, true)
         .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
@@ -43,6 +44,8 @@ public class CustomWebApplicationFactory<TProgram>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
+
+        builder.UseEnvironment("Development");
 
         builder.ConfigureAppConfiguration(config =>
         {

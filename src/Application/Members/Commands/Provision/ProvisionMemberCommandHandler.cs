@@ -17,6 +17,9 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
     private readonly IClock _clock;
     private readonly IBackgroundJobClient _backgroundJobClient;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ProvisionMemberCommandHandler"/> class.
+    /// </summary>
     public ProvisionMemberCommandHandler(
         IMemberRepository memberRepository,
         IClock clock,
@@ -40,7 +43,7 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
 
         async Task<Guid> Core()
         {
-            var existing = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken);
+            var existing = await _memberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, request.SubjectId, cancellationToken);
 
             var memberToSave = existing ?? Member.Create(
                 request.IdentifyName,
@@ -53,6 +56,13 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
 
             if (existing is null)
             {
+                memberToSave.ConnectExternalProvider(
+                    ExternalProvider.Keycloak,
+                    ExternalConnectionType.Identity,
+                    request.SubjectId,
+                    [], // empty scopes
+                    _clock);
+
                 await _memberRepository.AddAsync(memberToSave, cancellationToken);
             }
 

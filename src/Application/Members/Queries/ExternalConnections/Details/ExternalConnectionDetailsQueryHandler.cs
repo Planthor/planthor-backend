@@ -12,11 +12,13 @@ namespace Application.Members.Queries.ExternalConnections.Details;
 /// <summary>
 /// Handler for retrieving the details of a specific external connection.
 /// </summary>
-/// <param name="readOnlyContext">The read-only context.</param>
 public class ExternalConnectionDetailsQueryHandler : IQueryHandler<ExternalConnectionDetailsQuery, ExternalConnectionDto>
 {
     private readonly IReadOnlyContext _readOnlyContext;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExternalConnectionDetailsQueryHandler"/> class.
+    /// </summary>
     public ExternalConnectionDetailsQueryHandler(IReadOnlyContext readOnlyContext)
     {
         ArgumentNullException.ThrowIfNull(readOnlyContext);

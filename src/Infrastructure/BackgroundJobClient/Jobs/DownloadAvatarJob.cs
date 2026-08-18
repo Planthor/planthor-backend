@@ -16,6 +16,7 @@ namespace Infrastructure.BackgroundJobClient.Jobs;
 /// <param name="httpClientFactory">Factory for creating HTTP clients to download the image.</param>
 /// <param name="avatarStorageService">The service used to upload the avatar to storage.</param>
 /// <param name="sender">The MediatR sender used to update the member's profile with the new path.</param>
+/// <param name="logger">The logger instance.</param>
 [DisallowConcurrentExecution]
 public partial class DownloadAvatarJob(
     IHttpClientFactory httpClientFactory,

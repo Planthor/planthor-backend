@@ -8,6 +8,7 @@ using Api.Requests;
 using Application.Dtos;
 using Application.Members.Commands.Create;
 using Application.Members.Commands.Update;
+using Application.Members.Commands.Patch;
 using Application.Members.Queries.Details;
 using Application.Members.Queries.List;
 using FluentValidation;
@@ -24,6 +25,7 @@ namespace Api.Controllers.v1;
 /// <param name="sender">The mediator used to send commands and queries.</param>
 /// <param name="createMemberCommandValidator">The validator for <see cref="CreateMemberCommand"/>.</param>
 /// <param name="updateMemberCommandValidator">The validator for <see cref="UpdateMemberCommand"/>.</param>
+/// <param name="patchMemberCommandValidator">The validator for <see cref="PatchMemberCommand"/>.</param>
 /// <param name="memberDetailsQueryValidator">The validator for <see cref="MemberDetailsQuery"/>.</param>
 /// <exception cref="ArgumentNullException">Thrown when sender is null.</exception>
 [Authorize]
@@ -34,6 +36,7 @@ public class MembersController(
     ISender sender,
     IValidator<CreateMemberCommand> createMemberCommandValidator,
     IValidator<UpdateMemberCommand> updateMemberCommandValidator,
+    IValidator<PatchMemberCommand> patchMemberCommandValidator,
     IValidator<MemberDetailsQuery> memberDetailsQueryValidator)
     : ControllerBase
 {
@@ -128,6 +131,36 @@ public class MembersController(
             request.PreferredTimezone);
 
         await updateMemberCommandValidator.ValidateAndThrowAsync(command, token);
+        await _sender.Send(command, token);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Partially updates an existing member (Field Mask pattern).
+    /// </summary>
+    /// <param name="id">The ID of the member to patch.</param>
+    /// <param name="request">The request containing fields to update and the UpdateMask.</param>
+    /// <param name="token">A cancellation token.</param>
+    /// <returns>An IActionResult with NoContent status code on success, otherwise an appropriate error code.</returns>
+    [HttpPatch("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Patch(
+        [FromRoute] Guid id,
+        [FromBody] PatchMemberRequest request,
+        CancellationToken token)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var command = new PatchMemberCommand(
+            id,
+            request.UpdateMask,
+            request.IdentifyName,
+            request.FirstName,
+            request.LastName);
+
+        await patchMemberCommandValidator.ValidateAndThrowAsync(command, token);
         await _sender.Send(command, token);
         return NoContent();
     }

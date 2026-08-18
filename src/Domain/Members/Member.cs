@@ -332,6 +332,20 @@ public class Member(
     }
 
     /// <summary>
+    /// Updates the member's identify name (handle).
+    /// </summary>
+    public void UpdateIdentifyName(string identifyName, IClock clock)
+    {
+        if (string.IsNullOrWhiteSpace(identifyName))
+        {
+            throw new ArgumentException("IdentifyName cannot be empty.", nameof(identifyName));
+        }
+
+        IdentifyName = identifyName;
+        StampUpdatedAudit(Id, clock);
+    }
+
+    /// <summary>
     /// Updates the member's avatar path and raises a <see cref="MemberAvatarUpdatedEvent"/>.
     /// </summary>
     /// <param name="pathAvatar">The new path or URI for the member's avatar.</param>

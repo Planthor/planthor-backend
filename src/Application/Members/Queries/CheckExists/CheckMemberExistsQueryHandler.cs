@@ -10,11 +10,13 @@ namespace Application.Members.Queries.CheckExists;
 /// <summary>
 /// Handler for the <see cref="CheckMemberExistsQuery"/>.
 /// </summary>
-/// <param name="readOnlyContext">The read-only database context.</param>
 public class CheckMemberExistsQueryHandler : IQueryHandler<CheckMemberExistsQuery, bool>
 {
     private readonly IReadOnlyContext _readOnlyContext;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CheckMemberExistsQueryHandler"/> class.
+    /// </summary>
     public CheckMemberExistsQueryHandler(IReadOnlyContext readOnlyContext)
     {
         ArgumentNullException.ThrowIfNull(readOnlyContext);

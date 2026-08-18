@@ -10,7 +10,9 @@ namespace Application.Members.Commands.Update;
 /// <param name="MiddleName"></param>
 /// <param name="LastName"></param>
 /// <param name="Description"></param>
+/// <param name="Id">The member ID.</param>
 /// <param name="PathAvatar"></param>
+/// <param name="PreferredTimezone">The preferred timezone.</param>
 public record UpdateMemberCommand(
     Guid Id,
     string FirstName,

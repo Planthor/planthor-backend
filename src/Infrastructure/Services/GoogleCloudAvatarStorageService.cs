@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
+/// <summary>
+/// Represents the GoogleCloudAvatarStorageService.
+/// </summary>
 public partial class GoogleCloudAvatarStorageService : IAvatarStorageService
 {
     private const string ContainerName = "avatars";
@@ -16,6 +19,9 @@ public partial class GoogleCloudAvatarStorageService : IAvatarStorageService
     private readonly StorageClient _storageClient;
     private readonly ILogger<GoogleCloudAvatarStorageService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GoogleCloudAvatarStorageService"/> class.
+    /// </summary>
     public GoogleCloudAvatarStorageService(IConfiguration configuration, ILogger<GoogleCloudAvatarStorageService> logger)
         : this(configuration, logger, StorageClient.Create()) { }
 
@@ -28,6 +34,9 @@ public partial class GoogleCloudAvatarStorageService : IAvatarStorageService
         _storageClient = storageClient;
     }
 
+    /// <summary>
+    /// Uploads the avatar asynchronously.
+    /// </summary>
     public async Task<string> UploadAvatarAsync(
         Guid memberId,
         Stream fileStream,
@@ -46,6 +55,9 @@ public partial class GoogleCloudAvatarStorageService : IAvatarStorageService
         return $"https://storage.googleapis.com/{_bucketName}/{objectName}";
     }
 
+    /// <summary>
+    /// Deletes the avatar asynchronously.
+    /// </summary>
     public Task DeleteAvatarAsync(Uri blobUri, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(blobUri);

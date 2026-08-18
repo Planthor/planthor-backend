@@ -7,6 +7,9 @@ namespace Application.Members.Queries.Details;
 /// </summary>
 public class MemberDetailsQueryValidator : AbstractValidator<MemberDetailsQuery>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MemberDetailsQueryValidator"/> class.
+    /// </summary>
     public MemberDetailsQueryValidator()
     {
         RuleFor(x => x.Id)

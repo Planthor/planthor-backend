@@ -8,6 +8,9 @@ namespace Application.Members.PersonalPlans.Commands.Cancel;
 /// </summary>
 public class CancelPlanCommandValidator : AbstractValidator<CancelPlanCommand>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CancelPlanCommandValidator"/> class.
+    /// </summary>
     public CancelPlanCommandValidator()
     {
         RuleFor(x => x.IdentifyName)

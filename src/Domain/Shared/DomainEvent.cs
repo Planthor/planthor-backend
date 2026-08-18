@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NodaTime;
 
 namespace Domain.Shared;
@@ -18,6 +18,7 @@ public abstract class DomainEvent : IDomainEvent
     /// resolved internally — so that time remains controllable in tests
     /// and time-travel scenarios.
     /// </param>
+    /// <param name="occurredBy">The identifier of the user or system that caused the event.</param>
     protected DomainEvent(IClock clock, string occurredBy)
     {
         if (clock == null)

@@ -9,5 +9,8 @@ namespace Application.Shared;
 /// </summary>
 public interface IFacebookGraphAdapter
 {
+    /// <summary>
+    /// Gets the user profile picture stream.
+    /// </summary>
     Task<Stream> GetUserProfilePictureStreamAsync(string facebookUserId, CancellationToken cancellationToken);
 }

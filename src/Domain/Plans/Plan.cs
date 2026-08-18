@@ -119,7 +119,7 @@ public class Plan : AggregateRoot<Guid>
     /// <summary>
     /// Gets the total number of likes on this plan.
     /// Denormalized for fast read — incremented and decremented
-    /// by the <see cref="Like"/> aggregate via domain events.
+    /// by the Like aggregate via domain events.
     /// </summary>
     public int LikeCount { get; private set; }
 
@@ -211,6 +211,7 @@ public class Plan : AggregateRoot<Guid>
     /// The sport-specific extension details. Must not be null.
     /// </param>
     /// <param name="clock">The system clock.</param>
+    /// <param name="createUserId">The identifier of the user creating the plan.</param>
     /// <returns>A fully validated sport <see cref="Plan"/> instance.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="sportPlanDetails"/> is null.

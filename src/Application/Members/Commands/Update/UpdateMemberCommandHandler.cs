@@ -7,8 +7,12 @@ using NodaTime;
 
 namespace Application.Members.Commands.Update;
 
+/// <summary>
+/// Represents the UpdateMemberCommandHandler.
+/// </summary>
 public class UpdateMemberCommandHandler(IMemberRepository memberRepository, IClock clock) : ICommandHandler<UpdateMemberCommand>
 {
+    /// <inheritdoc />
     public Task Handle(UpdateMemberCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

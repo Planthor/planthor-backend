@@ -17,6 +17,9 @@ public class PersonalPlanDetailsQueryHandler : IQueryHandler<PersonalPlanDetails
 {
     private readonly IReadOnlyContext _readOnlyContext;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PersonalPlanDetailsQueryHandler"/> class.
+    /// </summary>
     public PersonalPlanDetailsQueryHandler(IReadOnlyContext readOnlyContext)
     {
         ArgumentNullException.ThrowIfNull(readOnlyContext);

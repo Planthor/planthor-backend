@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Domain.Shared;
 using NodaTime;
 
@@ -15,6 +15,7 @@ namespace Domain.Plans.Events;
 /// <param name="endDateLocal">The local end date as an ISO string.</param>
 /// <param name="timezone">The IANA timezone identifier.</param>
 /// <param name="clock"> The system clock used to timestamp when this event occurred.</param>
+/// <param name="occurredBy">The user ID that triggered this event.</param>
 public sealed class PlanCreatedEvent(
     Guid planId,
     string planName,

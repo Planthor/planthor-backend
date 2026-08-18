@@ -93,6 +93,18 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
     [Fact]
     public async Task PersonalPlan_Generic_Lifecycle_Tests()
     {
+        // We first need a member for the identity
+        var createMemberCmd = new CreateMemberRequest(
+            FirstName: "Generic",
+            MiddleName: null,
+            LastName: "Owner",
+            Description: "For testing generic plans",
+            PreferredTimezone: "UTC"
+        );
+        var createMemberResponse = await _client.PostAsJsonAsync("/v1/members", createMemberCmd);
+        // It might already exist if tests run in parallel/sequence, so we just ensure we try to create it.
+        // We don't EnsureSuccessStatusCode() here because it might return Conflict/400 if it already exists.
+
         // 1. Create Personal Plan without PlanDetails
         var createCmd = new CreatePersonalPlanRequest(
             Name: "Generic Plan",
@@ -111,7 +123,7 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
         );
 
         var createResponse = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", createCmd);
-        createResponse.EnsureSuccessStatusCode();
+        Assert.True(createResponse.IsSuccessStatusCode, await createResponse.Content.ReadAsStringAsync());
         
         var createdPlan = await createResponse.Content.ReadFromJsonAsync<PersonalPlanDto>();
         Assert.NotNull(createdPlan);
@@ -170,6 +182,16 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
     [Fact]
     public async Task PersonalPlan_Validation_Tests()
     {
+        // We first need a member for the identity
+        var createMemberCmd = new CreateMemberRequest(
+            FirstName: "Validation",
+            MiddleName: null,
+            LastName: "Owner",
+            Description: "For testing validation",
+            PreferredTimezone: "UTC"
+        );
+        await _client.PostAsJsonAsync("/v1/members", createMemberCmd);
+
         // 1. Validation error: empty sport types
         var emptySportTypesCmd = new CreatePersonalPlanRequest(
             Name: "Test Plan", Unit: "km", Target: 100.0, FromDate: DateTimeOffset.UtcNow, ToDate: DateTimeOffset.UtcNow.AddDays(30),

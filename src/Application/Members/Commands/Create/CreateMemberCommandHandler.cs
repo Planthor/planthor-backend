@@ -15,6 +15,7 @@ public class CreateMemberCommandHandler(
     IClock clock) : ICommandHandler<CreateMemberCommand, Guid>
 {
 
+    /// <inheritdoc />
     public Task<Guid> Handle(CreateMemberCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

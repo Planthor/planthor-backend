@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Application.Shared;
 
 namespace Application.Members.Commands.Create;
@@ -10,6 +10,7 @@ namespace Application.Members.Commands.Create;
 /// <param name="MiddleName">The middle name of the member.</param>
 /// <param name="LastName">The last name of the member.</param>
 /// <param name="Description">A free-text description or bio of the member.</param>
+/// <param name="IdentifyName">The identify name of the member.</param>
 /// <param name="PreferredTimezone">The IANA timezone identifier preferred by the member (e.g., "Asia/Ho_Chi_Minh").</param>
 public record CreateMemberCommand(
     string IdentifyName,

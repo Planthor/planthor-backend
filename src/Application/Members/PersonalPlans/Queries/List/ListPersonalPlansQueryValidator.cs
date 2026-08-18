@@ -10,6 +10,9 @@ public class ListPersonalPlansQueryValidator : AbstractValidator<ListPersonalPla
     private const int MinLimit = 0;
     private const int MaxLimit = 100;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ListPersonalPlansQueryValidator"/> class.
+    /// </summary>
     public ListPersonalPlansQueryValidator()
     {
         RuleFor(x => x.IdentifyName)
