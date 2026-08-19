@@ -2,5 +2,11 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <LangVersion>latestMajor</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="!$(MSBuildProjectFullPath.Contains('tests')) and !$(MSBuildProjectFullPath.Contains('Tests'))">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 </Project>
