@@ -38,9 +38,5 @@ public class UpdatePlanCommandValidator : AbstractValidator<UpdatePersonalPlanCo
         RuleFor(x => x.ToDate)
             .GreaterThan(x => x.FromDate)
             .WithErrorCode("error_todate_before_fromdate");
-            
-        RuleFor(x => x.PeriodType)
-            .NotEmpty()
-            .WithErrorCode("error_period_type_required");
     }
 }

@@ -162,8 +162,7 @@ public class PersonalPlansController(
             request.Target,
             request.Current,
             request.FromDate,
-            request.ToDate,
-            request.PeriodType);
+            request.ToDate);
 
         await updatePlanCommandValidator.ValidateAndThrowAsync(updatePlanCommand, token);
         var updatedPlan = await _sender.Send(updatePlanCommand, token);
