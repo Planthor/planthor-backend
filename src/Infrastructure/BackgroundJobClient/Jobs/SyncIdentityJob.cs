@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Domain.Members;
 using Infrastructure.Services;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using Quartz;
@@ -43,9 +44,20 @@ public partial class SyncIdentityJob(
             return;
         }
 
+        var keycloakConnection = member.ExternalConnections
+            .FirstOrDefault(c => c.Provider == ExternalProvider.Keycloak && 
+                                 c.Type == ExternalConnectionType.Identity && 
+                                 c.Status == ConnectionStatus.Active);
+        
+        if (keycloakConnection == null)
+        {
+            LogKeycloakConnectionNotFound(memberId);
+            return;
+        }
+
         try
         {
-            var identities = await _keycloakAdminClient.GetUserFederatedIdentitiesAsync(identifyName, context.CancellationToken);
+            var identities = await _keycloakAdminClient.GetUserFederatedIdentitiesAsync(keycloakConnection.ExternalUserId, context.CancellationToken);
             
             bool hasChanges = false;
             foreach (var identity in identities)
@@ -108,4 +120,7 @@ public partial class SyncIdentityJob(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "SyncIdentityJob: Unrecognized identity provider '{IdentityProvider}' for user '{IdentifyName}'")]
     private partial void LogUnrecognizedProvider(Exception ex, string identityProvider, string identifyName);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "SyncIdentityJob: Active Keycloak identity connection not found for Member {MemberId}.")]
+    private partial void LogKeycloakConnectionNotFound(Guid memberId);
 }
