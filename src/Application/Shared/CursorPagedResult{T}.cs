@@ -14,6 +14,3 @@ public record CursorPagedResult<T>(
     string? NextCursor,
     bool HasNextPage
 );
-
-
-

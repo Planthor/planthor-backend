@@ -7,6 +7,8 @@ using Api.Requests;
 using Application.Dtos;
 using Application.Members.ActivityLogs.Commands.Create;
 using Application.Members.ActivityLogs.Queries.Details;
+using Application.Members.ActivityLogs.Queries.List;
+using Application.Shared;
 using Domain.Members;
 using FluentValidation;
 using MediatR;
@@ -22,6 +24,7 @@ namespace Api.Controllers.v1;
 /// <param name="sender">The mediator used to send commands and queries.</param>
 /// <param name="createActivityLogCommandValidator">The validator for <see cref="CreateActivityLogCommand"/>.</param>
 /// <param name="activityLogDetailsQueryValidator">The validator for <see cref="ActivityLogDetailsQuery"/>.</param>
+/// <param name="listActivityLogsQueryValidator">The validator for <see cref="ListActivityLogsQuery"/>.</param>
 [Authorize]
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
@@ -29,7 +32,8 @@ namespace Api.Controllers.v1;
 public class ActivityLogsController(
     ISender sender,
     IValidator<CreateActivityLogCommand> createActivityLogCommandValidator,
-    IValidator<ActivityLogDetailsQuery> activityLogDetailsQueryValidator)
+    IValidator<ActivityLogDetailsQuery> activityLogDetailsQueryValidator,
+    IValidator<ListActivityLogsQuery> listActivityLogsQueryValidator)
     : ControllerBase
 {
     private readonly ISender _sender = sender ?? throw new ArgumentNullException(nameof(sender));
@@ -134,15 +138,24 @@ public class ActivityLogsController(
     }
 
     /// <summary>
-    /// Gets all activity logs for a specific plan.
+    /// Gets a paginated list of activity logs for a specific plan.
     /// </summary>
+    /// <param name="planId">The unique identifier of the plan.</param>
+    /// <param name="limit">The maximum number of items to return (max 100). Defaults to 10.</param>
+    /// <param name="cursor">The pagination cursor to fetch the next set of results.</param>
+    /// <param name="token">A cancellation token.</param>
+    /// <returns>An IActionResult containing a <see cref="CursorPagedResult{ActivityLogDto}"/>.</returns>
+    /// <response code="200">Returns the paginated list of activity logs.</response>
+    /// <response code="400">If the query parameters fail validation.</response>
+    /// <response code="401">If the user is not authenticated.</response>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult> Read(
+    public async Task<ActionResult<CursorPagedResult<ActivityLogDto>>> Read(
         [FromRoute] Guid planId,
         [FromQuery] int? limit,
-        [FromQuery] Guid? cursor,
+        [FromQuery] string? cursor,
         CancellationToken token)
     {
         var identifyName = CurrentUserIdentifyName;
@@ -151,7 +164,11 @@ public class ActivityLogsController(
             return Unauthorized();
         }
 
-        return Ok();
+        var query = new ListActivityLogsQuery(planId, limit ?? 10, cursor);
+        await listActivityLogsQueryValidator.ValidateAndThrowAsync(query, token);
+        var result = await _sender.Send(query, token);
+
+        return Ok(result);
     }
 
     /// <summary>
