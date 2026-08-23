@@ -56,7 +56,7 @@ public class CreatePersonalPlanCommandHandlerTests
     [Fact]
     public async Task Handle_MemberNotFound_ThrowsArgumentException()
     {
-        _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns((Member?)null);
+        _mockMemberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, "user1", Arg.Any<CancellationToken>()).Returns((Member?)null);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => _handler.Handle(new CreatePersonalPlanCommand("user1", "Plan 1", "km", 100, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero), "2024-01-01", "2025-01-01", "UTC", true, true, 1, false, null), CancellationToken.None));
     }
@@ -65,7 +65,7 @@ public class CreatePersonalPlanCommandHandlerTests
     public async Task Handle_ValidRequest_CreatesPlan()
     {
         var member = Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
-        _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
+        _mockMemberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, "user1", Arg.Any<CancellationToken>()).Returns(member);
 
         var result = await _handler.Handle(new CreatePersonalPlanCommand("user1", "Plan 1", "km", 100, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero), "2024-01-01", "2025-01-01", "UTC", true, true, 1, false, null), CancellationToken.None);
 

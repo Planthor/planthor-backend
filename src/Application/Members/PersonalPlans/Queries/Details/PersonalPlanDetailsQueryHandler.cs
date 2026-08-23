@@ -39,7 +39,11 @@ public class PersonalPlanDetailsQueryHandler : IQueryHandler<PersonalPlanDetails
         async Task<PersonalPlanDto> Core()
         {
             var member = await _readOnlyContext.FirstOrDefaultAsync<Member, Member>(
-                q => q.Where(m => m.IdentifyName == request.IdentifyName),
+                q => q.Where(m => m.ExternalConnections.Any(c => 
+                    c.Provider == ExternalProvider.Keycloak && 
+                    c.Type == ExternalConnectionType.Identity && 
+                    c.ExternalUserId == request.IdentifyName && 
+                    c.Status == ConnectionStatus.Active)),
                 cancellationToken);
 
             var personalPlan = (member?.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId))

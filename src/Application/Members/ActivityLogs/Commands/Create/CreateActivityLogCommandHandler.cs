@@ -29,8 +29,8 @@ public sealed class CreateActivityLogCommandHandler(
 
     private async Task<Guid> HandleAsync(CreateActivityLogCommand request, CancellationToken cancellationToken)
     {
-        var member = await memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
-            ?? throw new InvalidOperationException($"Member with IdentityName '{request.IdentifyName}' was not found.");
+        var member = await memberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, request.IdentifyName, cancellationToken)
+            ?? throw new InvalidOperationException($"Member with IdentifyName '{request.IdentifyName}' was not found.");
 
         var plan = await planRepository.GetByIdAsync(request.PlanId, cancellationToken)
             ?? throw new InvalidOperationException($"Plan with ID '{request.PlanId}' was not found.");

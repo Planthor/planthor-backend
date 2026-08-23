@@ -57,7 +57,7 @@ public class UpdatePlanCommandHandlerTests
     [Fact]
     public async Task Handle_MemberNotFound_ThrowsKeyNotFoundException()
     {
-        _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns((Member?)null);
+        _mockMemberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, "user1", Arg.Any<CancellationToken>()).Returns((Member?)null);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", Guid.NewGuid(), "km", 100, 50, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
     }
@@ -66,7 +66,7 @@ public class UpdatePlanCommandHandlerTests
     public async Task Handle_PersonalPlanNotFound_ThrowsKeyNotFoundException()
     {
         var member = Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
-        _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
+        _mockMemberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, "user1", Arg.Any<CancellationToken>()).Returns(member);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", Guid.NewGuid(), "km", 100, 50, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
     }
@@ -78,7 +78,7 @@ public class UpdatePlanCommandHandlerTests
         var member = Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
         member.SubscribeToPlan(planId, true, 0, false, _mockClock);
         
-        _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
+        _mockMemberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, "user1", Arg.Any<CancellationToken>()).Returns(member);
         _mockPlanRepository.GetByIdAsync(planId, Arg.Any<CancellationToken>()).Returns((Plan?)null);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", planId, "km", 100, 50, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
@@ -94,7 +94,7 @@ public class UpdatePlanCommandHandlerTests
         var plan = Plan.Create("Plan 1", "km", 100, Instant.FromUtc(2024, 1, 1, 0, 0), Instant.FromUtc(2025, 1, 1, 0, 0), "2024-01-01", "2025-01-01", "UTC", true, _mockClock, Guid.NewGuid());
         typeof(Plan).GetProperty("Id")!.SetValue(plan, planId);
 
-        _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
+        _mockMemberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, "user1", Arg.Any<CancellationToken>()).Returns(member);
         _mockPlanRepository.GetByIdAsync(planId, Arg.Any<CancellationToken>()).Returns(plan);
 
         var result = await _handler.Handle(new UpdatePersonalPlanCommand("user1", planId, "mi", 50, 20, new DateTimeOffset(2024,2,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,2,1,0,0,0,TimeSpan.Zero)), CancellationToken.None);
@@ -118,7 +118,7 @@ public class UpdatePlanCommandHandlerTests
         // Force Target to 0 after creation
         typeof(Plan).GetProperty("Target")!.SetValue(plan, 0f);
 
-        _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
+        _mockMemberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, "user1", Arg.Any<CancellationToken>()).Returns(member);
         _mockPlanRepository.GetByIdAsync(planId, Arg.Any<CancellationToken>()).Returns(plan);
 
         // Update command doesn't touch Target in this test so it remains 0 (since we mock GetByIdAsync returning this plan)
