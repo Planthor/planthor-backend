@@ -32,7 +32,11 @@ public class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
     {
         // 1. Fetch the Member's PersonalPlans
         var member = await readOnlyContext.FirstOrDefaultAsync<Member, Member>(
-            q => q.Where(m => m.IdentifyName == request.IdentifyName),
+            q => q.Where(m => m.ExternalConnections.Any(c => 
+                c.Provider == ExternalProvider.Keycloak && 
+                c.Type == ExternalConnectionType.Identity && 
+                c.ExternalUserId == request.IdentifyName && 
+                c.Status == ConnectionStatus.Active)),
             cancellationToken);
 
         if (member == null)

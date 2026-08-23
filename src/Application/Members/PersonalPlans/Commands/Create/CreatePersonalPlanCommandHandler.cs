@@ -30,7 +30,7 @@ public class CreatePersonalPlanCommandHandler(
 
     private async Task<Guid> HandleAsync(CreatePersonalPlanCommand request, CancellationToken cancellationToken)
     {
-        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
+        var member = await _memberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, request.IdentifyName, cancellationToken)
             ?? throw new InvalidOperationException($"Member with IdentityName '{request.IdentifyName}' was not found.");
 
         var fromInstant = Instant.FromDateTimeOffset(request.FromDate);

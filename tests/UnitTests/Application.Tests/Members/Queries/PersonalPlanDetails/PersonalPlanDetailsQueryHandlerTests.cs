@@ -113,6 +113,7 @@ public class PersonalPlanDetailsQueryHandlerTests
     public async Task Handle_ExecutesQueryLambda_ProjectsToDto()
     {
         var member = Member.Create("alice", "Alice", "", "Smith", "desc", "UTC", _mockClock);
+        member.ConnectExternalProvider(ExternalProvider.Keycloak, ExternalConnectionType.Identity, "alice", [], _mockClock);
         var planId = Guid.NewGuid();
         member.SubscribeToPlan(planId, true, 1, false, _mockClock);
 
