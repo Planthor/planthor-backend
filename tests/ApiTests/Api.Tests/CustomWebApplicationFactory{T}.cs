@@ -26,12 +26,11 @@ namespace Api.Tests;
 public class CustomWebApplicationFactory<TProgram>
     : WebApplicationFactory<TProgram>, IAsyncLifetime where TProgram : class
 {
-    private readonly IContainer _mongoDbContainer = new ContainerBuilder()
-        .WithImage("mongo:8.3")
+    private readonly IContainer _mongoDbContainer = new ContainerBuilder("mongo:8.3")
         .WithEnvironment("GLIBC_TUNABLES", "glibc.pthread.rseq=1")
         .WithCommand("mongod", "--replSet", "rs0", "--bind_ip_all")
         .WithPortBinding(27017, true)
-        .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(27017))
+        .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(27017))
         .Build();
     public WireMockServer WireMockServer { get; private set; }
 
