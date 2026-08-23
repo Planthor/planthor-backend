@@ -61,8 +61,20 @@ public class MemberSessionFilter : IAsyncActionFilter
             return;
         }
 
-        var identifyName = user.FindFirst("preferred_username")?.Value;
-        if (string.IsNullOrEmpty(identifyName))
+        var preferredUsername = user.FindFirst("preferred_username")?.Value;
+        string? identifyName;
+        
+        if (!string.IsNullOrEmpty(preferredUsername) && preferredUsername.Contains('@'))
+        {
+            var prefix = preferredUsername.Split('@')[0];
+            var suffix = Guid.NewGuid().ToString()[..4];
+            identifyName = $"{prefix}_{suffix}".ToLowerInvariant();
+        }
+        else if (!string.IsNullOrEmpty(preferredUsername))
+        {
+            identifyName = preferredUsername;
+        }
+        else
         {
             identifyName = $"{user.FindFirst(ClaimTypes.GivenName)?.Value}_{Guid.NewGuid().ToString()[..8]}".ToLowerInvariant();
         }

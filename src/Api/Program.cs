@@ -9,6 +9,7 @@ using Application.Interfaces;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -92,6 +93,13 @@ try
     // OpenAPI + Scalar
     builder.Services.AddOpenApi();
 
+    builder.Services.AddHttpLogging(logging =>
+    {
+        logging.LoggingFields = HttpLoggingFields.All;
+        logging.RequestBodyLogLimit = 4096;
+        logging.ResponseBodyLogLimit = 4096;
+    });
+
     var app = builder.Build();
 
     if (app.Environment.IsDevelopment())
@@ -109,6 +117,7 @@ try
     }
 
     app.UseExceptionHandler();
+    app.UseHttpLogging();
     app.UseAuthentication();
     app.UseAuthorization();
 

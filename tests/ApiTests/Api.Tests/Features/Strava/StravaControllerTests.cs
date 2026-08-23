@@ -1,8 +1,12 @@
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using Application.ExternalSync.Commands.SyncStravaActivities;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Xunit;
 
 namespace Api.Tests.Features.Strava;
@@ -66,8 +70,8 @@ public class StravaControllerTests : IClassFixture<CustomWebApplicationFactory<P
     [Fact]
     public async Task ManualSync_ReturnsOk_WithNewLogsCreated()
     {
-        var mockSender = NSubstitute.Substitute.For<MediatR.ISender>();
-        NSubstitute.SubstituteExtensions.Returns(mockSender.Send(NSubstitute.Arg.Any<Application.ExternalSync.Commands.SyncStravaActivities.SyncStravaActivitiesCommand>(), NSubstitute.Arg.Any<System.Threading.CancellationToken>()), 5);
+        var mockSender = Substitute.For<ISender>();
+        SubstituteExtensions.Returns(mockSender.Send(Arg.Any<SyncStravaActivitiesCommand>(), Arg.Any<CancellationToken>()), 5);
 
         var client = _factory.WithWebHostBuilder(builder =>
         {
