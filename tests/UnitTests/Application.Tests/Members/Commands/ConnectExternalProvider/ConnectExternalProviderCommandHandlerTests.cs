@@ -45,7 +45,7 @@ public class ConnectExternalProviderCommandHandlerTests
     {
         // Arrange
         var command = new ConnectExternalProviderCommand("user1", "strava", "sync", "ext_123", ["read_all"]);
-        _memberRepositoryMock.GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+        _memberRepositoryMock.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.IdentifyName, Arg.Any<CancellationToken>())
             .Returns((Member?)null);
 
         // Act & Assert
@@ -61,7 +61,7 @@ public class ConnectExternalProviderCommandHandlerTests
         var clock = SystemClock.Instance;
         var member = Member.Create("user1", "John", "Doe", "Smith", "desc", "UTC", clock);
 
-        _memberRepositoryMock.GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
+        _memberRepositoryMock.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, command.IdentifyName, Arg.Any<CancellationToken>())
             .Returns(member);
         
         _clockMock.GetCurrentInstant().Returns(clock.GetCurrentInstant());

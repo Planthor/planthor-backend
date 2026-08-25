@@ -75,4 +75,88 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         var res2 = await _client.PutAsync("/v1/members/00000000-0000-0000-0000-000000000000", content);
         Assert.Equal(HttpStatusCode.BadRequest, res2.StatusCode);
     }
+
+    [Fact]
+    public async Task Member_Patch_Tests()
+    {
+        // Create first member to test IdentifyName uniqueness
+        var createCmd1 = new CreateMemberRequest("User", null, "One", null, "UTC");
+        _client.DefaultRequestHeaders.Add("X-TestUserId", "auth-user-1");
+        var res1 = await _client.PostAsJsonAsync("/v1/members", createCmd1);
+        res1.EnsureSuccessStatusCode();
+        var member1 = await res1.Content.ReadFromJsonAsync<MemberDto>();
+        _client.DefaultRequestHeaders.Remove("X-TestUserId");
+
+        // Create second member to patch
+        var createCmd2 = new CreateMemberRequest("User", null, "Two", null, "UTC");
+        _client.DefaultRequestHeaders.Add("X-TestUserId", "auth-user-2");
+        var res2 = await _client.PostAsJsonAsync("/v1/members", createCmd2);
+        res2.EnsureSuccessStatusCode();
+        var member2 = await res2.Content.ReadFromJsonAsync<MemberDto>();
+        _client.DefaultRequestHeaders.Remove("X-TestUserId");
+
+        // 1. Patch FirstName and LastName successfully
+        var patchCmd1 = new PatchMemberRequest(
+            UpdateMask: ["FirstName", "LastName"],
+            IdentifyName: null,
+            FirstName: "PatchedFirst",
+            LastName: "PatchedLast"
+        );
+        
+        // Use HttpMethod.Patch because HttpClient doesn't have PatchAsJsonAsync built-in out of the box in .NET 6/7, wait, it has PatchAsJsonAsync in newer .NET. Let's use HttpRequestMessage or just PatchAsJsonAsync if available.
+        var patchReq1 = await _client.PatchAsJsonAsync($"/v1/members/{member2!.Id}", patchCmd1);
+        patchReq1.EnsureSuccessStatusCode();
+
+        var getRes1 = await _client.GetFromJsonAsync<MemberDto>($"/v1/members/{member2.Id}");
+        Assert.Equal("PatchedFirst", getRes1!.FirstName);
+        Assert.Equal("PatchedLast", getRes1.LastName);
+
+        // 2. Patch IdentifyName successfully
+        var patchCmd2 = new PatchMemberRequest(
+            UpdateMask: ["IdentifyName"],
+            IdentifyName: "new-identify-name",
+            FirstName: null,
+            LastName: null
+        );
+        var patchReq2 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd2);
+        patchReq2.EnsureSuccessStatusCode();
+
+        var getRes2 = await _client.GetFromJsonAsync<MemberDto>($"/v1/members/{member2.Id}");
+        Assert.NotNull(getRes2); // IdentifyName is not returned in MemberDto currently, but we ensure the patch succeeded.
+
+        // 3. Patch IdentifyName failure (empty string)
+        var patchCmd3 = new PatchMemberRequest(
+            UpdateMask: ["IdentifyName"],
+            IdentifyName: "",
+            FirstName: null,
+            LastName: null
+        );
+        var patchReq3 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd3);
+        Assert.Equal(HttpStatusCode.InternalServerError, patchReq3.StatusCode);
+
+        // 4. Patch IdentifyName failure (already taken by member1 which is auth-user-1)
+        var patchCmd4 = new PatchMemberRequest(
+            UpdateMask: ["IdentifyName"],
+            IdentifyName: "auth-user-1",
+            FirstName: null,
+            LastName: null
+        );
+        var patchReq4 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd4);
+        Assert.Equal(HttpStatusCode.InternalServerError, patchReq4.StatusCode);
+
+        // 5. Patch FirstName failure (empty string)
+        var patchCmd5 = new PatchMemberRequest(
+            UpdateMask: ["FirstName"],
+            IdentifyName: null,
+            FirstName: "",
+            LastName: null
+        );
+        var patchReq5 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd5);
+        Assert.Equal(HttpStatusCode.InternalServerError, patchReq5.StatusCode);
+        
+        // 6. Patch member not found
+        var patchCmd6 = new PatchMemberRequest(["FirstName"], null, "ValidName", null);
+        var patchReq6 = await _client.PatchAsJsonAsync($"/v1/members/{System.Guid.NewGuid()}", patchCmd6);
+        Assert.Equal(HttpStatusCode.InternalServerError, patchReq6.StatusCode);
+    }
 }

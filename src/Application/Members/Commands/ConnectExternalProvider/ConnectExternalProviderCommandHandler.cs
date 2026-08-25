@@ -39,7 +39,7 @@ public sealed class ConnectExternalProviderCommandHandler : ICommandHandler<Conn
 
         async Task Core()
         {
-            var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
+            var member = await _memberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, request.IdentifyName, cancellationToken)
                 ?? throw new KeyNotFoundException($"Member with Identity {request.IdentifyName} not found.");
 
             var provider = ExternalProvider.FromId(request.ProviderId);
