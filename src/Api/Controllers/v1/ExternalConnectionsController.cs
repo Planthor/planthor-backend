@@ -33,7 +33,7 @@ public class ExternalConnectionsController(
     /// <summary>
     /// Gets all external connections for a member.
     /// </summary>
-    /// <param name="identifier">The member identifier, which can be '@me' or a valid GUID.</param>
+    /// <param name="identifier">The member identifier, which can be 'me' or a valid GUID.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>A list of external connections.</returns>
     /// <response code="200">Returns the list of external connections.</response>
@@ -61,7 +61,7 @@ public class ExternalConnectionsController(
     /// <summary>
     /// Gets the details of a specific external connection.
     /// </summary>
-    /// <param name="identifier">The member identifier, which can be '@me' or a valid GUID.</param>
+    /// <param name="identifier">The member identifier, which can be 'me' or a valid GUID.</param>
     /// <param name="id">The unique identifier of the external connection.</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>The external connection details.</returns>
