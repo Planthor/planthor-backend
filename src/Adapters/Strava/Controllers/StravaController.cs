@@ -73,7 +73,7 @@ public sealed partial class StravaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Authorize()
     {
-        var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var identifyName = HttpContext.Items["IdentifyName"] as string;
         if (string.IsNullOrEmpty(identifyName))
         {
             return Unauthorized();
@@ -285,7 +285,7 @@ public sealed partial class StravaController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> ManualSync(CancellationToken cancellationToken)
     {
-        var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var identifyName = HttpContext.Items["IdentifyName"] as string;
         if (string.IsNullOrEmpty(identifyName))
         {
             return Unauthorized();

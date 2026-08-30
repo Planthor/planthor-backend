@@ -68,6 +68,7 @@ public class StravaControllerTests
         var user = new ClaimsPrincipal(identity);
         
         var httpContext = new DefaultHttpContext { User = user };
+        httpContext.Items["IdentifyName"] = "test-user-id";
         httpContext.Request.Scheme = "https";
         httpContext.Request.Host = new HostString("localhost");
         
@@ -103,6 +104,7 @@ public class StravaControllerTests
     {
         // Arrange
         _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+        _controller.ControllerContext.HttpContext.Items.Remove("IdentifyName");
 
         // Act
         var result = _controller.Authorize();

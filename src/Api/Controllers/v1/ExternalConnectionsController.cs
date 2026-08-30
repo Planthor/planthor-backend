@@ -21,7 +21,6 @@ namespace Api.Controllers.v1;
 /// <param name="listQueryValidator">The validator for <see cref="ListExternalConnectionsQuery"/>.</param>
 /// <param name="detailsQueryValidator">The validator for <see cref="ExternalConnectionDetailsQuery"/>.</param>
 [Authorize]
-[ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/members/{identifier}/[controller]")]
 public sealed class ExternalConnectionsController(

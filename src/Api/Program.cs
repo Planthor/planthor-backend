@@ -82,10 +82,10 @@ try
 
     builder.Services.AddHealthChecks();
 
-    // API Client
     builder.Services.AddControllers(options =>
     {
         options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
+        options.Filters.Add<MemberSessionFilter>();
     });
 
     builder.Services.AddEndpointsApiExplorer();

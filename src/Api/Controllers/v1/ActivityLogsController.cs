@@ -25,7 +25,6 @@ namespace Api.Controllers.v1;
 /// <param name="activityLogDetailsQueryValidator">The validator for <see cref="ActivityLogDetailsQuery"/>.</param>
 /// <param name="listActivityLogsQueryValidator">The validator for <see cref="ListActivityLogsQuery"/>.</param>
 [Authorize]
-[ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/plans/{planId}/[controller]")]
 public sealed class ActivityLogsController(

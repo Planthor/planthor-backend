@@ -28,7 +28,6 @@ namespace Api.Controllers.v1;
 /// <param name="memberDetailsQueryValidator">The validator for <see cref="MemberDetailsQuery"/>.</param>
 /// <exception cref="ArgumentNullException">Thrown when sender is null.</exception>
 [Authorize]
-[ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/[controller]")]
 public sealed class MembersController(

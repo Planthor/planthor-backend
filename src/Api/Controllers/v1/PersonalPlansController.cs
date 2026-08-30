@@ -30,7 +30,6 @@ namespace Api.Controllers.v1;
 /// <param name="activatePlanCommandValidator">The validator for <see cref="ActivatePersonalPlanCommand"/>.</param>
 /// <param name="cancelPlanCommandValidator">The validator for <see cref="CancelPlanCommand"/>.</param>
 [Authorize]
-[ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/members/{identifier}/[controller]")]
 public sealed class PersonalPlansController(

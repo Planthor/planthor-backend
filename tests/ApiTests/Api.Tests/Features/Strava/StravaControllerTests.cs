@@ -71,6 +71,8 @@ public class StravaControllerTests : IClassFixture<CustomWebApplicationFactory<P
     public async Task ManualSync_ReturnsOk_WithNewLogsCreated()
     {
         var mockSender = Substitute.For<ISender>();
+        mockSender.Send(Arg.Any<Application.Members.Commands.Provision.ProvisionMemberCommand>(), Arg.Any<CancellationToken>())
+            .Returns(new Application.Members.Commands.Provision.ProvisionMemberResult(System.Guid.NewGuid(), "test-identify-name"));
         SubstituteExtensions.Returns(mockSender.Send(Arg.Any<SyncStravaActivitiesCommand>(), Arg.Any<CancellationToken>()), 5);
 
         var client = _factory.WithWebHostBuilder(builder =>
