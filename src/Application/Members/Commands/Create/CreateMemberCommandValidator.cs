@@ -6,7 +6,7 @@ namespace Application.Members.Commands.Create;
 /// <summary>
 /// Validates the initial payload required to create a member.
 /// </summary>
-public class CreateMemberCommandValidator : AbstractValidator<CreateMemberCommand>
+public sealed class CreateMemberCommandValidator : AbstractValidator<CreateMemberCommand>
 {
     private const int MaxFirstNameLength = 100;
     private const int MaxLastNameLength = 100;

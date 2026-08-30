@@ -1,5 +1,4 @@
 using System;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
@@ -29,7 +28,7 @@ namespace Api.Controllers.v1;
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/plans/{planId}/[controller]")]
-public class ActivityLogsController(
+public sealed class ActivityLogsController(
     ISender sender,
     IValidator<CreateActivityLogCommand> createActivityLogCommandValidator,
     IValidator<ActivityLogDetailsQuery> activityLogDetailsQueryValidator,
@@ -39,9 +38,9 @@ public class ActivityLogsController(
     private readonly ISender _sender = sender ?? throw new ArgumentNullException(nameof(sender));
 
     /// <summary>
-    /// Gets the authenticated user's identity name from claims.
+    /// Gets the authenticated user's identity name from HttpContext.Items.
     /// </summary>
-    private string? CurrentUserIdentifyName => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    private string? CurrentIdentifyName => HttpContext.Items.TryGetValue("IdentifyName", out var name) && name is string n ? n : null;
 
     /// <summary>
     /// Creates a new activity log for a specific plan.
@@ -75,7 +74,7 @@ public class ActivityLogsController(
 
         async Task<ActionResult<ActivityLogDto>> Core()
         {
-            var identifyName = CurrentUserIdentifyName;
+            var identifyName = CurrentIdentifyName;
             if (string.IsNullOrEmpty(identifyName))
             {
                 return Unauthorized();
@@ -128,7 +127,7 @@ public class ActivityLogsController(
         [FromRoute] Guid logId,
         CancellationToken token)
     {
-        var identifyName = CurrentUserIdentifyName;
+        var identifyName = CurrentIdentifyName;
         if (identifyName == null)
         {
             return Unauthorized();
@@ -158,7 +157,7 @@ public class ActivityLogsController(
         [FromQuery] string? cursor,
         CancellationToken token)
     {
-        var identifyName = CurrentUserIdentifyName;
+        var identifyName = CurrentIdentifyName;
         if (identifyName == null)
         {
             return Unauthorized();
@@ -183,7 +182,7 @@ public class ActivityLogsController(
         [FromRoute] Guid logId,
         CancellationToken token)
     {
-        var identifyName = CurrentUserIdentifyName;
+        var identifyName = CurrentIdentifyName;
         if (identifyName == null)
         {
             return Unauthorized();
@@ -208,7 +207,7 @@ public class ActivityLogsController(
         [FromRoute] Guid logId,
         CancellationToken token)
     {
-        var identifyName = CurrentUserIdentifyName;
+        var identifyName = CurrentIdentifyName;
         if (identifyName == null)
         {
             return Unauthorized();

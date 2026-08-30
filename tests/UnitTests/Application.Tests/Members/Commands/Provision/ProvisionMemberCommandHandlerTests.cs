@@ -45,7 +45,7 @@ public class ProvisionMemberCommandHandlerTests
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        Assert.NotEqual(Guid.Empty, result);
+        Assert.NotEqual(Guid.Empty, result.MemberId);
         await _mockRepository.Received(1).AddAsync(Arg.Any<Member>(), Arg.Any<CancellationToken>());
         await _mockRepository.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
@@ -62,7 +62,7 @@ public class ProvisionMemberCommandHandlerTests
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        Assert.Equal(existingMember.Id, result);
+        Assert.Equal(existingMember.Id, result.MemberId);
     }
 
     [Fact]

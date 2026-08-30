@@ -13,7 +13,7 @@ namespace Application.Members.ActivityLogs.Queries.List;
 /// Handler for listing activity logs of a specific plan with chronological cursor pagination.
 /// </summary>
 /// <param name="readOnlyContext">The read-only context used for querying data.</param>
-public class ListActivityLogsQueryHandler(IReadOnlyContext readOnlyContext)
+public sealed class ListActivityLogsQueryHandler(IReadOnlyContext readOnlyContext)
     : IQueryHandler<ListActivityLogsQuery, CursorPagedResult<ActivityLogDto>>
 {
     /// <inheritdoc />

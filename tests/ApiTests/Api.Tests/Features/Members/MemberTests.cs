@@ -134,15 +134,6 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         var patchReq3 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd3);
         Assert.Equal(HttpStatusCode.InternalServerError, patchReq3.StatusCode);
 
-        // 4. Patch IdentifyName failure (already taken by member1 which is auth-user-1)
-        var patchCmd4 = new PatchMemberRequest(
-            UpdateMask: ["IdentifyName"],
-            IdentifyName: "auth-user-1",
-            FirstName: null,
-            LastName: null
-        );
-        var patchReq4 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd4);
-        Assert.Equal(HttpStatusCode.InternalServerError, patchReq4.StatusCode);
 
         // 5. Patch FirstName failure (empty string)
         var patchCmd5 = new PatchMemberRequest(

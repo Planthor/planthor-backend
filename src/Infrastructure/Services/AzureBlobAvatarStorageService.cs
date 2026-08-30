@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +14,7 @@ namespace Infrastructure.Services;
 /// Provides functionality for uploading and deleting member avatar images.
 /// </summary>
 /// <param name="configuration">The application configuration used to retrieve storage connection strings.</param>
-public class AzureBlobAvatarStorageService(IConfiguration configuration) : IAvatarStorageService
+public sealed class AzureBlobAvatarStorageService(IConfiguration configuration) : IAvatarStorageService
 {
     private const string ContainerName = "avatars";
     private readonly string _connectionString = configuration["Storage:Azure:ConnectionString"]

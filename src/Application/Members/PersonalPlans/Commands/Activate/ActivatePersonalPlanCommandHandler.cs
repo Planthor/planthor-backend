@@ -14,7 +14,7 @@ namespace Application.Members.PersonalPlans.Commands.Activate;
 /// <summary>
 /// Handler for activating a personal plan.
 /// </summary>
-public class ActivatePersonalPlanCommandHandler(
+public sealed class ActivatePersonalPlanCommandHandler(
     IMemberRepository memberRepository,
     IPlanRepository planRepository,
     IClock clock)
@@ -35,7 +35,7 @@ public class ActivatePersonalPlanCommandHandler(
     private async Task<PersonalPlanDto> HandleAsync(ActivatePersonalPlanCommand request, CancellationToken cancellationToken)
     {
         // 1. Fetch member
-        var member = await _memberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, request.IdentifyName, cancellationToken)
+        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
             ?? throw new KeyNotFoundException($"Member with identifier '{request.IdentifyName}' was not found.");
 
         // 2. Validate member owns the plan

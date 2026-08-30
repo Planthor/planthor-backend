@@ -7,7 +7,7 @@ namespace Domain.Plans;
 /// <summary>
 /// Represents the lifecycle status of a Plan as a strongly-typed enum.
 /// </summary>
-public class PlanStatus
+public sealed class PlanStatus
 {
     /// <summary>
     /// A plan that has not been started.

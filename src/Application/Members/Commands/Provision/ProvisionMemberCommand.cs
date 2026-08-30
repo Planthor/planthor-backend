@@ -16,4 +16,4 @@ public record ProvisionMemberCommand(
     string IdentifyName,
     string FirstName,
     string LastName,
-    Uri? AvatarUrl) : ICommand<Guid>;
+    Uri? AvatarUrl) : ICommand<ProvisionMemberResult>;

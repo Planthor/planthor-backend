@@ -9,7 +9,7 @@ namespace Adapters.Strava.Configuration;
 /// <see cref="StateEncryptionKey"/>) should be stored in Azure Key Vault or
 /// ASP.NET User Secrets — never committed to source control.
 /// </remarks>
-public class StravaOptions
+public sealed class StravaOptions
 {
     /// <summary>
     /// The configuration section name.

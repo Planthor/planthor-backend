@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
@@ -34,7 +33,7 @@ namespace Api.Controllers.v1;
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/members/{identifier}/[controller]")]
-public class PersonalPlansController(
+public sealed class PersonalPlansController(
     ISender sender,
     IValidator<CreatePersonalPlanCommand> createPersonalPlanCommandValidator,
     IValidator<UpdatePersonalPlanCommand> updatePlanCommandValidator,
@@ -48,9 +47,9 @@ public class PersonalPlansController(
         ?? throw new ArgumentNullException(nameof(sender));
 
     /// <summary>
-    /// Gets the authenticated user's identity name from claims.
+    /// Gets the authenticated user's identity name from HttpContext.Items.
     /// </summary>
-    private string? CurrentUserIdentifyName => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    private string? CurrentIdentifyName => HttpContext.Items.TryGetValue("IdentifyName", out var name) && name is string n ? n : null;
 
     /// <summary>
     /// Create a new personal plan.
@@ -83,7 +82,7 @@ public class PersonalPlansController(
             return Unauthorized();
         }
 
-        if (targetIdentifyName != CurrentUserIdentifyName)
+        if (targetIdentifyName != CurrentIdentifyName)
         {
             return Forbid();
         }
@@ -150,7 +149,7 @@ public class PersonalPlansController(
             return Unauthorized();
         }
 
-        if (targetIdentifyName != CurrentUserIdentifyName)
+        if (targetIdentifyName != CurrentIdentifyName)
         {
             return Forbid();
         }
@@ -248,7 +247,7 @@ public class PersonalPlansController(
     private string? ResolveIdentifier(string identifier)
     {
         return identifier.Equals("me", StringComparison.OrdinalIgnoreCase)
-            ? CurrentUserIdentifyName
+            ? CurrentIdentifyName
             : identifier;
     }
 
@@ -278,7 +277,7 @@ public class PersonalPlansController(
             return Unauthorized();
         }
 
-        if (targetIdentifyName != CurrentUserIdentifyName)
+        if (targetIdentifyName != CurrentIdentifyName)
         {
             return Forbid();
         }
@@ -316,7 +315,7 @@ public class PersonalPlansController(
             return Unauthorized();
         }
 
-        if (targetIdentifyName != CurrentUserIdentifyName)
+        if (targetIdentifyName != CurrentIdentifyName)
         {
             return Forbid();
         }

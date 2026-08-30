@@ -12,7 +12,7 @@ namespace Application.Members.ActivityLogs.Queries.Details;
 /// Handles the <see cref="ActivityLogDetailsQuery"/> to retrieve activity log details.
 /// </summary>
 /// <param name="planRepository">The plan repository to fetch plan details.</param>
-public class ActivityLogDetailsQueryHandler(IPlanRepository planRepository) : IQueryHandler<ActivityLogDetailsQuery, ActivityLogDto>
+public sealed class ActivityLogDetailsQueryHandler(IPlanRepository planRepository) : IQueryHandler<ActivityLogDetailsQuery, ActivityLogDto>
 {
     /// <summary>
     /// Handles the query to retrieve the activity log details.

@@ -6,7 +6,7 @@ namespace Application.Members.Commands.Update;
 /// <summary>
 /// Validates the initial payload required to create a member.
 /// </summary>
-public class UpdateMemberCommandValidator : AbstractValidator<UpdateMemberCommand>
+public sealed class UpdateMemberCommandValidator : AbstractValidator<UpdateMemberCommand>
 {
     private const int MaxFirstNameLength = 100;
     private const int MaxLastNameLength = 100;

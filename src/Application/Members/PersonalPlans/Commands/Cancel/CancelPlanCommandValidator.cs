@@ -6,7 +6,7 @@ namespace Application.Members.PersonalPlans.Commands.Cancel;
 /// Validator for the <see cref="CancelPlanCommand"/> to ensure all required fields are present
 /// before the cancellation logic is executed.
 /// </summary>
-public class CancelPlanCommandValidator : AbstractValidator<CancelPlanCommand>
+public sealed class CancelPlanCommandValidator : AbstractValidator<CancelPlanCommand>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CancelPlanCommandValidator"/> class.

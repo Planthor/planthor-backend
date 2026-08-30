@@ -5,7 +5,7 @@ namespace Application.Members.Queries.ExternalConnections.List;
 /// <summary>
 /// Validator for <see cref="ListExternalConnectionsQuery"/>.
 /// </summary>
-public class ListExternalConnectionsQueryValidator : AbstractValidator<ListExternalConnectionsQuery>
+public sealed class ListExternalConnectionsQueryValidator : AbstractValidator<ListExternalConnectionsQuery>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ListExternalConnectionsQueryValidator"/> class.

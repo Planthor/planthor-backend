@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Dtos;
+using Api.Filters;
 using Application.Members.Queries.ExternalConnections.Details;
 using Application.Members.Queries.ExternalConnections.List;
 using FluentValidation;
@@ -21,14 +21,17 @@ namespace Api.Controllers.v1;
 /// <param name="listQueryValidator">The validator for <see cref="ListExternalConnectionsQuery"/>.</param>
 /// <param name="detailsQueryValidator">The validator for <see cref="ExternalConnectionDetailsQuery"/>.</param>
 [Authorize]
+[ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/members/{identifier}/[controller]")]
-public class ExternalConnectionsController(
+public sealed class ExternalConnectionsController(
     ISender sender,
     IValidator<ListExternalConnectionsQuery> listQueryValidator,
     IValidator<ExternalConnectionDetailsQuery> detailsQueryValidator) : ControllerBase
 {
     private readonly ISender _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+
+    private string? CurrentIdentifyName => HttpContext.Items.TryGetValue("IdentifyName", out var name) && name is string n ? n : null;
 
     /// <summary>
     /// Gets all external connections for a member.
@@ -45,13 +48,12 @@ public class ExternalConnectionsController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<ExternalConnectionDto>>> ReadAll(string identifier, CancellationToken token)
     {
-        var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(identifyName))
+        if (string.IsNullOrEmpty(CurrentIdentifyName))
         {
             return Unauthorized();
         }
 
-        var query = new ListExternalConnectionsQuery(identifier, identifyName);
+        var query = new ListExternalConnectionsQuery(identifier, CurrentIdentifyName);
         await listQueryValidator.ValidateAndThrowAsync(query, token);
         
         var result = await _sender.Send(query, token);
@@ -76,13 +78,12 @@ public class ExternalConnectionsController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ExternalConnectionDto>> Read(string identifier, Guid id, CancellationToken token)
     {
-        var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(identifyName))
+        if (string.IsNullOrEmpty(CurrentIdentifyName))
         {
             return Unauthorized();
         }
 
-        var query = new ExternalConnectionDetailsQuery(identifier, identifyName, id);
+        var query = new ExternalConnectionDetailsQuery(identifier, CurrentIdentifyName, id);
         await detailsQueryValidator.ValidateAndThrowAsync(query, token);
         
         var result = await _sender.Send(query, token);

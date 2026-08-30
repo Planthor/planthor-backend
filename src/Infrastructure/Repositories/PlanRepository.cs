@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 /// <summary>
 /// Repository implementation for managing <see cref="Plan"/> entities, providing data access operations specifically for user plans.
 /// </summary>
-public class PlanRepository(PlanthorDbContext context) : BaseRepository<Plan>(context), IPlanRepository
+public sealed class PlanRepository(PlanthorDbContext context) : BaseRepository<Plan>(context), IPlanRepository
 {
     /// <inheritdoc />
     public async Task<Plan?> GetByIdAsync(Guid id, CancellationToken cancellationToken)

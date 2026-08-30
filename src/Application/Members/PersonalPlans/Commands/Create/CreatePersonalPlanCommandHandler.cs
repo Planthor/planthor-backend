@@ -11,7 +11,7 @@ namespace Application.Members.PersonalPlans.Commands.Create;
 /// <summary>
 /// Handles the creation of a new plan and subscribing a member to it as a personal plan.
 /// </summary>
-public class CreatePersonalPlanCommandHandler(
+public sealed class CreatePersonalPlanCommandHandler(
     IMemberRepository memberRepository,
     IPlanRepository planRepository,
     IClock clock) : ICommandHandler<CreatePersonalPlanCommand, Guid>
@@ -30,7 +30,7 @@ public class CreatePersonalPlanCommandHandler(
 
     private async Task<Guid> HandleAsync(CreatePersonalPlanCommand request, CancellationToken cancellationToken)
     {
-        var member = await _memberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, request.IdentifyName, cancellationToken)
+        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
             ?? throw new InvalidOperationException($"Member with IdentityName '{request.IdentifyName}' was not found.");
 
         var fromInstant = Instant.FromDateTimeOffset(request.FromDate);

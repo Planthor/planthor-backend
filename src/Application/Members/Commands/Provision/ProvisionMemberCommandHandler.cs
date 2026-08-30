@@ -11,7 +11,7 @@ namespace Application.Members.Commands.Provision;
 /// Handles the provisioning of a new member or triggers avatar downloads for existing members.
 /// Implements Just-In-Time (JIT) provisioning logic for users logging in via external providers.
 /// </summary>
-public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberCommand, Guid>
+public sealed class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberCommand, ProvisionMemberResult>
 {
     private readonly IMemberRepository _memberRepository;
     private readonly IClock _clock;
@@ -35,13 +35,13 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
     }
 
     /// <inheritdoc />
-    public Task<Guid> Handle(ProvisionMemberCommand request, CancellationToken cancellationToken)
+    public Task<ProvisionMemberResult> Handle(ProvisionMemberCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         return Core();
 
-        async Task<Guid> Core()
+        async Task<ProvisionMemberResult> Core()
         {
             var existing = await _memberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, request.SubjectId, cancellationToken);
 
@@ -82,7 +82,7 @@ public class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMemberComm
                 await _backgroundJobClient.EnqueueAvatarDownloadAsync(memberToSave.Id, request.AvatarUrl, cancellationToken);
             }
 
-            return memberToSave.Id;
+            return new ProvisionMemberResult(memberToSave.Id, memberToSave.IdentifyName);
         }
     }
 }

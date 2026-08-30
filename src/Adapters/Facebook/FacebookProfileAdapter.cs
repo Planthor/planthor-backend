@@ -8,7 +8,7 @@ namespace Adapters.Facebook;
 /// Specifically handles the retrieval of a user's profile picture, 
 /// with a graceful fallback to a configured default avatar if the fetch fails.
 /// </summary>
-public class FacebookProfileAdapter(IHttpClientFactory httpClientFactory, IConfiguration configuration) : ISocialProfileAdapter
+public sealed class FacebookProfileAdapter(IHttpClientFactory httpClientFactory, IConfiguration configuration) : ISocialProfileAdapter
 {
     /// <inheritdoc />
     public string ProviderId => "FACEBOOK";

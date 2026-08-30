@@ -10,7 +10,7 @@ namespace Infrastructure.Configurations;
 /// <summary>
 /// Entity Framework Core configuration for the <see cref="Plan"/> entity, detailing its indexes, owned entities, and database mappings.
 /// </summary>
-public class PlanConfiguration : IEntityTypeConfiguration<Plan>
+public sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Plan> builder)

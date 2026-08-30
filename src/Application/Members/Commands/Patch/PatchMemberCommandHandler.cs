@@ -11,7 +11,7 @@ namespace Application.Members.Commands.Patch;
 /// <summary>
 /// Represents the PatchMemberCommandHandler.
 /// </summary>
-public class PatchMemberCommandHandler(IMemberRepository memberRepository, IClock clock) : ICommandHandler<PatchMemberCommand>
+public sealed class PatchMemberCommandHandler(IMemberRepository memberRepository, IClock clock) : ICommandHandler<PatchMemberCommand>
 {
     /// <inheritdoc />
     public Task Handle(PatchMemberCommand request, CancellationToken cancellationToken)

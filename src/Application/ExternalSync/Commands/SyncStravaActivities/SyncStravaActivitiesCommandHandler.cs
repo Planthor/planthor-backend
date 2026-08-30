@@ -17,7 +17,7 @@ namespace Application.ExternalSync.Commands.SyncStravaActivities;
 /// Handles the execution of <see cref="SyncStravaActivitiesCommand"/>.
 /// Fetches recent activities from Strava for a connected member and adds activity logs to their linked plans.
 /// </summary>
-public class SyncStravaActivitiesCommandHandler(
+public sealed class SyncStravaActivitiesCommandHandler(
     IMemberRepository memberRepository,
     IPlanRepository planRepository,
     IServiceProvider serviceProvider,

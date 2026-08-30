@@ -6,7 +6,7 @@ namespace Application.Members.PersonalPlans.Commands.Activate;
 /// Validator for the <see cref="ActivatePersonalPlanCommand"/> to ensure all required fields are present
 /// before the activation logic is executed.
 /// </summary>
-public class ActivatePersonalPlanCommandValidator : AbstractValidator<ActivatePersonalPlanCommand>
+public sealed class ActivatePersonalPlanCommandValidator : AbstractValidator<ActivatePersonalPlanCommand>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ActivatePersonalPlanCommandValidator"/> class.

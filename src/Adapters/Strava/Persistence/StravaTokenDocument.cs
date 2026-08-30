@@ -10,7 +10,7 @@ namespace Adapters.Strava.Persistence;
 /// The <see cref="AthleteId"/> field enables reverse lookups when processing
 /// webhook events (which only carry the Strava athlete ID, not the Planthor member ID).
 /// </remarks>
-public class StravaTokenDocument
+public sealed class StravaTokenDocument
 {
     /// <summary>
     /// Gets or sets the document identifier, which equals the Planthor member's IdentifyName.

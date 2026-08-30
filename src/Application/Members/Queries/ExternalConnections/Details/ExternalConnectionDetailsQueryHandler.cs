@@ -12,7 +12,7 @@ namespace Application.Members.Queries.ExternalConnections.Details;
 /// <summary>
 /// Handler for retrieving the details of a specific external connection.
 /// </summary>
-public class ExternalConnectionDetailsQueryHandler : IQueryHandler<ExternalConnectionDetailsQuery, ExternalConnectionDto>
+public sealed class ExternalConnectionDetailsQueryHandler : IQueryHandler<ExternalConnectionDetailsQuery, ExternalConnectionDto>
 {
     private readonly IReadOnlyContext _readOnlyContext;
 
@@ -39,11 +39,7 @@ public class ExternalConnectionDetailsQueryHandler : IQueryHandler<ExternalConne
                     var memberQuery = q;
                     if (request.Identifier.Equals("me", StringComparison.OrdinalIgnoreCase))
                     {
-                        memberQuery = memberQuery.Where(m => m.ExternalConnections.Any(c => 
-                            c.Provider == ExternalProvider.Keycloak && 
-                            c.Type == ExternalConnectionType.Identity && 
-                            c.ExternalUserId == request.CurrentIdentifyName && 
-                            c.Status == ConnectionStatus.Active));
+                        memberQuery = memberQuery.Where(m => m.IdentifyName == request.CurrentIdentifyName);
                     }
                     else if (Guid.TryParse(request.Identifier, out var memberId))
                     {

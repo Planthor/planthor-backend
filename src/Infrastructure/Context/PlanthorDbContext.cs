@@ -17,7 +17,7 @@ namespace Infrastructure.Context;
 /// </summary>
 /// <param name="options">The options to be used by a <see cref="DbContext"/>.</param>
 /// <param name="publisher">The MediatR publisher for dispatching domain events.</param>
-public class PlanthorDbContext(DbContextOptions options, IPublisher publisher) : DbContext(options)
+public sealed class PlanthorDbContext(DbContextOptions options, IPublisher publisher) : DbContext(options)
 {
     /// <summary>
     /// Gets or sets the dataset for Member entities.

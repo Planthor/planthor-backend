@@ -7,7 +7,7 @@ namespace Adapters.Strava.Mapping;
 /// Implements <see cref="IProviderSportTypeMapper"/> for Strava.
 /// Maps Strava sport_type values to canonical Planthor sport types.
 /// </summary>
-public class StravaSportTypeMapper : IProviderSportTypeMapper
+public sealed class StravaSportTypeMapper : IProviderSportTypeMapper
 {
     private static readonly Dictionary<string, PlanthorSportType> Mappings = new(StringComparer.OrdinalIgnoreCase)
     {

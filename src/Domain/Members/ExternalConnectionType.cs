@@ -12,7 +12,7 @@ namespace Domain.Members;
 /// between different connection purposes (e.g., authentication vs. data synchronization)
 /// for the same external provider.
 /// </remarks>
-public class ExternalConnectionType
+public sealed class ExternalConnectionType
 {
     /// <summary>
     /// Connection used primarily for user authentication via Identity Brokering (e.g., Keycloak).

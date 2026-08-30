@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Domain.Shared.Exceptions;
 
@@ -11,7 +11,7 @@ namespace Domain.Shared.Exceptions;
 /// <typeparam name="TId">
 /// The type of the entity's identifier. Matches <see cref="IEntity{TId}.Id"/>.
 /// </typeparam>
-public class EntityNotFoundException<TEntity, TId> : Exception
+public sealed class EntityNotFoundException<TEntity, TId> : Exception
     where TEntity : IEntity<TId>
     where TId : notnull
 {

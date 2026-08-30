@@ -17,7 +17,7 @@ namespace Api.Filters;
 /// This filter delegates actual authentication checks to the default [Authorize] filter.
 /// It only acts if the user is already authenticated by the identity provider (e.g., Keycloak).
 /// </remarks>
-public class MemberSessionFilter : IAsyncActionFilter
+public sealed class MemberSessionFilter : IAsyncActionFilter
 {
     private readonly ISender _sender;
 
@@ -86,13 +86,16 @@ public class MemberSessionFilter : IAsyncActionFilter
             Uri.TryCreate(avatarUrlString, UriKind.Absolute, out avatarUrl);
         }
 
-        await _sender.Send(new ProvisionMemberCommand(
+        var result = await _sender.Send(new ProvisionMemberCommand(
             SubjectId: subjectId,
             IdentifyName: identifyName,
             FirstName: user.FindFirst(ClaimTypes.GivenName)?.Value ?? "New",
             LastName: user.FindFirst(ClaimTypes.Surname)?.Value ?? "User",
             AvatarUrl: avatarUrl
         ));
+
+        context.HttpContext.Items["MemberId"] = result.MemberId;
+        context.HttpContext.Items["IdentifyName"] = result.IdentifyName;
 
         await next();
     }
