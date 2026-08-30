@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
@@ -9,7 +9,7 @@ namespace Application.Members.EventHandler;
 /// <summary>
 /// Represents the ProcessInitialAvatarEventHandler.
 /// </summary>
-public class ProcessInitialAvatarEventHandler : IDomainEventHandler<MemberRegisteredEvent>
+public sealed class ProcessInitialAvatarEventHandler : IDomainEventHandler<MemberRegisteredEvent>
 {
     /// <inheritdoc />
     public Task HandleAsync(MemberRegisteredEvent domainEvent, CancellationToken cancellationToken)

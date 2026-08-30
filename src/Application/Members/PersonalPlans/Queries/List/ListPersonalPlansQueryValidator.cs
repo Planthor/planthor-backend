@@ -5,7 +5,7 @@ namespace Application.Members.PersonalPlans.Queries.List;
 /// <summary>
 /// Validator for the <see cref="ListPersonalPlansQuery"/> to ensure pagination limits and member identity are valid.
 /// </summary>
-public class ListPersonalPlansQueryValidator : AbstractValidator<ListPersonalPlansQuery>
+public sealed class ListPersonalPlansQueryValidator : AbstractValidator<ListPersonalPlansQuery>
 {
     private const int MinLimit = 0;
     private const int MaxLimit = 100;

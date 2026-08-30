@@ -9,7 +9,7 @@ namespace Infrastructure.Configurations;
 /// <summary>
 /// Entity Framework Core configuration for the <see cref="Member"/> entity, mapping its properties and relationships to the database schema.
 /// </summary>
-public class MemberConfiguration : IEntityTypeConfiguration<Member>
+public sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
 {
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Member> builder)

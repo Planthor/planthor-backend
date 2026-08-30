@@ -12,7 +12,7 @@ namespace Application.Members.Queries.List;
 /// <summary>
 /// Handler for retrieving all members.
 /// </summary>
-public class ListMembersQueryHandler(IReadOnlyContext readOnlyContext)
+public sealed class ListMembersQueryHandler(IReadOnlyContext readOnlyContext)
     : IQueryHandler<ListMembersQuery, IEnumerable<MemberDto>>
 {
     /// <inheritdoc />

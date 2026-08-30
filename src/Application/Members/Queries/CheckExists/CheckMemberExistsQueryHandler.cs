@@ -10,7 +10,7 @@ namespace Application.Members.Queries.CheckExists;
 /// <summary>
 /// Handler for the <see cref="CheckMemberExistsQuery"/>.
 /// </summary>
-public class CheckMemberExistsQueryHandler : IQueryHandler<CheckMemberExistsQuery, bool>
+public sealed class CheckMemberExistsQueryHandler : IQueryHandler<CheckMemberExistsQuery, bool>
 {
     private readonly IReadOnlyContext _readOnlyContext;
 

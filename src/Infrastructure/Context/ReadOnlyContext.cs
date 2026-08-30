@@ -12,7 +12,7 @@ namespace Infrastructure.Context;
 /// Implements read-only operations using EF Core, optimized for CQRS read queries.
 /// </summary>
 /// <param name="context">The database context.</param>
-public class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContext
+public sealed class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContext
 {
     private readonly PlanthorDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 

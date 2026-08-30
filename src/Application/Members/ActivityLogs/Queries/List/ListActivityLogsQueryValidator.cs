@@ -5,7 +5,7 @@ namespace Application.Members.ActivityLogs.Queries.List;
 /// <summary>
 /// Validator for the <see cref="ListActivityLogsQuery"/> to ensure pagination limits are valid.
 /// </summary>
-public class ListActivityLogsQueryValidator : AbstractValidator<ListActivityLogsQuery>
+public sealed class ListActivityLogsQueryValidator : AbstractValidator<ListActivityLogsQuery>
 {
     private const int MinLimit = 0;
     private const int MaxLimit = 100;

@@ -12,7 +12,7 @@ namespace Domain.Members;
 /// localization keys, while keeping the set of valid providers closed and type-safe.
 /// Follows the same pattern as <see cref="Plans.PlanStatus"/>.
 /// </remarks>
-public class ExternalProvider
+public sealed class ExternalProvider
 {
     /// <summary>
     /// Strava fitness tracking platform.

@@ -9,7 +9,7 @@ namespace Infrastructure.BackgroundJobClient;
 /// <summary>
 /// Implementation of <see cref="IBackgroundJobClient"/> using Quartz.NET to schedule and execute background tasks.
 /// </summary>
-public class QuartzBackgroundJobClient(ISchedulerFactory schedulerFactory) : IBackgroundJobClient
+public sealed class QuartzBackgroundJobClient(ISchedulerFactory schedulerFactory) : IBackgroundJobClient
 {
     /// <inheritdoc />
     public Task EnqueueAvatarDownloadAsync(Guid memberId, Uri avatarUrl, CancellationToken cancellationToken)

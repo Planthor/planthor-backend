@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
@@ -10,7 +10,7 @@ namespace Application.Members.Commands.Create;
 /// <summary>
 /// Handles the creation of a new member.
 /// </summary>
-public class CreateMemberCommandHandler(
+public sealed class CreateMemberCommandHandler(
     IMemberRepository memberRepository,
     IClock clock) : ICommandHandler<CreateMemberCommand, Guid>
 {

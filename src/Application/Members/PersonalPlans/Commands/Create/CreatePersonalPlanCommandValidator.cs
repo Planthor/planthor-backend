@@ -9,7 +9,7 @@ namespace Application.Members.PersonalPlans.Commands.Create;
 /// <summary>
 /// Validates the payload required to create a new plan and subscribe a member to it.
 /// </summary>
-public class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePersonalPlanCommand>
+public sealed class CreatePersonalPlanCommandValidator : AbstractValidator<CreatePersonalPlanCommand>
 {
     private const int MaxPlanNameLength = 100;
     private const int MaxUnitLength = 50;

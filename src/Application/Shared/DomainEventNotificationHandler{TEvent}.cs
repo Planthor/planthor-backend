@@ -10,7 +10,7 @@ namespace Application.Shared;
 /// <summary>
 /// A MediatR notification handler that wraps and dispatches domain events to their respective <see cref="IDomainEventHandler{TEvent}"/> implementations.
 /// </summary>
-public class DomainEventNotificationHandler<TEvent>(
+public sealed class DomainEventNotificationHandler<TEvent>(
     IEnumerable<IDomainEventHandler<TEvent>> handlers) : INotificationHandler<DomainEventNotification<TEvent>>
     where TEvent : IDomainEvent
 {

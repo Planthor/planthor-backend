@@ -14,7 +14,7 @@ namespace Application.Members.PersonalPlans.Commands.Update;
 /// <summary>
 /// Handler for updating a personal plan.
 /// </summary>
-public class UpdatePlanCommandHandler(
+public sealed class UpdatePlanCommandHandler(
     IMemberRepository memberRepository,
     IPlanRepository planRepository,
     IClock clock)
@@ -40,7 +40,7 @@ public class UpdatePlanCommandHandler(
     private async Task<PersonalPlanDto> HandleAsync(UpdatePersonalPlanCommand request, CancellationToken cancellationToken)
     {
         // 1. Fetch member
-        var member = await _memberRepository.GetByExternalIdentityAsync(ExternalProvider.Keycloak.Id, request.IdentifyName, cancellationToken) 
+        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
             ?? throw new KeyNotFoundException($"Member with identifier '{request.IdentifyName}' was not found.");
 
         // 2. Validate member owns the plan

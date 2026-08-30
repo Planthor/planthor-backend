@@ -12,7 +12,7 @@ namespace Domain.Plans;
 /// <summary>
 /// Aggregate root representing a trackable plan owned by a member.
 /// </summary>
-public class Plan : AggregateRoot<Guid>
+public sealed class Plan : AggregateRoot<Guid>
 {
     private readonly List<ActivityLog> _activityLogs = [];
 

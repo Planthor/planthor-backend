@@ -11,7 +11,7 @@ namespace Api.Filters;
 /// An authorization filter that restricts access to an endpoint so that it is only available in the Development environment.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class DevelopmentOnlyAttribute : Attribute, IAuthorizationFilter
+public sealed class DevelopmentOnlyAttribute : Attribute, IAuthorizationFilter
 {
     /// <summary>
     /// Checks if the application is running in the Development environment.

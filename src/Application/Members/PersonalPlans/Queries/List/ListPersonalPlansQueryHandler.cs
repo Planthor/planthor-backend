@@ -13,7 +13,7 @@ namespace Application.Members.PersonalPlans.Queries.List;
 /// <summary>
 /// Handler for listing personal plans of a member with progress and cursor pagination.
 /// </summary>
-public class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
+public sealed class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
     : IQueryHandler<ListPersonalPlansQuery, CursorPagedResult<PersonalPlanDto>>
 {
     private const double PercentageMultiplier = 100.0;
@@ -32,11 +32,7 @@ public class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyContext)
     {
         // 1. Fetch the Member's PersonalPlans
         var member = await readOnlyContext.FirstOrDefaultAsync<Member, Member>(
-            q => q.Where(m => m.ExternalConnections.Any(c => 
-                c.Provider == ExternalProvider.Keycloak && 
-                c.Type == ExternalConnectionType.Identity && 
-                c.ExternalUserId == request.IdentifyName && 
-                c.Status == ConnectionStatus.Active)),
+            q => q.Where(m => m.IdentifyName == request.IdentifyName),
             cancellationToken);
 
         if (member == null)

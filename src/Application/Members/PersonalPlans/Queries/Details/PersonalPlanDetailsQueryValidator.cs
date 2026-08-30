@@ -5,7 +5,7 @@ namespace Application.Members.PersonalPlans.Queries.Details;
 /// <summary>
 /// Validator for the <see cref="PersonalPlanDetailsQuery"/> to ensure both the member identity and plan ID are provided.
 /// </summary>
-public class PersonalPlanDetailsQueryValidator : AbstractValidator<PersonalPlanDetailsQuery>
+public sealed class PersonalPlanDetailsQueryValidator : AbstractValidator<PersonalPlanDetailsQuery>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PersonalPlanDetailsQueryValidator"/> class.

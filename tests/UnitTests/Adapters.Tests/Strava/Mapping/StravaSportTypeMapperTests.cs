@@ -1,6 +1,4 @@
 using Adapters.Strava.Mapping;
-using Domain.Plans;
-using Xunit;
 
 namespace Adapters.Tests.Strava.Mapping;
 

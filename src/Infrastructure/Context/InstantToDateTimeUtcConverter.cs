@@ -7,7 +7,7 @@ namespace Infrastructure.Context;
 /// <summary>
 /// Converts a NodaTime Instant to a UTC DateTime for Entity Framework Core.
 /// </summary>
-public class InstantToDateTimeUtcConverter : ValueConverter<Instant, DateTime>
+public sealed class InstantToDateTimeUtcConverter : ValueConverter<Instant, DateTime>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="InstantToDateTimeUtcConverter"/> class.

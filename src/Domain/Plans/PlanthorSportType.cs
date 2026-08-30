@@ -7,7 +7,7 @@ namespace Domain.Plans;
 /// <summary>
 /// Represents a supported sport type in the Planthor platform.
 /// </summary>
-public class PlanthorSportType
+public sealed class PlanthorSportType
 {
     /// <summary>
     /// Wildcard - accepts any Strava activity type. User does not care about specific sport types.

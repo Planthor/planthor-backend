@@ -12,7 +12,7 @@ namespace Application.Members.Queries.Details;
 /// <summary>
 /// Handler for retrieving the details of a member.
 /// </summary>
-public class MemberDetailsQueryHandler : IQueryHandler<MemberDetailsQuery, MemberDto>
+public sealed class MemberDetailsQueryHandler : IQueryHandler<MemberDetailsQuery, MemberDto>
 {
     private readonly IReadOnlyContext _readOnlyContext;
 

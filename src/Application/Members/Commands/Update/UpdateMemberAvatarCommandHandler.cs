@@ -12,7 +12,7 @@ namespace Application.Members.Commands.Update;
 /// </summary>
 /// <param name="memberRepository">The repository used to fetch and update member data.</param>
 /// <param name="clock">The system clock used for audit stamping.</param>
-public class UpdateMemberAvatarCommandHandler(
+public sealed class UpdateMemberAvatarCommandHandler(
     IMemberRepository memberRepository,
     IClock clock) : ICommandHandler<UpdateMemberAvatarCommand>
 {

@@ -12,7 +12,7 @@ namespace Domain.Members;
 /// localization keys, while keeping the set of valid statuses closed and type-safe.
 /// Follows the same pattern as <see cref="Plans.PlanStatus"/>.
 /// </remarks>
-public class ConnectionStatus
+public sealed class ConnectionStatus
 {
     /// <summary>
     /// The connection is active and tokens are valid.

@@ -12,7 +12,7 @@ namespace Api.Controllers.v1;
 /// </summary>
 [ApiController]
 [Route("v1/[controller]")]
-public class SportTypesController : ControllerBase
+public sealed class SportTypesController : ControllerBase
 {
     /// <summary>
     /// Returns the list of all supported Planthor sport types.

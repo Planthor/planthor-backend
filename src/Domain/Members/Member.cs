@@ -16,7 +16,7 @@ namespace Domain.Members;
 /// All connection lifecycle operations are performed through the member aggregate
 /// to maintain consistency within the aggregate boundary.
 /// </remarks>
-public class Member(
+public sealed class Member(
     string identifyName,
     string firstName,
     string middleName,

@@ -1,6 +1,5 @@
 using System;
 using Application.Shared;
-using Xunit;
 
 namespace Application.Tests.Shared;
 

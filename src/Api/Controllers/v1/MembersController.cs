@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Api.Filters;
@@ -32,7 +31,7 @@ namespace Api.Controllers.v1;
 [ServiceFilter(typeof(MemberSessionFilter))]
 [ApiController]
 [Route("v1/[controller]")]
-public class MembersController(
+public sealed class MembersController(
     ISender sender,
     IValidator<CreateMemberCommand> createMemberCommandValidator,
     IValidator<UpdateMemberCommand> updateMemberCommandValidator,
@@ -42,6 +41,8 @@ public class MembersController(
 {
     private readonly ISender _sender = sender
         ?? throw new ArgumentNullException(nameof(sender));
+
+    private string? CurrentIdentifyName => HttpContext.Items.TryGetValue("IdentifyName", out var name) && name is string n ? n : null;
 
     /// <summary>
     /// Creates a new member.
@@ -68,14 +69,13 @@ public class MembersController(
 
         async Task<ActionResult<MemberDto>> Core()
         {
-            var identifyName = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(identifyName))
+            if (string.IsNullOrEmpty(CurrentIdentifyName))
             {
                 return Unauthorized();
             }
 
             var command = new CreateMemberCommand(
-                identifyName,
+                CurrentIdentifyName,
                 request.FirstName,
                 request.MiddleName,
                 request.LastName,

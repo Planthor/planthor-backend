@@ -13,7 +13,7 @@ namespace Application.Members.PersonalPlans.Queries.Details;
 /// <summary>
 /// Handler for retrieving details of a specific personal plan.
 /// </summary>
-public class PersonalPlanDetailsQueryHandler : IQueryHandler<PersonalPlanDetailsQuery, PersonalPlanDto>
+public sealed class PersonalPlanDetailsQueryHandler : IQueryHandler<PersonalPlanDetailsQuery, PersonalPlanDto>
 {
     private readonly IReadOnlyContext _readOnlyContext;
 
@@ -39,11 +39,7 @@ public class PersonalPlanDetailsQueryHandler : IQueryHandler<PersonalPlanDetails
         async Task<PersonalPlanDto> Core()
         {
             var member = await _readOnlyContext.FirstOrDefaultAsync<Member, Member>(
-                q => q.Where(m => m.ExternalConnections.Any(c => 
-                    c.Provider == ExternalProvider.Keycloak && 
-                    c.Type == ExternalConnectionType.Identity && 
-                    c.ExternalUserId == request.IdentifyName && 
-                    c.Status == ConnectionStatus.Active)),
+                q => q.Where(m => m.IdentifyName == request.IdentifyName),
                 cancellationToken);
 
             var personalPlan = (member?.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId))
