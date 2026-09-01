@@ -53,7 +53,7 @@ public class MemberSessionFilterTests
 
         // Assert
         Assert.True(nextCalled);
-        _ = await _senderMock.DidNotReceiveWithAnyArgs().Send(default!);
+        await _senderMock.DidNotReceiveWithAnyArgs().Send(default!);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class MemberSessionFilterTests
 
         // Assert
         Assert.True(nextCalled);
-        _ = await _senderMock.DidNotReceiveWithAnyArgs().Send(default!);
+        await _senderMock.DidNotReceiveWithAnyArgs().Send(default!);
     }
 
     [Fact]
@@ -94,7 +94,8 @@ public class MemberSessionFilterTests
         await _filter.OnActionExecutionAsync(context, next);
 
         // Assert
-        _ = _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+        await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+            c != null &&
             c.SubjectId == "sub123" &&
             c.IdentifyName.StartsWith("user_") &&
             c.IdentifyName.Length == 9 && // 'user_' (5) + 4 random chars = 9.
@@ -125,7 +126,8 @@ public class MemberSessionFilterTests
         await _filter.OnActionExecutionAsync(context, next);
 
         // Assert
-        _ = _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+        await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+            c != null &&
             c.IdentifyName == "my_custom_username" &&
             c.FirstName == "John" &&
             c.LastName == "Doe"
@@ -148,7 +150,8 @@ public class MemberSessionFilterTests
         await _filter.OnActionExecutionAsync(context, next);
 
         // Assert
-        _ = _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+        await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+            c != null &&
             c.IdentifyName.StartsWith("alice_") &&
             c.IdentifyName.Length == 14 // 'alice_' (6) + 8 random chars = 14
         ), Arg.Any<CancellationToken>());
@@ -169,7 +172,8 @@ public class MemberSessionFilterTests
         await _filter.OnActionExecutionAsync(context, next);
 
         // Assert
-        _ = _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+        await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+            c != null &&
             c.IdentifyName.StartsWith('_') &&
             c.IdentifyName.Length == 9 // '_' (1) + 8 random chars = 9
         ), Arg.Any<CancellationToken>());
@@ -192,8 +196,8 @@ public class MemberSessionFilterTests
         await _filter.OnActionExecutionAsync(context, next);
 
         // Assert
-        _ = _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
-            c.AvatarUrl != null && c.AvatarUrl.ToString() == "https://example.com/avatar.png"
+        await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+            c != null && c.AvatarUrl != null && c.AvatarUrl.ToString() == "https://example.com/avatar.png"
         ), Arg.Any<CancellationToken>());
     }
     
@@ -214,8 +218,8 @@ public class MemberSessionFilterTests
         await _filter.OnActionExecutionAsync(context, next);
 
         // Assert
-        _ = _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
-            c.AvatarUrl == null
+        await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
+            c != null && c.AvatarUrl == null
         ), Arg.Any<CancellationToken>());
     }
 
@@ -223,7 +227,7 @@ public class MemberSessionFilterTests
     public void Constructor_NullSender_ThrowsArgumentNullException()
     {
         // Act & Assert
-        _ = Assert.Throws<ArgumentNullException>(() => new MemberSessionFilter(null!));
+        Assert.Throws<ArgumentNullException>(() => new MemberSessionFilter(null!));
     }
 
     [Fact]
@@ -233,7 +237,7 @@ public class MemberSessionFilterTests
         Task<ActionExecutedContext> next() => Task.FromResult<ActionExecutedContext>(null!);
 
         // Act & Assert
-        _ = await Assert.ThrowsAsync<ArgumentNullException>(() => _filter.OnActionExecutionAsync(null!, next));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _filter.OnActionExecutionAsync(null!, next));
     }
 
     [Fact]
@@ -244,6 +248,6 @@ public class MemberSessionFilterTests
         var context = CreateContext(user);
 
         // Act & Assert
-        _ = await Assert.ThrowsAsync<ArgumentNullException>(() => _filter.OnActionExecutionAsync(context, null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _filter.OnActionExecutionAsync(context, null!));
     }
 }

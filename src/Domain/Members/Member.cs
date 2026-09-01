@@ -312,7 +312,7 @@ public sealed class Member(
     /// </summary>
     public void Update(
         string firstName,
-        string middleName,
+        string? middleName,
         string lastName,
         string description,
         string pathAvatar,

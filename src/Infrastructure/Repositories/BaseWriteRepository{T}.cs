@@ -17,7 +17,7 @@ public abstract class BaseRepository<T> : IWriteRepository<T> where T : class, I
     protected readonly PlanthorDbContext Context;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BaseRepository"/> class.
+    /// Initializes a new instance of the BaseRepository{T}/> class.
     /// </summary>
     protected BaseRepository(PlanthorDbContext context)
     {

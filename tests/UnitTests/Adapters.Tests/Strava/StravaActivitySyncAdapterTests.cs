@@ -120,7 +120,7 @@ public class StravaActivitySyncAdapterTests
         Assert.Equal("Run", result[0].ActivityType);
         Assert.Equal("Ride", result[1].ActivityType);
 
-        await _mockTokenDb.Received(1).UpsertAsync(Arg.Is<StravaTokenDocument>(d => d.LastSyncEpoch > lastSyncEpoch), Arg.Any<CancellationToken>());
+        await _mockTokenDb.Received(1).UpsertAsync(Arg.Is<StravaTokenDocument>(d => d != null && d.LastSyncEpoch > lastSyncEpoch), Arg.Any<CancellationToken>());
     }
 
     [Fact]
