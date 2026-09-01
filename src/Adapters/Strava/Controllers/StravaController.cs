@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Adapters.Strava.Client;
@@ -187,29 +186,6 @@ public sealed partial class StravaController : ControllerBase
 
         LogCallbackSuccess(payload.IdentifyName, tokenResponse.Athlete.Id);
         return Redirect(_options.FrontendSuccessUrl.ToString());
-    }
-
-    // ────────────────────────────────────────────────────────────────
-    // Disconnect
-    // ────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Disconnects the authenticated member's Strava account by revoking
-    /// the OAuth tokens on Strava and updating the domain state.
-    /// </summary>
-    /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    /// <returns><c>204 No Content</c> on success.</returns>
-    /// <response code="204">The Strava connection was successfully revoked.</response>
-    /// <response code="401">If the user is not authenticated.</response>
-    /// <response code="404">If no active Strava connection exists.</response>
-    [HttpDelete("disconnect")]
-    [Authorize]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Disconnect(CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException("Disconnect endpoint will be implemented in Phase 1.");
     }
 
     // ────────────────────────────────────────────────────────────────

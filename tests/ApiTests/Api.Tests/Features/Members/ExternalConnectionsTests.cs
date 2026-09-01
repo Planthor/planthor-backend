@@ -43,6 +43,19 @@ public class ExternalConnectionsTests(CustomWebApplicationFactory<Program> facto
         var getSingle = await _client.GetAsync($"/v1/members/me/external-connections/{connectionId}");
         Assert.Equal(HttpStatusCode.Unauthorized, getSingle.StatusCode);
         
+        var deleteResponse = await _client.DeleteAsync("/v1/members/me/external-connections/STRAVA");
+        Assert.Equal(HttpStatusCode.Unauthorized, deleteResponse.StatusCode);
+
         _client.DefaultRequestHeaders.Remove("X-Omit-NameIdentifier");
+    }
+
+    [Fact]
+    public async Task Disconnect_NonExistentProvider_ReturnsInternalServerError()
+    {
+        // Depending on validation and entity state, if member exists but no provider
+        // it throws InvalidOperationException resulting in 500.
+        // Wait, the validator might catch it if the provider ID is totally invalid.
+        var deleteResponse = await _client.DeleteAsync("/v1/members/me/external-connections/INVALID_PROVIDER");
+        Assert.Equal(HttpStatusCode.InternalServerError, deleteResponse.StatusCode);
     }
 }

@@ -302,7 +302,7 @@ public class StravaControllerTests
     [Fact]
     public async Task NotImplementedEndpoints_ShouldThrowExceptions()
     {
-        await Assert.ThrowsAsync<NotImplementedException>(() => _controller.Disconnect(CancellationToken.None));
+
         await Assert.ThrowsAsync<NotSupportedException>(() => _controller.ReceiveEvent(new StravaWebhookPayload(), CancellationToken.None));
     }
 }
