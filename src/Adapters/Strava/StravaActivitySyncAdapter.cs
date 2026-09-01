@@ -32,8 +32,8 @@ public sealed class StravaActivitySyncAdapter(IStravaApiClient client, StravaAda
     public Task<IReadOnlyList<AdapterActivityDto>> FetchActivitiesAsync(
         Guid memberId,
         string identifyName,
-        Instant? since = null,
-        CancellationToken cancellationToken = default)
+        Instant? since,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(identifyName);
 

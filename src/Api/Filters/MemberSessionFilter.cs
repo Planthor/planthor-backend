@@ -19,6 +19,7 @@ namespace Api.Filters;
 /// </remarks>
 public sealed class MemberSessionFilter : IAsyncActionFilter
 {
+    private const int RandomSuffixLength = 8;
     private readonly ISender _sender;
 
     /// <summary>
@@ -76,7 +77,7 @@ public sealed class MemberSessionFilter : IAsyncActionFilter
         }
         else
         {
-            identifyName = $"{user.FindFirst(ClaimTypes.GivenName)?.Value}_{Guid.NewGuid().ToString()[..8]}".ToLowerInvariant();
+            identifyName = $"{user.FindFirst(ClaimTypes.GivenName)?.Value}_{Guid.NewGuid().ToString()[..RandomSuffixLength]}".ToLowerInvariant();
         }
 
         var avatarUrlString = user.FindFirst("avatarUrl")?.Value;

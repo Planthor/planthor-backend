@@ -84,7 +84,7 @@ public class StravaActivitySyncAdapterTests
     public async Task FetchActivitiesAsync_NullIdentifyName_ThrowsArgumentNullException()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _adapter.FetchActivitiesAsync(Guid.NewGuid(), null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _adapter.FetchActivitiesAsync(Guid.NewGuid(), null!, null, CancellationToken.None));
     }
 
     [Fact]

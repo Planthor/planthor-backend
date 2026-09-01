@@ -17,35 +17,35 @@ public sealed class ReadOnlyContext(PlanthorDbContext context) : IReadOnlyContex
     private readonly PlanthorDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
     /// <inheritdoc />
-    public async Task<List<TResult>> QueryAsync<TEntity, TResult>(
+    public Task<List<TResult>> QueryAsync<TEntity, TResult>(
         Func<IQueryable<TEntity>, IQueryable<TResult>> queryBuilder,
         CancellationToken cancellationToken) where TEntity : class
     {
         ArgumentNullException.ThrowIfNull(queryBuilder);
 
         var query = _context.Set<TEntity>().AsNoTracking();
-        return await queryBuilder(query).ToListAsync(cancellationToken);
+        return queryBuilder(query).ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<TResult?> FirstOrDefaultAsync<TEntity, TResult>(
+    public Task<TResult?> FirstOrDefaultAsync<TEntity, TResult>(
         Func<IQueryable<TEntity>, IQueryable<TResult>> queryBuilder,
         CancellationToken cancellationToken) where TEntity : class
     {
         ArgumentNullException.ThrowIfNull(queryBuilder);
 
         var query = _context.Set<TEntity>().AsNoTracking();
-        return await queryBuilder(query).FirstOrDefaultAsync(cancellationToken);
+        return queryBuilder(query).FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<bool> AnyAsync<TEntity>(
+    public Task<bool> AnyAsync<TEntity>(
         Func<IQueryable<TEntity>, IQueryable<TEntity>> queryBuilder,
         CancellationToken cancellationToken) where TEntity : class
     {
         ArgumentNullException.ThrowIfNull(queryBuilder);
 
         var query = _context.Set<TEntity>().AsNoTracking();
-        return await queryBuilder(query).AnyAsync(cancellationToken);
+        return queryBuilder(query).AnyAsync(cancellationToken);
     }
 }

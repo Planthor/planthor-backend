@@ -23,61 +23,66 @@ public partial class SyncIdentityJob(
     private readonly IClock _clock = clock;
     private readonly ILogger<SyncIdentityJob> _logger = logger;
     /// <inheritdoc />
-    public async Task Execute(IJobExecutionContext context)
+    public Task Execute(IJobExecutionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var dataMap = context.MergedJobDataMap;
-        var memberIdString = dataMap.GetString("MemberId");
-        var identifyName = dataMap.GetString("IdentifyName");
+        return Core();
 
-        if (!Guid.TryParse(memberIdString, out var memberId) || string.IsNullOrEmpty(identifyName))
+        async Task Core()
         {
-            LogInvalidJobData();
-            return;
-        }
+            var dataMap = context.MergedJobDataMap;
+            var memberIdString = dataMap.GetString("MemberId");
+            var identifyName = dataMap.GetString("IdentifyName");
 
-        var member = await _memberRepository.GetByIdAsync(memberId, context.CancellationToken);
-        if (member == null)
-        {
-            LogMemberNotFound(memberId);
-            return;
-        }
-
-        var keycloakConnection = member.ExternalConnections
-            .FirstOrDefault(c => c.Provider == ExternalProvider.Keycloak && 
-                                 c.Type == ExternalConnectionType.Identity && 
-                                 c.Status == ConnectionStatus.Active);
-        
-        if (keycloakConnection == null)
-        {
-            LogKeycloakConnectionNotFound(memberId);
-            return;
-        }
-
-        try
-        {
-            var identities = await _keycloakAdminClient.GetUserFederatedIdentitiesAsync(keycloakConnection.ExternalUserId, context.CancellationToken);
-            
-            bool hasChanges = false;
-            foreach (var identity in identities)
+            if (!Guid.TryParse(memberIdString, out var memberId) || string.IsNullOrEmpty(identifyName))
             {
-                if (ProcessIdentity(member, identity, identifyName))
+                LogInvalidJobData();
+                return;
+            }
+
+            var member = await _memberRepository.GetByIdAsync(memberId, context.CancellationToken);
+            if (member == null)
+            {
+                LogMemberNotFound(memberId);
+                return;
+            }
+
+            var keycloakConnection = member.ExternalConnections
+                .FirstOrDefault(c => c.Provider == ExternalProvider.Keycloak && 
+                                     c.Type == ExternalConnectionType.Identity && 
+                                     c.Status == ConnectionStatus.Active);
+            
+            if (keycloakConnection == null)
+            {
+                LogKeycloakConnectionNotFound(memberId);
+                return;
+            }
+
+            try
+            {
+                var identities = await _keycloakAdminClient.GetUserFederatedIdentitiesAsync(keycloakConnection.ExternalUserId, context.CancellationToken);
+                
+                bool hasChanges = false;
+                foreach (var identity in identities)
                 {
-                    hasChanges = true;
+                    if (ProcessIdentity(member, identity, identifyName))
+                    {
+                        hasChanges = true;
+                    }
+                }
+
+                if (hasChanges)
+                {
+                    await _memberRepository.SaveChangesAsync(context.CancellationToken);
+                    LogIdentitiesSynced(memberId);
                 }
             }
-
-            if (hasChanges)
+            catch (Exception ex)
             {
-                await _memberRepository.SaveChangesAsync(context.CancellationToken);
-                LogIdentitiesSynced(memberId);
+                LogSyncFailed(ex, memberId);
+                throw; // Rethrow to let Quartz handle retries if configured
             }
-        }
-        catch (Exception ex)
-        {
-            LogSyncFailed(ex, memberId);
-            throw; // Rethrow to let Quartz handle retries if configured
         }
     }
 

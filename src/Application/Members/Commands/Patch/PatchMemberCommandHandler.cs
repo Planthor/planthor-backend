@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
@@ -49,14 +48,20 @@ public sealed class PatchMemberCommandHandler(IMemberRepository memberRepository
 
         if (request.UpdateMask.Contains(nameof(request.FirstName), StringComparer.OrdinalIgnoreCase))
         {
-            if (string.IsNullOrWhiteSpace(request.FirstName)) throw new ArgumentException("FirstName cannot be empty when provided in UpdateMask");
+            if (string.IsNullOrWhiteSpace(request.FirstName))
+            {
+                throw new ArgumentException("FirstName cannot be empty when provided in UpdateMask");
+            }
             newFirstName = request.FirstName;
             updateProfile = true;
         }
 
         if (request.UpdateMask.Contains(nameof(request.LastName), StringComparer.OrdinalIgnoreCase))
         {
-            if (string.IsNullOrWhiteSpace(request.LastName)) throw new ArgumentException("LastName cannot be empty when provided in UpdateMask");
+            if (string.IsNullOrWhiteSpace(request.LastName))
+            {
+                throw new ArgumentException("LastName cannot be empty when provided in UpdateMask");
+            }
             newLastName = request.LastName;
             updateProfile = true;
         }

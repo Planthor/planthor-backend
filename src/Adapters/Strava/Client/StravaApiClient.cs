@@ -3,6 +3,7 @@ using Adapters.Strava.Configuration;
 using Adapters.Strava.Persistence;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NodaTime;
 
 namespace Adapters.Strava.Client;
 
@@ -22,6 +23,7 @@ public partial class StravaApiClient : IStravaApiClient
     private readonly StravaAdapterDatabase _tokenDb;
     private readonly StravaOptions _options;
     private readonly ILogger<StravaApiClient> _logger;
+    private readonly IClock _clock;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StravaApiClient"/> class.
@@ -30,32 +32,36 @@ public partial class StravaApiClient : IStravaApiClient
     /// <param name="tokenDb">The Strava token database.</param>
     /// <param name="options">The Strava options.</param>
     /// <param name="logger">The logger.</param>
+    /// <param name="clock">The clock instance.</param>
     public StravaApiClient(
         HttpClient httpClient,
         StravaAdapterDatabase tokenDb,
         IOptions<StravaOptions> options,
-        ILogger<StravaApiClient> logger)
+        ILogger<StravaApiClient> logger,
+        IClock clock)
     {
         ArgumentNullException.ThrowIfNull(httpClient);
         ArgumentNullException.ThrowIfNull(tokenDb);
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(clock);
 
         _httpClient = httpClient;
         _tokenDb = tokenDb;
         _options = options.Value;
         _logger = logger;
+        _clock = clock;
     }
 
     /// <summary>
     /// Gets the Strava OAuth token endpoint URI.
     /// </summary>
-    private Uri TokenEndpoint => new(new Uri(_options.BaseUrl.AbsoluteUri.TrimEnd('/') + "/"), "oauth/token");
+    private Uri TokenEndpoint => new(_options.BaseUrl, "oauth/token");
 
     /// <summary>
     /// Gets the Strava OAuth deauthorize endpoint URI.
     /// </summary>
-    private Uri DeauthorizeEndpoint => new(new Uri(_options.BaseUrl.AbsoluteUri.TrimEnd('/') + "/"), "oauth/deauthorize");
+    private Uri DeauthorizeEndpoint => new(_options.BaseUrl, "oauth/deauthorize");
 
     /// <summary>
     /// Exchanges an authorization code for access and refresh tokens,
@@ -112,7 +118,7 @@ public partial class StravaApiClient : IStravaApiClient
                 AccessToken = tokenResponse.AccessToken,
                 RefreshToken = tokenResponse.RefreshToken,
                 ExpiresAt = tokenResponse.ExpiresAt,
-                LastRefreshedAtUtc = DateTime.UtcNow
+                LastRefreshedAtUtc = _clock.GetCurrentInstant().ToDateTimeUtc()
             };
 
             await _tokenDb.UpsertAsync(document, cancellationToken);
@@ -181,7 +187,7 @@ public partial class StravaApiClient : IStravaApiClient
             existing.AccessToken = refreshResponse.AccessToken;
             existing.RefreshToken = refreshResponse.RefreshToken;
             existing.ExpiresAt = refreshResponse.ExpiresAt;
-            existing.LastRefreshedAtUtc = DateTime.UtcNow;
+            existing.LastRefreshedAtUtc = _clock.GetCurrentInstant().ToDateTimeUtc();
 
             await _tokenDb.UpsertAsync(existing, cancellationToken);
 
@@ -313,8 +319,7 @@ public partial class StravaApiClient : IStravaApiClient
                 requestUri += $"&after={afterEpoch.Value}";
             }
 
-            var baseUriString = string.Concat(_options.BaseUrl.AbsoluteUri.TrimEnd('/'), '/');
-            var request = new HttpRequestMessage(HttpMethod.Get, new Uri(new Uri(baseUriString), requestUri));
+            var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_options.BaseUrl, requestUri));
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.AccessToken);
 
             var response = await _httpClient.SendAsync(request, cancellationToken);

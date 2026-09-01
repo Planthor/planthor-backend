@@ -109,7 +109,7 @@ public sealed class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyConte
         }
 
         string? nextCursor = hasNextPage
-            ? paginatedPersonalPlans.Last().PlanId.ToString()
+            ? paginatedPersonalPlans[^1].PlanId.ToString()
             : null;
 
         return new CursorPagedResult<PersonalPlanDto>(dtos, nextCursor, hasNextPage);

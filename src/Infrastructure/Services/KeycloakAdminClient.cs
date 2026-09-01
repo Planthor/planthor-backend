@@ -39,7 +39,7 @@ public partial class KeycloakAdminClient(HttpClient httpClient, IConfiguration c
         // Get Client Credentials Token
         var tokenEndpoint = $"{authority}/protocol/openid-connect/token";
         
-        var tokenRequest = new HttpRequestMessage(HttpMethod.Post, tokenEndpoint)
+        var tokenRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(tokenEndpoint))
         {
             Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
@@ -68,7 +68,7 @@ public partial class KeycloakAdminClient(HttpClient httpClient, IConfiguration c
         
         var adminEndpoint = $"{baseUrl}/admin/realms/{realm}/users/{identifyName}/federated-identity";
 
-        var request = new HttpRequestMessage(HttpMethod.Get, adminEndpoint);
+        var request = new HttpRequestMessage(HttpMethod.Get, new Uri(adminEndpoint));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request, cancellationToken);

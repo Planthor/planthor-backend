@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Webhook;
@@ -81,7 +83,7 @@ public sealed partial class StravaController : ControllerBase
         var payload = new OAuthStatePayload
         {
             IdentifyName = identifyName,
-            Nonce = Guid.NewGuid().ToString("N"),
+            Nonce = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture),
             TimestampUtc = _clock.GetCurrentInstant().ToUnixTimeSeconds()
         };
 
@@ -180,7 +182,7 @@ public sealed partial class StravaController : ControllerBase
             payload.IdentifyName,
             ExternalProvider.Strava.Id,
             ExternalConnectionType.ActivitiesSync.Id,
-            tokenResponse.Athlete.Id.ToString(),
+            tokenResponse.Athlete.Id.ToString(CultureInfo.InvariantCulture),
             scopesList
         ), cancellationToken);
 
@@ -316,15 +318,18 @@ internal class OAuthStatePayload
     /// <summary>
     /// Gets or sets the Planthor member's Keycloak subject ID (Identity Name).
     /// </summary>
-    public string IdentifyName { get; set; } = default!;
+    [JsonInclude]
+    internal string IdentifyName { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets a cryptographic nonce to prevent replay attacks.
     /// </summary>
-    public string Nonce { get; set; } = default!;
+    [JsonInclude]
+    internal string Nonce { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets the UTC epoch seconds when the state was created.
     /// </summary>
-    public long TimestampUtc { get; set; }
+    [JsonInclude]
+    internal long TimestampUtc { get; set; }
 }

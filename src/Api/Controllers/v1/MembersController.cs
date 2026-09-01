@@ -113,25 +113,30 @@ public sealed class MembersController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(
+    public Task<IActionResult> Update(
         [FromRoute] Guid id,
         [FromBody] UpdateMemberRequest request,
         CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var command = new UpdateMemberCommand(
-            id,
-            request.FirstName,
-            request.MiddleName,
-            request.LastName,
-            request.Description,
-            request.PathAvatar,
-            request.PreferredTimezone);
+        return Core();
 
-        await updateMemberCommandValidator.ValidateAndThrowAsync(command, token);
-        await _sender.Send(command, token);
-        return NoContent();
+        async Task<IActionResult> Core()
+        {
+            var command = new UpdateMemberCommand(
+                id,
+                request.FirstName,
+                request.MiddleName,
+                request.LastName,
+                request.Description,
+                request.PathAvatar,
+                request.PreferredTimezone);
+
+            await updateMemberCommandValidator.ValidateAndThrowAsync(command, token);
+            await _sender.Send(command, token);
+            return NoContent();
+        }
     }
 
     /// <summary>
@@ -145,23 +150,28 @@ public sealed class MembersController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Patch(
+    public Task<IActionResult> Patch(
         [FromRoute] Guid id,
         [FromBody] PatchMemberRequest request,
         CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var command = new PatchMemberCommand(
-            id,
-            request.UpdateMask,
-            request.IdentifyName,
-            request.FirstName,
-            request.LastName);
+        return Core();
 
-        await patchMemberCommandValidator.ValidateAndThrowAsync(command, token);
-        await _sender.Send(command, token);
-        return NoContent();
+        async Task<IActionResult> Core()
+        {
+            var command = new PatchMemberCommand(
+                id,
+                request.UpdateMask,
+                request.IdentifyName,
+                request.FirstName,
+                request.LastName);
+
+            await patchMemberCommandValidator.ValidateAndThrowAsync(command, token);
+            await _sender.Send(command, token);
+            return NoContent();
+        }
     }
 
     /// <summary>

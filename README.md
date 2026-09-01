@@ -7,6 +7,10 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Planthor_PlanthorWebApi&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Planthor_PlanthorWebApi)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Planthor_PlanthorWebApi&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Planthor_PlanthorWebApi)
 
+> Product requirements, system architecture, roadmaps, and ADRs are maintained in
+> the canonical [Planthor Wiki](https://github.com/Planthor/planthor-documentation/wiki).
+> This README is authoritative for backend setup and implementation workflows.
+
 ## 📋 Table of Contents
 
 - [About Planthor](#about-planthor)
@@ -39,7 +43,7 @@
 - **Real-time Webhooks** — Receive real-time notifications from external services (e.g., Strava activity events)
 - **JWT Authentication** — Secure API access with token-based authentication via Keycloak
 
-For more features, see [Planthor Wiki - Features](https://github.com/Planthor/planthor-documentation/wiki/Features).
+For accepted features and requirements, see [Planthor Wiki — Features](https://github.com/Planthor/planthor-documentation/wiki/Features) and [Use cases](https://github.com/Planthor/planthor-documentation/wiki/Use-Case).
 
 ---
 
@@ -113,8 +117,8 @@ infrastructure/
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/Planthor/PlanthorWebApi.git
-cd PlanthorWebApi
+git clone https://github.com/Planthor/planthor-backend.git
+cd planthor-backend
 ```
 
 #### Step 1: Start Infrastructure Services
@@ -159,10 +163,6 @@ The API will start at `https://localhost:5001`.
 
 - **Scalar UI (API Docs):** `https://localhost:5001/scalar/v1` *(development only)*
 - **OpenAPI JSON:** `https://localhost:5001/openapi/v1.json`
-
----scm-history-item:%5Chome%5Cplt%5Cprojects%5Cplanthor-backend?%7B%22repositoryId%22%3A%22scm0%22%2C%22historyItemId%22%3A%22eb6b21038d5cb0cc74d740e77c957fd4a14c96b6%22%2C%22historyItemParentId%22%3A%222f37eaacf63e229fffe1e714106907c46ba2e3e0%22%2C%22historyItemDisplayId%22%3A%22eb6b210%22%7D
-
----
 
 ## Running the Application
 
@@ -253,6 +253,7 @@ curl -H "Authorization: Bearer <your-jwt-token>" https://localhost:5001/v1/membe
 **OpenAPI Specification:**
 
 - JSON format: `https://localhost:5001/openapi/v1.json`
+- Build-generated contract: `src/Api/obj/openapi/planthor-api-openapi-specs.json`
 - Use with Postman, Insomnia, or other OpenAPI clients
 
 ---
@@ -526,7 +527,7 @@ dotnet watch run
 
 ### Documentation
 
-- **[Planthor Wiki](https://github.com/Planthor/planthor-documentation/wiki)** — Feature documentation and architectural decisions
+- **[Planthor Wiki](https://github.com/Planthor/planthor-documentation/wiki)** — Canonical requirements, architecture, roadmaps, and ADRs
 - **[Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)** — Architectural pattern reference
 - **[CQRS Pattern](https://martinfowler.com/bliki/CQRS.html)** — Command Query Responsibility Segregation
 - **[MediatR Documentation](https://github.com/jbogard/MediatR)** — In-process mediator library

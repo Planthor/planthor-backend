@@ -93,11 +93,12 @@ try
     // OpenAPI + Scalar
     builder.Services.AddOpenApi();
 
+    const int MaxLogLimit = 4096;
     builder.Services.AddHttpLogging(logging =>
     {
         logging.LoggingFields = HttpLoggingFields.All;
-        logging.RequestBodyLogLimit = 4096;
-        logging.ResponseBodyLogLimit = 4096;
+        logging.RequestBodyLogLimit = MaxLogLimit;
+        logging.ResponseBodyLogLimit = MaxLogLimit;
     });
 
     var app = builder.Build();

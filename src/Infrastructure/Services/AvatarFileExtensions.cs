@@ -10,7 +10,7 @@ internal static class AvatarFileExtensions
     /// Returns the file extension (without dot) for the given image content type.
     /// Defaults to <c>jpg</c> for unknown types.
     /// </summary>
-    public static string GetExtension(string contentType) => contentType switch
+    internal static string GetExtension(string contentType) => contentType switch
     {
         "image/jpeg" => "jpg",
         "image/png" => "png",

@@ -9,6 +9,8 @@ namespace Application.Members.Commands.DisconnectExternalProvider;
 /// </summary>
 public sealed class DisconnectExternalProviderCommandValidator : AbstractValidator<DisconnectExternalProviderCommand>
 {
+    private const int MaxIdentifyNameLength = 100;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DisconnectExternalProviderCommandValidator"/> class.
     /// </summary>
@@ -16,7 +18,7 @@ public sealed class DisconnectExternalProviderCommandValidator : AbstractValidat
     {
         RuleFor(x => x.IdentifyName)
             .NotEmpty()
-            .MaximumLength(100);
+            .MaximumLength(MaxIdentifyNameLength);
 
         RuleFor(x => x.ProviderId)
             .NotEmpty()

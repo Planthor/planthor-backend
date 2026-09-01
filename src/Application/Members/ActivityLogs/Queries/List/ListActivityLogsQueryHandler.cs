@@ -78,7 +78,7 @@ public sealed class ListActivityLogsQueryHandler(IReadOnlyContext readOnlyContex
         string? nextCursor = null;
         if (hasNextPage)
         {
-            var lastLog = paginatedLogs.Last();
+            var lastLog = paginatedLogs[^1];
             var plainCursor = $"{lastLog.CreatedAt.ToUnixTimeMilliseconds()}_{lastLog.Id}";
             nextCursor = OpaqueCursor.Encode(plainCursor);
         }

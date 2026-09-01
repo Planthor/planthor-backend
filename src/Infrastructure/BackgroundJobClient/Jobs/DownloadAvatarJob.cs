@@ -32,45 +32,50 @@ public partial class DownloadAvatarJob(
     /// <param name="context">The execution context provided by Quartz, containing the MemberId and Url.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     /// <exception cref="JobExecutionException">Thrown when the download or upload process fails.</exception>
-    public async Task Execute(IJobExecutionContext context)
+    public Task Execute(IJobExecutionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var memberIdString = context.MergedJobDataMap.GetString("MemberId");
-        var urlString = context.MergedJobDataMap.GetString("Url");
+        return Core();
 
-        if (string.IsNullOrEmpty(memberIdString) || string.IsNullOrEmpty(urlString))
+        async Task Core()
         {
-            LogInvalidJobData(memberIdString, urlString);
-            return;
-        }
+            var memberIdString = context.MergedJobDataMap.GetString("MemberId");
+            var urlString = context.MergedJobDataMap.GetString("Url");
 
-        var memberId = Guid.Parse(memberIdString);
-        var url = new Uri(urlString);
+            if (string.IsNullOrEmpty(memberIdString) || string.IsNullOrEmpty(urlString))
+            {
+                LogInvalidJobData(memberIdString, urlString);
+                return;
+            }
 
-        try
-        {
-            using var client = httpClientFactory.CreateClient();
-            var response = await client.GetAsync(url, context.CancellationToken);
-            response.EnsureSuccessStatusCode();
+            var memberId = Guid.Parse(memberIdString);
+            var url = new Uri(urlString);
 
-            var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
-            using var stream = await response.Content.ReadAsStreamAsync(context.CancellationToken);
+            try
+            {
+                using var client = httpClientFactory.CreateClient();
+                var response = await client.GetAsync(url, context.CancellationToken);
+                response.EnsureSuccessStatusCode();
 
-            var avatarPath = await avatarStorageService.UploadAvatarAsync(
-                memberId,
-                stream,
-                contentType,
-                context.CancellationToken);
+                var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
+                using var stream = await response.Content.ReadAsStreamAsync(context.CancellationToken);
 
-            await sender.Send(new UpdateMemberAvatarCommand(memberId, avatarPath), context.CancellationToken);
+                var avatarPath = await avatarStorageService.UploadAvatarAsync(
+                    memberId,
+                    stream,
+                    contentType,
+                    context.CancellationToken);
 
-            LogAvatarUpdated(memberId);
-        }
-        catch (Exception ex)
-        {
-            LogAvatarUpdateFailed(ex, memberId);
-            throw new JobExecutionException(msg: "Failed to process avatar download", cause: ex, refireImmediately: false);
+                await sender.Send(new UpdateMemberAvatarCommand(memberId, avatarPath), context.CancellationToken);
+
+                LogAvatarUpdated(memberId);
+            }
+            catch (Exception ex)
+            {
+                LogAvatarUpdateFailed(ex, memberId);
+                throw new JobExecutionException(msg: "Failed to process avatar download", cause: ex, refireImmediately: false);
+            }
         }
     }
 

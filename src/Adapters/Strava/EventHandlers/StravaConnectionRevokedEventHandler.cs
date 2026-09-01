@@ -35,50 +35,55 @@ public sealed partial class StravaConnectionRevokedEventHandler : IDomainEventHa
     }
 
     /// <inheritdoc/>
-    public async Task HandleAsync(ExternalConnectionRevokedEvent domainEvent, CancellationToken cancellationToken)
+    public Task HandleAsync(ExternalConnectionRevokedEvent domainEvent, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
 
         if (domainEvent.Provider.Id != ExternalProvider.Strava.Id)
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        try
+        return Core();
+
+        async Task Core()
         {
-            var memberRepository = _serviceProvider.GetRequiredService<IMemberRepository>();
-
-            var member = await memberRepository.GetByIdAsync(domainEvent.MemberId, cancellationToken);
-
-            if (member != null)
+            try
             {
-                var success = await _stravaClient.DeauthorizeAsync(member.IdentifyName, cancellationToken);
-                if (success)
+                var memberRepository = _serviceProvider.GetRequiredService<IMemberRepository>();
+
+                var member = await memberRepository.GetByIdAsync(domainEvent.MemberId, cancellationToken);
+
+                if (member != null)
                 {
-                    LogDeauthorizationSucceeded(member.IdentifyName);
+                    var success = await _stravaClient.DeauthorizeAsync(member.IdentifyName, cancellationToken);
+                    if (success)
+                    {
+                        LogDeauthorizationSucceeded(member.IdentifyName);
+                    }
+                    else
+                    {
+                        LogDeauthorizationFailed(member.IdentifyName);
+                    }
                 }
                 else
                 {
-                    LogDeauthorizationFailed(member.IdentifyName);
+                    LogMemberNotFound(domainEvent.MemberId);
                 }
             }
-            else
+            catch (OperationCanceledException ex)
             {
-                LogMemberNotFound(domainEvent.MemberId);
+                LogOperationCanceled(ex, domainEvent.MemberId);
+                throw;
             }
-        }
-        catch (OperationCanceledException ex)
-        {
-            LogOperationCanceled(ex, domainEvent.MemberId);
-            throw;
-        }
-        catch (InvalidOperationException ex)
-        {
-            LogServiceResolutionFailed(ex, domainEvent.MemberId);
-        }
-        catch (Exception ex)
-        {
-            LogErrorDeauthorizingStrava(ex, domainEvent.MemberId);
+            catch (InvalidOperationException ex)
+            {
+                LogServiceResolutionFailed(ex, domainEvent.MemberId);
+            }
+            catch (Exception ex)
+            {
+                LogErrorDeauthorizingStrava(ex, domainEvent.MemberId);
+            }
         }
     }
 

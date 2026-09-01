@@ -54,5 +54,5 @@ public sealed class StravaTokenDocument
     /// <summary>
     /// Gets or sets the UTC timestamp of the last successful token refresh or initial token exchange.
     /// </summary>
-    public DateTime LastRefreshedAtUtc { get; set; }
+    public DateTimeOffset LastRefreshedAtUtc { get; set; }
 }

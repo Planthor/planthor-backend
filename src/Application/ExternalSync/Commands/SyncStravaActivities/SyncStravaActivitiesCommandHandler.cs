@@ -41,42 +41,47 @@ public sealed class SyncStravaActivitiesCommandHandler(
     /// <returns>The total number of activity logs successfully created.</returns>
     /// <exception cref="ArgumentException">Thrown when the member is not found.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the member does not have an active Strava activities sync connection.</exception>
-    public async Task<int> Handle(SyncStravaActivitiesCommand request, CancellationToken cancellationToken)
+    public Task<int> Handle(SyncStravaActivitiesCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken);
-        if (member == null)
+        return Core();
+
+        async Task<int> Core()
         {
-            throw new ArgumentException("Member not found", nameof(request));
+            var member = await _memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken);
+            if (member == null)
+            {
+                throw new ArgumentException("Member not found", nameof(request));
+            }
+
+            if (!member.HasActiveConnection(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync))
+            {
+                throw new InvalidOperationException("No active Strava connection.");
+            }
+
+            var linkedPlans = member.PersonalPlans
+                .Where(pp => pp.LinkUserAdapter)
+                .ToList();
+
+            if (linkedPlans.Count == 0)
+            {
+                return 0;
+            }
+
+            var stravaAdapter = _serviceProvider.GetRequiredKeyedService<IActivitySyncAdapter>(ProviderName);
+            var sportTypeMapper = _serviceProvider.GetRequiredKeyedService<IProviderSportTypeMapper>(ProviderName);
+
+            var activities = await stravaAdapter.FetchActivitiesAsync(member.Id, request.IdentifyName, null, cancellationToken);
+
+            int logsCreated = 0;
+            foreach (var activity in activities)
+            {
+                logsCreated += await ProcessActivityAsync(activity, linkedPlans, member.Id, sportTypeMapper, cancellationToken);
+            }
+
+            return logsCreated;
         }
-
-        if (!member.HasActiveConnection(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync))
-        {
-            throw new InvalidOperationException("No active Strava connection.");
-        }
-
-        var linkedPlans = member.PersonalPlans
-            .Where(pp => pp.LinkUserAdapter)
-            .ToList();
-
-        if (linkedPlans.Count == 0)
-        {
-            return 0;
-        }
-
-        var stravaAdapter = _serviceProvider.GetRequiredKeyedService<IActivitySyncAdapter>(ProviderName);
-        var sportTypeMapper = _serviceProvider.GetRequiredKeyedService<IProviderSportTypeMapper>(ProviderName);
-
-        var activities = await stravaAdapter.FetchActivitiesAsync(member.Id, request.IdentifyName, null, cancellationToken);
-
-        int logsCreated = 0;
-        foreach (var activity in activities)
-        {
-            logsCreated += await ProcessActivityAsync(activity, linkedPlans, member.Id, sportTypeMapper, cancellationToken);
-        }
-
-        return logsCreated;
     }
 
     private async Task<int> ProcessActivityAsync(
