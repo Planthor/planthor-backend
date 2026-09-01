@@ -253,7 +253,6 @@ curl -H "Authorization: Bearer <your-jwt-token>" https://localhost:5001/v1/membe
 **OpenAPI Specification:**
 
 - JSON format: `https://localhost:5001/openapi/v1.json`
-- Build-generated contract: `src/Api/obj/openapi/planthor-api-openapi-specs.json`
 - Use with Postman, Insomnia, or other OpenAPI clients
 
 ---
