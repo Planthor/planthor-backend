@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Api.Filters;
 using Api.Requests;
 using Application.Dtos;
 using Application.Members.PersonalPlans.Commands.Activate;

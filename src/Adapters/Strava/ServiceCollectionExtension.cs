@@ -1,8 +1,11 @@
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
+using Adapters.Strava.EventHandlers;
 using Adapters.Strava.Mapping;
 using Adapters.Strava.Persistence;
 using Application.Interfaces;
+using Application.Shared;
+using Domain.Members.Events;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -47,6 +50,8 @@ public static class ServiceCollectionExtension
 
         services.AddKeyedScoped<IActivitySyncAdapter, StravaActivitySyncAdapter>("STRAVA");
         services.AddKeyedSingleton<IProviderSportTypeMapper, StravaSportTypeMapper>("STRAVA");
+
+        services.AddTransient<IDomainEventHandler<ExternalConnectionRevokedEvent>, StravaConnectionRevokedEventHandler>();
 
         return services;
     }

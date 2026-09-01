@@ -55,7 +55,7 @@ public class StravaControllerTests : IClassFixture<CustomWebApplicationFactory<P
         Assert.Equal(HttpStatusCode.Redirect, authorizeRes.StatusCode);
 
         var disconnectRes = await _client.DeleteAsync("/v1/Strava/disconnect");
-        Assert.Equal(HttpStatusCode.InternalServerError, disconnectRes.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, disconnectRes.StatusCode);
     }
 
     [Fact]

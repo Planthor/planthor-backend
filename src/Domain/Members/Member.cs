@@ -19,7 +19,7 @@ namespace Domain.Members;
 public sealed class Member(
     string identifyName,
     string firstName,
-    string middleName,
+    string? middleName,
     string lastName,
     string description,
     string preferredTimezone) : AggregateRoot<Guid>
@@ -43,7 +43,7 @@ public sealed class Member(
     /// <summary>
     /// Gets the middle name of the member. Can be empty.
     /// </summary>
-    public string MiddleName { get; private set; } = middleName;
+    public string? MiddleName { get; private set; } = middleName;
 
     /// <summary>
     /// Gets the last name of the member.
@@ -246,7 +246,7 @@ public sealed class Member(
     public static Member Create(
         string identifyName,
         string firstName,
-        string middleName,
+        string? middleName,
         string lastName,
         string description,
         string preferredTimezone,

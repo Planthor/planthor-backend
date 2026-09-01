@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Dtos;
-using Api.Filters;
+using Application.Members.Commands.DisconnectExternalProvider;
 using Application.Members.Queries.ExternalConnections.Details;
 using Application.Members.Queries.ExternalConnections.List;
+using Domain.Members;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -87,5 +88,39 @@ public sealed class ExternalConnectionsController(
         
         var result = await _sender.Send(query, token);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Disconnects a specific external connection.
+    /// </summary>
+    /// <param name="identifier">The member identifier, which can be 'me' or a valid GUID.</param>
+    /// <param name="providerId">The unique identifier of the external provider (e.g., 'STRAVA').</param>
+    /// <param name="token">A cancellation token.</param>
+    /// <returns>No content on success.</returns>
+    /// <response code="204">The connection was successfully disconnected.</response>
+    /// <response code="400">If command validation fails.</response>
+    /// <response code="401">If the user is unauthorized.</response>
+    /// <response code="404">If the connection or member is not found.</response>
+    [HttpDelete("{providerId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Disconnect(string identifier, string providerId, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(CurrentIdentifyName))
+        {
+            return Unauthorized();
+        }
+
+        // We hardcode ActivitiesSync for now as it's the only supported type. 
+        // In the future, this could be passed as a route or query parameter.
+        var command = new DisconnectExternalProviderCommand(
+            CurrentIdentifyName, 
+            providerId, 
+            ExternalConnectionType.ActivitiesSync.Id);
+
+        await _sender.Send(command, token);
+        return NoContent();
     }
 }
