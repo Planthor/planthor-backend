@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.PersonalPlans.Queries.List;
-using Application.Shared;
+using Application.Tests.Shared;
 using Domain.Members;
 using Domain.Plans;
 using NodaTime;
@@ -14,7 +14,7 @@ namespace Application.Tests.Members.Queries.ListPersonalPlans;
 
 public class ListPersonalPlansQueryHandlerTests
 {
-    private readonly IReadOnlyContext _mockContext;
+    private readonly InMemoryReadOnlyContext _context;
     private readonly ListPersonalPlansQueryHandler _handler;
     private readonly IClock _clock;
     private readonly Instant _from;
@@ -22,8 +22,8 @@ public class ListPersonalPlansQueryHandlerTests
 
     public ListPersonalPlansQueryHandlerTests()
     {
-        _mockContext = Substitute.For<IReadOnlyContext>();
-        _handler = new ListPersonalPlansQueryHandler(_mockContext);
+        _context = new InMemoryReadOnlyContext();
+        _handler = new ListPersonalPlansQueryHandler(_context);
         _clock = Substitute.For<IClock>();
         _clock.GetCurrentInstant().Returns(Instant.FromUtc(2024, 1, 1, 0, 0));
         _from = Instant.FromUtc(2024, 1, 1, 0, 0);
@@ -38,20 +38,12 @@ public class ListPersonalPlansQueryHandlerTests
 
     private void SetupMemberContext(Member? member)
     {
-        _mockContext
-            .FirstOrDefaultAsync(
-                Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
-                Arg.Any<CancellationToken>())
-            .Returns(member);
+        _context.SetEntities<Member>(member is null ? [] : [member]);
     }
 
     private void SetupPlansContext(List<Plan> plans)
     {
-        _mockContext
-            .QueryAsync(
-                Arg.Any<Func<IQueryable<Plan>, IQueryable<Plan>>>(),
-                Arg.Any<CancellationToken>())
-            .Returns(plans);
+        _context.SetEntities(plans);
     }
 
     [Fact]
@@ -262,6 +254,6 @@ public class ListPersonalPlansQueryHandlerTests
 
         await _handler.Handle(new ListPersonalPlansQuery("user1"), cancellationToken);
 
-        await _mockContext.Received(1).FirstOrDefaultAsync(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
+        Assert.Equal(cancellationToken, _context.LastCancellationToken);
     }
 }

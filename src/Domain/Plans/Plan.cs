@@ -73,7 +73,13 @@ public sealed class Plan : AggregateRoot<Guid>
     /// Gets the current aggregate value across all activity logs.
     /// Compared against <see cref="Target"/> to determine completion.
     /// </summary>
-    public float CurrentValue => _activityLogs.Sum(log => log.Value);
+    /// <remarks>
+    /// Persisted as a denormalized field in MongoDB to avoid recomputing from the
+    /// full <see cref="ActivityLogs"/> collection on every read. Updated internally
+    /// by <see cref="RecalculateCurrentValue"/> whenever logs are added or the plan
+    /// is modified.
+    /// </remarks>
+    public float CurrentValue { get; private set; }
 
     /// <summary>
     /// Gets the UTC instant at which this period starts.
@@ -329,8 +335,13 @@ public sealed class Plan : AggregateRoot<Guid>
 
         RecalculateCurrentValue();
 
-        // Inform other parts of the system (if any) that an activity log was added.
-        // E.g., RaiseDomainEvent - ActivityLogAddedDomainEvent
+        RaiseDomainEvent(new ActivityLogAddedEvent(
+            Id,
+            activityLog.Id,
+            activityLog.Value,
+            CurrentValue,
+            clock,
+            $"{nameof(Plan)} / {nameof(AddActivityLog)}"));
 
         return activityLog;
     }
@@ -341,6 +352,8 @@ public sealed class Plan : AggregateRoot<Guid>
     /// </summary>
     private void RecalculateCurrentValue()
     {
+        CurrentValue = _activityLogs.Sum(log => log.Value);
+
         if (Status == PlanStatus.Active && CurrentValue >= Target)
         {
             Status = PlanStatus.Completed;

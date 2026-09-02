@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.PersonalPlans.Queries.Details;
-using Application.Shared;
+using Application.Tests.Shared;
 using Domain.Members;
 using Domain.Plans;
 using NodaTime;
@@ -14,32 +14,23 @@ namespace Application.Tests.Members.Queries.PersonalPlanDetails;
 
 public class PersonalPlanDetailsQueryHandlerTests
 {
-    private readonly IReadOnlyContext _mockContext;
+    private readonly InMemoryReadOnlyContext _context;
     private readonly PersonalPlanDetailsQueryHandler _handler;
     private readonly IClock _mockClock;
     private readonly Instant _now = Instant.FromUtc(2026, 1, 1, 0, 0);
 
     public PersonalPlanDetailsQueryHandlerTests()
     {
-        _mockContext = Substitute.For<IReadOnlyContext>();
-        _handler = new PersonalPlanDetailsQueryHandler(_mockContext);
+        _context = new InMemoryReadOnlyContext();
+        _handler = new PersonalPlanDetailsQueryHandler(_context);
         _mockClock = Substitute.For<IClock>();
         _mockClock.GetCurrentInstant().Returns(_now);
     }
 
     private void SetupContext(Member? member, Plan? plan)
     {
-        _mockContext
-            .FirstOrDefaultAsync(
-                Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
-                Arg.Any<CancellationToken>())
-            .Returns(member);
-
-        _mockContext
-            .FirstOrDefaultAsync(
-                Arg.Any<Func<IQueryable<Plan>, IQueryable<Plan>>>(),
-                Arg.Any<CancellationToken>())
-            .Returns(plan);
+        _context.SetEntities<Member>(member is null ? [] : [member]);
+        _context.SetEntities<Plan>(plan is null ? [] : [plan]);
     }
 
     [Fact]
@@ -106,7 +97,7 @@ public class PersonalPlanDetailsQueryHandlerTests
         await Assert.ThrowsAsync<KeyNotFoundException>(
             () => _handler.Handle(new PersonalPlanDetailsQuery("user1", Guid.NewGuid()), cancellationToken));
 
-        await _mockContext.Received(1).FirstOrDefaultAsync(Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(), cancellationToken);
+        Assert.Equal(cancellationToken, _context.LastCancellationToken);
     }
 
     [Fact]
@@ -120,17 +111,7 @@ public class PersonalPlanDetailsQueryHandlerTests
         var plan = Plan.Create("My Plan", "km", 100, _now, _now.Plus(Duration.FromDays(30)), "2026-01-01", "2026-01-31", "UTC", true, _mockClock, member.Id);
         typeof(Plan).GetProperty(nameof(Plan.Id))!.SetValue(plan, planId);
 
-        _mockContext
-            .FirstOrDefaultAsync(
-                Arg.Any<Func<IQueryable<Member>, IQueryable<Member>>>(),
-                Arg.Any<CancellationToken>())
-            .Returns(c => Task.FromResult(c.ArgAt<Func<IQueryable<Member>, IQueryable<Member>>>(0)(new[] { member }.AsQueryable()).FirstOrDefault()));
-
-        _mockContext
-            .FirstOrDefaultAsync(
-                Arg.Any<Func<IQueryable<Plan>, IQueryable<Plan>>>(),
-                Arg.Any<CancellationToken>())
-            .Returns(c => Task.FromResult(c.ArgAt<Func<IQueryable<Plan>, IQueryable<Plan>>>(0)(new[] { plan }.AsQueryable()).FirstOrDefault()));
+        SetupContext(member, plan);
 
         var result = await _handler.Handle(new PersonalPlanDetailsQuery("alice", planId), CancellationToken.None);
 

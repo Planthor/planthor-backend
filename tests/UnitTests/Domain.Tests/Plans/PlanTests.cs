@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using Domain.Plans;
+using Domain.Plans.Events;
 using Domain.Shared.Exceptions;
 using NodaTime;
 using Xunit;
@@ -180,6 +182,37 @@ public class PlanTests
         plan.AddActivityLog(10f, "2026-01-02", null, Clock, Guid.NewGuid());
         
         Assert.Equal(PlanStatus.Completed, plan.Status);
+    }
+
+    [Fact]
+    public void AddActivityLog_WithValue_UpdatesCurrentValue()
+    {
+        var plan = CreateValid(target: 100f);
+        typeof(Plan).GetProperty("Status")!.SetValue(plan, PlanStatus.Active);
+
+        plan.AddActivityLog(25f, "2026-01-02", null, Clock, Guid.NewGuid());
+
+        Assert.Equal(25f, plan.CurrentValue);
+
+        plan.AddActivityLog(10f, "2026-01-03", null, Clock, Guid.NewGuid());
+
+        Assert.Equal(35f, plan.CurrentValue);
+    }
+
+    [Fact]
+    public void AddActivityLog_ValidInput_RaisesActivityLogAddedEvent()
+    {
+        var plan = CreateValid(target: 100f);
+        typeof(Plan).GetProperty("Status")!.SetValue(plan, PlanStatus.Active);
+
+        var activityLog = plan.AddActivityLog(25f, "2026-01-02", null, Clock, Guid.NewGuid());
+
+        var domainEvent = Assert.Single(
+            plan.DomainEvents.OfType<ActivityLogAddedEvent>());
+        Assert.Equal(plan.Id, domainEvent.PlanId);
+        Assert.Equal(activityLog.Id, domainEvent.ActivityLogId);
+        Assert.Equal(25f, domainEvent.Value);
+        Assert.Equal(25f, domainEvent.NewCurrentValue);
     }
 
     [Fact]

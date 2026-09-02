@@ -21,8 +21,8 @@ public sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
 
         builder.HasKey(p => p.Id);
 
-        // Ghost Aggregate: progress is always derived from the owned ActivityLog collection.
-        builder.Ignore(p => p.CurrentValue);
+        // Denormalized: maintained by the domain aggregate on every AddActivityLog / Update call.
+        builder.Property(p => p.CurrentValue).IsRequired();
 
         builder.Property(p => p.Status)
             .HasConversion(
