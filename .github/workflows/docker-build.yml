@@ -18,6 +18,7 @@ jobs:
     name: Build and publish backend image
     permissions:
       contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,28 +44,53 @@ jobs:
           REGISTRY_HOST: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev
         run: gcloud auth configure-docker "$REGISTRY_HOST" --quiet
 
-      - name: Define Artifact Registry image URIs
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          username: planthordev
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Define container image URIs
         id: image
         env:
           REGISTRY_HOST: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev
           PROJECT_ID: ${{ secrets.GOOGLE_PROJECT }}
         run: |
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            REPOSITORY="planthor-backend"
+            {
+              echo "tags<<EOF"
+              echo "planthor-backend:${GITHUB_SHA}"
+              echo "planthor-backend:latest"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
           else
-            REPOSITORY="${REGISTRY_HOST}/${PROJECT_ID}/planthor-backend/planthor-backend"
+            {
+              echo "tags<<EOF"
+              echo "${REGISTRY_HOST}/${PROJECT_ID}/planthor-backend/planthor-backend:${GITHUB_SHA}"
+              echo "${REGISTRY_HOST}/${PROJECT_ID}/planthor-backend/planthor-backend:latest"
+              echo "planthordev/planthor-backend:${GITHUB_SHA}"
+              echo "planthordev/planthor-backend:latest"
+              echo "ghcr.io/planthor/webapi:${GITHUB_SHA}"
+              echo "ghcr.io/planthor/webapi:latest"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
           fi
-          echo "immutable=${REPOSITORY}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          echo "latest=${REPOSITORY}:latest" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push Artifact Registry image
+      - name: Build and push container images
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ steps.image.outputs.immutable }}
-            ${{ steps.image.outputs.latest }}
+          tags: ${{ steps.image.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
