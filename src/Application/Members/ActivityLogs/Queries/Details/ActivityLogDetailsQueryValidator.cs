@@ -14,5 +14,6 @@ public sealed class ActivityLogDetailsQueryValidator : AbstractValidator<Activit
     {
         RuleFor(x => x.PlanId).NotEmpty();
         RuleFor(x => x.LogId).NotEmpty();
+        RuleFor(x => x.IdentifyName).NotEmpty();
     }
 }

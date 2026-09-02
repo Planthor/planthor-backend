@@ -59,7 +59,7 @@ public class UpdatePlanCommandHandlerTests
     {
         _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns((Member?)null);
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", Guid.NewGuid(), "km", 100, 50, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", Guid.NewGuid(), "km", 100, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class UpdatePlanCommandHandlerTests
         var member = Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
         _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", Guid.NewGuid(), "km", 100, 50, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", Guid.NewGuid(), "km", 100, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class UpdatePlanCommandHandlerTests
         _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
         _mockPlanRepository.GetByIdAsync(planId, Arg.Any<CancellationToken>()).Returns((Plan?)null);
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", planId, "km", 100, 50, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new UpdatePersonalPlanCommand("user1", planId, "km", 100, new DateTimeOffset(2024,1,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,1,1,0,0,0,TimeSpan.Zero)), CancellationToken.None));
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class UpdatePlanCommandHandlerTests
         _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
         _mockPlanRepository.GetByIdAsync(planId, Arg.Any<CancellationToken>()).Returns(plan);
 
-        var result = await _handler.Handle(new UpdatePersonalPlanCommand("user1", planId, "mi", 50, 20, new DateTimeOffset(2024,2,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,2,1,0,0,0,TimeSpan.Zero)), CancellationToken.None);
+        var result = await _handler.Handle(new UpdatePersonalPlanCommand("user1", planId, "mi", 50, new DateTimeOffset(2024,2,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,2,1,0,0,0,TimeSpan.Zero)), CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(planId, result.PlanId);
@@ -122,7 +122,7 @@ public class UpdatePlanCommandHandlerTests
         _mockPlanRepository.GetByIdAsync(planId, Arg.Any<CancellationToken>()).Returns(plan);
 
         // Update command doesn't touch Target in this test so it remains 0 (since we mock GetByIdAsync returning this plan)
-        var result = await _handler.Handle(new UpdatePersonalPlanCommand("user1", planId, "mi", 0, 0, new DateTimeOffset(2024,2,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,2,1,0,0,0,TimeSpan.Zero)), CancellationToken.None);
+        var result = await _handler.Handle(new UpdatePersonalPlanCommand("user1", planId, "mi", 0, new DateTimeOffset(2024,2,1,0,0,0,TimeSpan.Zero), new DateTimeOffset(2025,2,1,0,0,0,TimeSpan.Zero)), CancellationToken.None);
 
         Assert.Equal(0, result.ProgressPercentage);
     }

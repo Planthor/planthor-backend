@@ -1,12 +1,14 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Webhook;
-using Application.ExternalSync.Commands.SyncStravaActivities;
+using Application.ExternalSync.Commands.EnqueueExternalActivitySync;
+using Application.ExternalSync.Commands.EnqueueExternalConnectionRevocation;
+using Application.ExternalSync.Commands.RequestExternalActivitySync;
 using Application.Members.Commands.ConnectExternalProvider;
+using Application.Shared;
 using Domain.Members;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -23,43 +25,21 @@ namespace Adapters.Strava.Controllers;
 /// Handles Strava-specific endpoints: OAuth authorization, webhook subscription verification,
 /// real-time push event processing, manual activity sync, and disconnection.
 /// </summary>
+/// <param name="stravaClient">The Strava API client.</param>
+/// <param name="clock">The system clock.</param>
+/// <param name="options">The Strava options.</param>
+/// <param name="sender">The MediatR sender.</param>
+/// <param name="logger">The logger.</param>
 [ApiController]
 [Route("v1/[controller]")]
-public sealed partial class StravaController : ControllerBase
+public sealed partial class StravaController(
+    IStravaApiClient stravaClient,
+    IClock clock,
+    IOptions<StravaOptions> options,
+    ISender sender,
+    ILogger<StravaController> logger) : ControllerBase
 {
-    private readonly IStravaApiClient _stravaClient;
-    private readonly IClock _clock;
-    private readonly StravaOptions _options;
-    private readonly ISender _sender;
-    private readonly ILogger<StravaController> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="StravaController"/> class.
-    /// </summary>
-    /// <param name="stravaClient">The Strava API client.</param>
-    /// <param name="clock">The system clock.</param>
-    /// <param name="options">The Strava options.</param>
-    /// <param name="sender">The MediatR sender.</param>
-    /// <param name="logger">The logger.</param>
-    public StravaController(
-        IStravaApiClient stravaClient,
-        IClock clock,
-        IOptions<StravaOptions> options,
-        ISender sender,
-        ILogger<StravaController> logger)
-    {
-        ArgumentNullException.ThrowIfNull(stravaClient);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(sender);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _stravaClient = stravaClient;
-        _clock = clock;
-        _options = options.Value;
-        _sender = sender;
-        _logger = logger;
-    }
+    private readonly StravaOptions _options = options.Value;
 
     /// <summary>
     /// Initiates the Strava OAuth authorization flow by redirecting the user
@@ -84,7 +64,7 @@ public sealed partial class StravaController : ControllerBase
         {
             IdentifyName = identifyName,
             Nonce = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture),
-            TimestampUtc = _clock.GetCurrentInstant().ToUnixTimeSeconds()
+            TimestampUtc = clock.GetCurrentInstant().ToUnixTimeSeconds()
         };
 
         var json = JsonSerializer.Serialize(payload);
@@ -162,14 +142,14 @@ public sealed partial class StravaController : ControllerBase
             return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", "invalid_state"));
         }
 
-        var nowEpoch = _clock.GetCurrentInstant().ToUnixTimeSeconds();
+        var nowEpoch = clock.GetCurrentInstant().ToUnixTimeSeconds();
         if (nowEpoch - payload.TimestampUtc > 900) // 15 minutes expiration
         {
             LogCallbackStateExpired(payload.IdentifyName);
             return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", "state_expired"));
         }
 
-        var tokenResponse = await _stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
+        var tokenResponse = await stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
         if (tokenResponse == null)
         {
             LogCallbackTokenExchangeFailed(payload.IdentifyName);
@@ -178,7 +158,7 @@ public sealed partial class StravaController : ControllerBase
 
         var scopesList = _options.Scopes.Split(',').Select(s => s.Trim()).ToList();
 
-        await _sender.Send(new ConnectExternalProviderCommand(
+        await sender.Send(new ConnectExternalProviderCommand(
             payload.IdentifyName,
             ExternalProvider.Strava.Id,
             ExternalConnectionType.ActivitiesSync.Id,
@@ -189,10 +169,6 @@ public sealed partial class StravaController : ControllerBase
         LogCallbackSuccess(payload.IdentifyName, tokenResponse.Athlete.Id);
         return Redirect(_options.FrontendSuccessUrl.ToString());
     }
-
-    // ────────────────────────────────────────────────────────────────
-    // Webhook
-    // ────────────────────────────────────────────────────────────────
 
     /// <summary>
     /// Validates a Strava webhook subscription by echoing the challenge token.
@@ -212,40 +188,73 @@ public sealed partial class StravaController : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (request.VerifyToken != _options.WebhookVerifyToken)
+        if (!request.Mode.Equals("subscribe", StringComparison.OrdinalIgnoreCase) ||
+            string.IsNullOrWhiteSpace(request.Challenge) ||
+            request.VerifyToken != _options.WebhookVerifyToken)
         {
             LogWebhookVerifyFailed();
             return Forbid();
         }
 
         LogWebhookVerifySuccess();
-        return Ok(new { hub_challenge = request.Challenge });
+        return Ok(new StravaWebhookVerificationResponse(request.Challenge));
     }
 
     /// <summary>
     /// Receives a real-time push event from Strava.
     /// </summary>
-    /// <param name="payload">The Strava webhook event payload.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns><c>200 OK</c> always (Strava requires fast acknowledgement).</returns>
     /// <response code="200">Event acknowledged.</response>
     [HttpPost("webhook")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public Task<IActionResult> ReceiveEvent(
-        [FromBody] StravaWebhookPayload payload,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> ReceiveEvent(CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(payload);
-
-        return Core();
-
-        async Task<IActionResult> Core()
+        try
         {
-            // Phase 3: Will enqueue a Quartz job for async processing
-            await Task.CompletedTask;
-            throw new NotSupportedException("Webhook event processing will be implemented in Phase 3.");
+            var payload = await JsonSerializer.DeserializeAsync<StravaWebhookPayload>(
+                Request.Body,
+                cancellationToken: cancellationToken);
+            if (payload is null ||
+                (_options.WebhookSubscriptionId != 0 &&
+                 payload.SubscriptionId != _options.WebhookSubscriptionId))
+            {
+                return Ok();
+            }
+
+            var externalUserId = payload.OwnerId.ToString(CultureInfo.InvariantCulture);
+            if (payload.ObjectType.Equals("activity", StringComparison.OrdinalIgnoreCase) &&
+                payload.AspectType.Equals("create", StringComparison.OrdinalIgnoreCase) &&
+                payload.ObjectId > 0 &&
+                payload.OwnerId > 0)
+            {
+                await sender.Send(new EnqueueExternalActivitySyncCommand(
+                    ExternalProvider.Strava.Id,
+                    externalUserId,
+                    ExternalActivitySyncTrigger.Webhook,
+                    payload.GetIdempotencyKey(),
+                    payload.ObjectId.ToString(CultureInfo.InvariantCulture)), cancellationToken);
+            }
+            else if (payload.OwnerId > 0 && payload.IsDeauthorization())
+            {
+                await sender.Send(new EnqueueExternalConnectionRevocationCommand(
+                    ExternalProvider.Strava.Id,
+                    externalUserId,
+                    payload.GetIdempotencyKey()), cancellationToken);
+            }
         }
+        catch (JsonException exception)
+        {
+            LogWebhookIgnored(exception);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Strava requires acknowledgement even when internal scheduling is temporarily unavailable.
+            LogWebhookSchedulingFailed(exception);
+        }
+
+        return Ok();
     }
 
     /// <summary>
@@ -253,13 +262,13 @@ public sealed partial class StravaController : ControllerBase
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>
-    /// <c>200 OK</c> with the number of new activity logs created.
+    /// <c>202 Accepted</c> after durable background work is queued.
     /// </returns>
-    /// <response code="200">Sync completed successfully.</response>
+    /// <response code="202">Sync was accepted for background processing.</response>
     /// <response code="401">If the JWT is missing or invalid.</response>
     [HttpPost("sync")]
     [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> ManualSync(CancellationToken cancellationToken)
     {
@@ -269,10 +278,16 @@ public sealed partial class StravaController : ControllerBase
             return Unauthorized();
         }
 
-        var command = new SyncStravaActivitiesCommand(identifyName);
-        var newLogsCreated = await _sender.Send(command, cancellationToken);
-        
-        return Ok(new { newLogsCreated });
+        var result = await sender.Send(
+            new RequestExternalActivitySyncCommand(identifyName, ExternalProvider.Strava.Id),
+            cancellationToken);
+
+        return Accepted(new
+        {
+            providerId = result.ProviderId,
+            state = result.State,
+            statusUrl = "/v1/members/me/external-connections/STRAVA/sync-status"
+        });
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -308,28 +323,10 @@ public sealed partial class StravaController : ControllerBase
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Strava webhook subscription verified successfully")]
     private partial void LogWebhookVerifySuccess();
-}
 
-/// <summary>
-/// Internal payload serialized into the encrypted OAuth <c>state</c> parameter.
-/// </summary>
-internal class OAuthStatePayload
-{
-    /// <summary>
-    /// Gets or sets the Planthor member's Keycloak subject ID (Identity Name).
-    /// </summary>
-    [JsonInclude]
-    internal string IdentifyName { get; set; } = default!;
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Ignoring an invalid Strava webhook payload")]
+    private partial void LogWebhookIgnored(Exception exception);
 
-    /// <summary>
-    /// Gets or sets a cryptographic nonce to prevent replay attacks.
-    /// </summary>
-    [JsonInclude]
-    internal string Nonce { get; set; } = default!;
-
-    /// <summary>
-    /// Gets or sets the UTC epoch seconds when the state was created.
-    /// </summary>
-    [JsonInclude]
-    internal long TimestampUtc { get; set; }
+    [LoggerMessage(Level = LogLevel.Error, Message = "Unable to schedule Strava webhook work; event acknowledged")]
+    private partial void LogWebhookSchedulingFailed(Exception exception);
 }

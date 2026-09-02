@@ -223,7 +223,7 @@ public class PlanTests
     public void Update_NullClock_ThrowsArgumentNullException()
     {
         var plan = CreateValid();
-        Assert.Throws<ArgumentNullException>(() => plan.Update("m", 200f, 10f, From, To, Guid.NewGuid(), null!));
+        Assert.Throws<ArgumentNullException>(() => plan.Update("m", 200f, From, To, Guid.NewGuid(), null!));
     }
 
     [Fact]
@@ -231,11 +231,11 @@ public class PlanTests
     {
         var plan = CreateValid();
         var byUserId = Guid.NewGuid();
-        plan.Update("m", 200f, 10f, From, To, byUserId, Clock);
+        plan.Update("m", 200f, From, To, byUserId, Clock);
         
         Assert.Equal("m", plan.Unit);
         Assert.Equal(200f, plan.Target);
-        Assert.Equal(10f, plan.CurrentValue);
+        Assert.Equal(0f, plan.CurrentValue);
         Assert.Equal(byUserId, plan.LastUpdatedBy);
     }
 

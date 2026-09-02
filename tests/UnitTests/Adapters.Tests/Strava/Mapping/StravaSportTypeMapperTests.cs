@@ -31,27 +31,26 @@ public class StravaSportTypeMapperTests
     public void MapToPlanthor_ValidStravaSportType_ReturnsMappedType(string stravaType, string expectedPlanthorId)
     {
         // Act
-        var result = _mapper.MapToPlanthor(stravaType);
+        var result = StravaSportTypeMapper.MapToCanonicalId(stravaType);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(expectedPlanthorId, result.Id);
+        Assert.Equal(expectedPlanthorId, result);
     }
 
     [Fact]
     public void MapToPlanthor_NullOrWhiteSpace_ReturnsNull()
     {
         // Act & Assert
-        Assert.Null(_mapper.MapToPlanthor(null!));
-        Assert.Null(_mapper.MapToPlanthor(""));
-        Assert.Null(_mapper.MapToPlanthor("   "));
+        Assert.Null(StravaSportTypeMapper.MapToCanonicalId(null!));
+        Assert.Null(StravaSportTypeMapper.MapToCanonicalId(""));
+        Assert.Null(StravaSportTypeMapper.MapToCanonicalId("   "));
     }
 
     [Fact]
     public void MapToPlanthor_UnknownSportType_ReturnsNull()
     {
         // Act
-        var result = _mapper.MapToPlanthor("IceSkating");
+        var result = StravaSportTypeMapper.MapToCanonicalId("IceSkating");
 
         // Assert
         Assert.Null(result);

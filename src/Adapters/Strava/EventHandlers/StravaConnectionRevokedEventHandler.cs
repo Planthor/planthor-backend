@@ -1,107 +1,78 @@
+using System.Globalization;
 using Adapters.Strava.Client;
+using Adapters.Strava.Persistence;
 using Application.Shared;
 using Domain.Members;
 using Domain.Members.Events;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Adapters.Strava.EventHandlers;
 
 /// <summary>
-/// Listens for the <see cref="ExternalConnectionRevokedEvent"/> and deauthorizes
-/// the member's Strava account if the revoked connection belongs to Strava.
+/// Handles the revocation of a Strava connection by permanently removing credentials,
+/// canceling pending jobs, and cleaning up queued adapter work.
 /// </summary>
-public sealed partial class StravaConnectionRevokedEventHandler : IDomainEventHandler<ExternalConnectionRevokedEvent>
+/// <param name="stravaClient">The Strava API client used to deauthorize the integration upstream.</param>
+/// <param name="tokenDatabase">The database used to retrieve the athlete's token for deauthorization.</param>
+/// <param name="activitySyncAdapter">The adapter used to delete operational data associated with the user.</param>
+/// <param name="backgroundJobClient">The client used to cancel any pending background sync jobs.</param>
+/// <param name="logger">The logger used to record warnings if upstream cleanup fails.</param>
+public sealed partial class StravaConnectionRevokedEventHandler(
+    IStravaApiClient stravaClient,
+    StravaAdapterDatabase tokenDatabase,
+    StravaActivitySyncAdapter activitySyncAdapter,
+    IBackgroundJobClient backgroundJobClient,
+    ILogger<StravaConnectionRevokedEventHandler> logger)
+    : IDomainEventHandler<ExternalConnectionRevokedEvent>
 {
-    private readonly IStravaApiClient _stravaClient;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<StravaConnectionRevokedEventHandler> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="StravaConnectionRevokedEventHandler"/> class.
-    /// </summary>
-    public StravaConnectionRevokedEventHandler(
-        IStravaApiClient stravaClient,
-        IServiceProvider serviceProvider,
-        ILogger<StravaConnectionRevokedEventHandler> logger)
-    {
-        ArgumentNullException.ThrowIfNull(stravaClient);
-        ArgumentNullException.ThrowIfNull(serviceProvider);
-        ArgumentNullException.ThrowIfNull(logger);
-
-        _stravaClient = stravaClient;
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
-
-    /// <inheritdoc/>
-    public Task HandleAsync(ExternalConnectionRevokedEvent domainEvent, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="domainEvent"/> is null.</exception>
+    public async Task HandleAsync(
+        ExternalConnectionRevokedEvent domainEvent,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
-
-        if (domainEvent.Provider.Id != ExternalProvider.Strava.Id)
+        if (domainEvent.Provider != ExternalProvider.Strava ||
+            domainEvent.Type != ExternalConnectionType.ActivitiesSync)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        return Core();
-
-        async Task Core()
+        try
         {
-            try
-            {
-                var memberRepository = _serviceProvider.GetRequiredService<IMemberRepository>();
+            await backgroundJobClient.CancelExternalActivitySyncAsync(
+                ExternalProvider.Strava.Id,
+                domainEvent.ExternalUserId,
+                cancellationToken);
 
-                var member = await memberRepository.GetByIdAsync(domainEvent.MemberId, cancellationToken);
-
-                if (member != null)
-                {
-                    var success = await _stravaClient.DeauthorizeAsync(member.IdentifyName, cancellationToken);
-                    if (success)
-                    {
-                        LogDeauthorizationSucceeded(member.IdentifyName);
-                    }
-                    else
-                    {
-                        LogDeauthorizationFailed(member.IdentifyName);
-                    }
-                }
-                else
-                {
-                    LogMemberNotFound(domainEvent.MemberId);
-                }
-            }
-            catch (OperationCanceledException ex)
+            if (long.TryParse(
+                    domainEvent.ExternalUserId,
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out var athleteId) &&
+                await tokenDatabase.GetByAthleteIdAsync(athleteId, cancellationToken) is { } token)
             {
-                LogOperationCanceled(ex, domainEvent.MemberId);
-                throw;
+                await stravaClient.DeauthorizeAsync(token.Id, cancellationToken);
             }
-            catch (InvalidOperationException ex)
-            {
-                LogServiceResolutionFailed(ex, domainEvent.MemberId);
-            }
-            catch (Exception ex)
-            {
-                LogErrorDeauthorizingStrava(ex, domainEvent.MemberId);
-            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            LogUpstreamCleanupFailed(exception, domainEvent.ExternalUserId);
+        }
+        finally
+        {
+            await activitySyncAdapter.DeleteOperationalDataAsync(
+                domainEvent.ExternalUserId,
+                CancellationToken.None);
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Successfully deauthorized Strava for member {IdentifyName}")]
-    private partial void LogDeauthorizationSucceeded(string identifyName);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to deauthorize Strava for member {IdentifyName}")]
-    private partial void LogDeauthorizationFailed(string identifyName);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Member {MemberId} not found during Strava deauthorization")]
-    private partial void LogMemberNotFound(Guid memberId);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Strava deauthorization was canceled for member {MemberId}")]
-    private partial void LogOperationCanceled(Exception ex, Guid memberId);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to resolve required services during Strava deauthorization for member {MemberId}")]
-    private partial void LogServiceResolutionFailed(Exception ex, Guid memberId);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Error occurred while deauthorizing Strava for member {MemberId}")]
-    private partial void LogErrorDeauthorizingStrava(Exception ex, Guid memberId);
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Strava upstream deauthorization failed for athlete {ExternalUserId}; local data is still deleted")]
+    private partial void LogUpstreamCleanupFailed(Exception exception, string externalUserId);
 }

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Dtos;
 using Application.Shared;
+using Domain.Members;
 using Domain.Plans;
 
 namespace Application.Members.ActivityLogs.Queries.Details;
@@ -11,8 +13,11 @@ namespace Application.Members.ActivityLogs.Queries.Details;
 /// <summary>
 /// Handles the <see cref="ActivityLogDetailsQuery"/> to retrieve activity log details.
 /// </summary>
+/// <param name="memberRepository">The member repository used to enforce Plan ownership.</param>
 /// <param name="planRepository">The plan repository to fetch plan details.</param>
-public sealed class ActivityLogDetailsQueryHandler(IPlanRepository planRepository) : IQueryHandler<ActivityLogDetailsQuery, ActivityLogDto>
+public sealed class ActivityLogDetailsQueryHandler(
+    IMemberRepository memberRepository,
+    IPlanRepository planRepository) : IQueryHandler<ActivityLogDetailsQuery, ActivityLogDto>
 {
     /// <summary>
     /// Handles the query to retrieve the activity log details.
@@ -23,17 +28,25 @@ public sealed class ActivityLogDetailsQueryHandler(IPlanRepository planRepositor
     public Task<ActivityLogDto> Handle(ActivityLogDetailsQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(memberRepository);
         ArgumentNullException.ThrowIfNull(planRepository);
 
         return Core();
 
         async Task<ActivityLogDto> Core()
         {
+            var member = await memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
+                ?? throw new KeyNotFoundException("Activity log was not found.");
+            if (!member.PersonalPlans.Any(personalPlan => personalPlan.PlanId == request.PlanId))
+            {
+                throw new KeyNotFoundException("Activity log was not found.");
+            }
+
             var plan = await planRepository.GetByIdAsync(request.PlanId, cancellationToken)
-                ?? throw new InvalidOperationException($"Plan with ID {request.PlanId} was not found.");
+                ?? throw new KeyNotFoundException("Activity log was not found.");
 
             var log = plan.ActivityLogs.SingleOrDefault(x => x.Id == request.LogId)
-                ?? throw new InvalidOperationException($"Activity log with ID {request.LogId} was not found.");
+                ?? throw new KeyNotFoundException("Activity log was not found.");
 
             return new ActivityLogDto(
                 Id: log.Id,

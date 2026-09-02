@@ -19,6 +19,10 @@ public sealed class ListActivityLogsQueryValidator : AbstractValidator<ListActiv
             .NotEmpty()
             .WithErrorCode("error_plan_id_required");
 
+        RuleFor(x => x.IdentifyName)
+            .NotEmpty()
+            .WithErrorCode("error_identify_name_required");
+
         RuleFor(x => x.Limit)
             .GreaterThan(MinLimit)
             .WithErrorCode("error_limit_too_low")

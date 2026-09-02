@@ -33,20 +33,20 @@ public sealed class SportPlanDetails : ValueObject
         }
 
         Unit = unit;
-        SportTypes = sportTypes ?? new List<string>().AsReadOnly();
+        SportTypes = sportTypes is null ? [] : [.. sportTypes];
     }
 
 
     /// <summary>
     /// Gets the unit of measurement. Defaults to <c>kilometer</c>.
     /// </summary>
-    public string Unit { get; }
+    public string Unit { get; private set; }
 
     /// <summary>
     /// Gets the list of accepted Strava sport type identifiers.
     /// An empty list means all sport types are accepted.
     /// </summary>
-    public IReadOnlyList<string> SportTypes { get; }
+    public IReadOnlyList<string> SportTypes { get; private set; }
 
 
     /// <inheritdoc/>

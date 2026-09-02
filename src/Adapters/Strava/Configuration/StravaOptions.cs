@@ -65,4 +65,20 @@ public sealed class StravaOptions
     /// Gets or sets the Strava API Base URL (useful for mocking).
     /// </summary>
     public Uri BaseUrl { get; set; } = new Uri("https://www.strava.com");
+
+    /// <summary>
+    /// Gets or sets whether OAuth and webhook events automatically enqueue activity synchronization.
+    /// </summary>
+    public bool AutomaticSyncEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the application-level webhook subscription identifier to accept.
+    /// A value of zero disables subscription filtering for local development.
+    /// </summary>
+    public long WebhookSubscriptionId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the percentage of Strava read quota reserved for real-time activity webhooks.
+    /// </summary>
+    public int HistoricalQuotaHeadroomPercentage { get; set; } = 20;
 }

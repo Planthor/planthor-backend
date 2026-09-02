@@ -9,7 +9,6 @@ namespace Api.Requests;
 public record UpdatePersonalPlanRequest(
     string Unit,
     [property: JsonRequired] double Target,
-    [property: JsonRequired] double Current,
     [property: JsonRequired] DateTimeOffset FromDate,
     [property: JsonRequired] DateTimeOffset ToDate
 );

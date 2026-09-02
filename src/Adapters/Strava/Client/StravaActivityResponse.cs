@@ -31,7 +31,7 @@ public class StravaActivityResponse
     /// Gets or sets the time at which the activity was started.
     /// </summary>
     [JsonPropertyName("start_date")]
-    public DateTime StartDate { get; set; }
+    public DateTimeOffset StartDate { get; set; }
 
     /// <summary>
     /// Gets or sets the type of the activity (e.g., Run, Ride).
@@ -44,4 +44,11 @@ public class StravaActivityResponse
     /// </summary>
     [JsonPropertyName("sport_type")]
     public string SportType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the athlete that owns the activity.
+    /// Used to verify activity ownership against the authenticated user.
+    /// </summary>
+    [JsonPropertyName("athlete")]
+    public StravaActivityAthleteResponse? Athlete { get; set; }
 }

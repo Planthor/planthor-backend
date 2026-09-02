@@ -23,8 +23,10 @@
     <PackageVersion Include="NodaTime" Version="3.3.3" />
     <PackageVersion Include="NodaTime.Testing" Version="3.3.3" />
     <PackageVersion Include="NSubstitute" Version="6.0.0" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="Quartz" Version="3.18.2" />
     <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.18.2" />
+    <PackageVersion Include="Quartz.Serialization.SystemTextJson" Version="3.18.2" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.16.20" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Testcontainers.MongoDb" Version="4.14.0" />

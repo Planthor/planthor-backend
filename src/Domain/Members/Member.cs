@@ -159,6 +159,7 @@ public sealed class Member(
             existing.Id,
             provider,
             type,
+            existing.ExternalUserId,
             clock,
             $"{nameof(Member)} / {nameof(RevokeExternalProvider)}"));
     }

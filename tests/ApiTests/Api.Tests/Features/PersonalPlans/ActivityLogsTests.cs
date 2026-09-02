@@ -130,9 +130,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
 
         // Validate plan not found (Branch: plan == null)
         var notFoundPlanListRes = await _client.GetAsync($"/v1/plans/{Guid.NewGuid()}/activity-logs");
-        notFoundPlanListRes.EnsureSuccessStatusCode(); // Still returns 200 with empty list
-        var notFoundList = await notFoundPlanListRes.Content.ReadFromJsonAsync<Application.Shared.CursorPagedResult<ActivityLogDto>>();
-        Assert.Empty(notFoundList!.Items);
+        Assert.Equal(HttpStatusCode.NotFound, notFoundPlanListRes.StatusCode);
 
         // 3. Validation limits (Branch: Limit validators)
         var invalidLimitRes = await _client.GetAsync($"/v1/plans/{planId}/activity-logs?limit=0");

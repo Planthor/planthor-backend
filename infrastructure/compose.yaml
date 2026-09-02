@@ -125,6 +125,27 @@ services:
       retries: 5
       start_period: 20s
 
+  quartz-postgres:
+    image: postgres:16-alpine
+    container_name: quartz-postgres
+    environment:
+      POSTGRES_DB: ${QUARTZ_DB_NAME:-quartz}
+      POSTGRES_USER: ${QUARTZ_DB_USER:-quartz}
+      POSTGRES_PASSWORD: ${QUARTZ_DB_PASSWORD:-Planthor_Quartz_123}
+    ports:
+      - ${QUARTZ_DB_PORT:-5433}:5432
+    volumes:
+      - quartz_postgres_data:/var/lib/postgresql/data
+      - ./quartz/tables_postgres.sql:/docker-entrypoint-initdb.d/001-quartz.sql:ro
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${QUARTZ_DB_USER:-quartz} -d ${QUARTZ_DB_NAME:-quartz}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
@@ -207,6 +228,8 @@ volumes:
   mongo_setup_configdb:
     driver: local
   postgres_data:
+    driver: local
+  quartz_postgres_data:
     driver: local
   pgadmin_data:
     driver: local
