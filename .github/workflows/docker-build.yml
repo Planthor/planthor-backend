@@ -1,4 +1,4 @@
-name: Docker CI workflow
+﻿name: Docker CI workflow
 
 on:
   push:
@@ -15,10 +15,9 @@ on:
 jobs:
   docker-build:
     runs-on: ubuntu-latest
-    name: Run docker build
+    name: Build and publish backend image
     permissions:
       contents: read
-      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,31 +25,46 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/planthor/webapi
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=tag
-            type=ref,event=pr
-
-      - name: Docker Login (GHCR)
+      - name: Authenticate to GCP
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
 
-      - name: Build and push Docker images
+      - name: Set up Cloud SDK
+        if: github.event_name != 'pull_request'
+        uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2
+        with:
+          project_id: ${{ secrets.GOOGLE_PROJECT }}
+
+      - name: Configure Artifact Registry Docker authentication
+        if: github.event_name != 'pull_request'
+        env:
+          REGISTRY_HOST: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev
+        run: gcloud auth configure-docker "$REGISTRY_HOST" --quiet
+
+      - name: Define Artifact Registry image URIs
+        id: image
+        env:
+          REGISTRY_HOST: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev
+          PROJECT_ID: ${{ secrets.GOOGLE_PROJECT }}
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            REPOSITORY="planthor-backend"
+          else
+            REPOSITORY="${REGISTRY_HOST}/${PROJECT_ID}/planthor-backend/planthor-backend"
+          fi
+          echo "immutable=${REPOSITORY}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "latest=${REPOSITORY}:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push Artifact Registry image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ steps.image.outputs.immutable }}
+            ${{ steps.image.outputs.latest }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
