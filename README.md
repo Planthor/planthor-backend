@@ -408,6 +408,10 @@ Configure these repository secrets before running it:
 
 The deployment service account needs permission to deploy Cloud Run revisions (`roles/run.admin`) and permission to act as the Cloud Run runtime service account (`roles/iam.serviceAccountUser`).
 
+#### Container image publishing
+
+Pushes to `main` and version tags publish the backend image to Artifact Registry, Docker Hub (`planthordev/planthor-backend`), and GitHub Container Registry (`ghcr.io/planthor/webapi`). Configure the `DOCKERHUB_TOKEN` repository secret with a Docker Hub access token that can push to `planthordev/planthor-backend`. Publishing to GHCR uses the workflow's `GITHUB_TOKEN` and requires the `packages: write` permission already configured in the workflow.
+
 #### Strava
 
 Configure the non-secret Strava values as Cloud Run environment variables: `Strava__ClientId`, `Strava__RedirectUri`, `Strava__FrontendSuccessUrl`, `Strava__FrontendErrorUrl`, and optionally `Strava__Scopes`.
