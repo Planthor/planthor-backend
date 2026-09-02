@@ -1,0 +1,55 @@
+name: Deploy to Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Cloud Run service name (example: planthor-backend)"
+        required: true
+        default: planthor-backend
+        type: string
+      image_tag:
+        description: "Artifact Registry image tag to deploy (example: latest or a commit SHA)"
+        required: true
+        default: latest
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy Cloud Run service
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PROJECT_ID: ${{ secrets.GOOGLE_PROJECT }}
+      REGION: ${{ secrets.GOOGLE_REGION }}
+      SERVICE: ${{ inputs.service }}
+      IMAGE_TAG: ${{ inputs.image_tag }}
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GOOGLE_PROJECT }}
+
+      - name: Deploy image to Cloud Run
+        env:
+          IMAGE: ${{ secrets.GOOGLE_REGION }}-docker.pkg.dev/${{ secrets.GOOGLE_PROJECT }}/planthor-backend/planthor-backend:${{ inputs.image_tag }}
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --project "$PROJECT_ID" \
+            --region "$REGION" \
+            --quiet
+
+      - name: Show deployed service URL
+        run: |
+          gcloud run services describe "$SERVICE" \
+            --project "$PROJECT_ID" \
+            --region "$REGION" \
+            --format='value(status.url)'

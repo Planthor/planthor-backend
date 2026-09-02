@@ -200,9 +200,19 @@ The application is designed to be cloud-native and can be fully configured via e
 | Variable | Description | Example |
 | --- | --- | --- |
 | `ConnectionStrings__PlanthorDbContext` | MongoDB connection string | `mongodb://admin:pass@localhost:27017/` |
-| `Authentication__Authority` | Keycloak Issuer URL | `https://auth.example.com/realms/planthor-realm` |
-| `Authentication__Audience` | Token Audience | `planthor-backend` |
-| `Authentication__RequireHttpsMetadata` | Require HTTPS for metadata | `true` (prod), `false` (dev) |
+| `Authentication__Keycloak__Authority` | Keycloak issuer URL | `https://auth.example.com/realms/planthor-realm` |
+| `Authentication__Keycloak__Audience` | Token audience | `planthor-backend` |
+| `Authentication__Keycloak__RequireHttpsMetadata` | Require HTTPS for metadata | `true` (prod), `false` (dev) |
+| `Storage__Provider` | Avatar storage provider | `Google` (Cloud Run), `Azure` (local default) |
+| `Storage__Gcs__BucketName` | Google Cloud Storage avatar bucket | `planthor-prod-avatars` |
+| `Strava__ClientId` | Strava application client ID | `123456` |
+| `Strava__ClientSecret` | Strava application client secret | Secret Manager reference |
+| `Strava__RedirectUri` | Strava OAuth callback URL | `https://api.example.com/v1/strava/callback` |
+| `Strava__FrontendSuccessUrl` | Client redirect after successful connection | `https://app.example.com/settings/connections?status=success` |
+| `Strava__FrontendErrorUrl` | Client redirect after failed connection | `https://app.example.com/settings/connections?status=error` |
+| `Strava__WebhookVerifyToken` | Strava webhook verification token | Secret Manager reference |
+| `Strava__StateEncryptionKey` | Base64-encoded 32-byte OAuth state encryption key | Secret Manager reference |
+| `Strava__Scopes` | Strava OAuth scopes | `activity:read_all,profile:read_all` |
 | `ASPNETCORE_ENVIRONMENT` | Application Environment | `Production`, `Development` |
 | `ASPNETCORE_URLS` | Binding URLs | `http://+:8080` |
 
@@ -364,10 +374,45 @@ $env:ConnectionStrings__PlanthorDbContext = "mongodb+srv://username:password@clu
 #### Keycloak (e.g., Keycloak Cloud or self-hosted)
 
 ```powershell
-$env:Authentication__Authority = "https://auth.youromain.com/realms/planthor-realm"
-$env:Authentication__Audience = "planthor-backend"
-$env:Authentication__RequireHttpsMetadata = "true"
+$env:Authentication__Keycloak__Authority = "https://auth.yourdomain.com/realms/planthor-realm"
+$env:Authentication__Keycloak__Audience = "planthor-backend"
+$env:Authentication__Keycloak__RequireHttpsMetadata = "true"
 ```
+
+#### Google Cloud Run and Cloud Storage
+
+For Cloud Run, configure Google as the avatar storage provider and supply the production bucket name:
+
+```powershell
+$env:Storage__Provider = "Google"
+$env:Storage__Gcs__BucketName = "planthor-prod-avatars"
+```
+
+Do not set `GOOGLE_APPLICATION_CREDENTIALS` or store a Google service-account JSON key in an application environment file. Cloud Run obtains Application Default Credentials from its assigned runtime service account. Grant that service account the `roles/storage.objectUser` role on the avatar bucket so the API can upload and delete avatar objects.
+
+#### Manual Cloud Run deployment
+
+The **Deploy to Cloud Run** workflow can be started from the repository's **Actions** tab. Select the Cloud Run service and the Artifact Registry image tag to deploy (`latest` by default). It deploys images from:
+
+```text
+<GOOGLE_REGION>-docker.pkg.dev/<GOOGLE_PROJECT>/planthor-backend/planthor-backend:<image_tag>
+```
+
+Configure these repository secrets before running it:
+
+| Secret | Description |
+| --- | --- |
+| `GOOGLE_CREDENTIALS` | JSON key for a deployment service account |
+| `GOOGLE_PROJECT` | Google Cloud project ID |
+| `GOOGLE_REGION` | Artifact Registry and Cloud Run region |
+
+The deployment service account needs permission to deploy Cloud Run revisions (`roles/run.admin`) and permission to act as the Cloud Run runtime service account (`roles/iam.serviceAccountUser`).
+
+#### Strava
+
+Configure the non-secret Strava values as Cloud Run environment variables: `Strava__ClientId`, `Strava__RedirectUri`, `Strava__FrontendSuccessUrl`, `Strava__FrontendErrorUrl`, and optionally `Strava__Scopes`.
+
+Create Secret Manager secrets for `Strava__ClientSecret`, `Strava__WebhookVerifyToken`, and `Strava__StateEncryptionKey`, then inject them into Cloud Run using those exact environment-variable names. Generate the state encryption key with `openssl rand -base64 32`. Never commit these values or place production values in `.env.example`.
 
 ### Environment-Specific Configuration
 
