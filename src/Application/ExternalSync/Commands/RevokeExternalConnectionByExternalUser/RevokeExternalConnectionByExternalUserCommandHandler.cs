@@ -19,30 +19,36 @@ public sealed class RevokeExternalConnectionByExternalUserCommandHandler(
 {
     private readonly IMemberRepository _memberRepository = memberRepository ?? throw new ArgumentNullException(nameof(memberRepository));
     private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
-    public async Task<bool> Handle(
+    public Task<bool> Handle(
         RevokeExternalConnectionByExternalUserCommand request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var member = await _memberRepository.GetByActiveExternalConnectionAsync(
-            request.ProviderId,
-            ExternalConnectionType.ActivitiesSync.Id,
-            request.ExternalUserId,
-            cancellationToken);
-        if (member is null)
-        {
-            return false;
-        }
+        return Core();
 
-        member.RevokeExternalProvider(
-            ExternalProvider.FromId(request.ProviderId),
-            ExternalConnectionType.ActivitiesSync,
-            _clock);
-        await _memberRepository.UpdateAsync(member, cancellationToken);
-        await _memberRepository.SaveChangesAsync(cancellationToken);
-        return true;
+        async Task<bool> Core()
+        {
+            var member = await _memberRepository.GetByActiveExternalConnectionAsync(
+                request.ProviderId,
+                ExternalConnectionType.ActivitiesSync.Id,
+                request.ExternalUserId,
+                cancellationToken);
+            if (member is null)
+            {
+                return false;
+            }
+
+            member.RevokeExternalProvider(
+                ExternalProvider.FromId(request.ProviderId),
+                ExternalConnectionType.ActivitiesSync,
+                _clock);
+            await _memberRepository.UpdateAsync(member, cancellationToken);
+            await _memberRepository.SaveChangesAsync(cancellationToken);
+            return true;
+        }
     }
 }

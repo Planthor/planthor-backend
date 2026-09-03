@@ -69,7 +69,7 @@ public sealed class MemberSessionFilter : IAsyncActionFilter
         {
             var prefix = preferredUsername.Split('@')[0];
             var suffix = Guid.NewGuid().ToString()[..4];
-            identifyName = $"{prefix}_{suffix}".ToLowerInvariant();
+            identifyName = $"{prefix}_{suffix}".ToUpperInvariant();
         }
         else if (!string.IsNullOrEmpty(preferredUsername))
         {
@@ -77,7 +77,7 @@ public sealed class MemberSessionFilter : IAsyncActionFilter
         }
         else
         {
-            identifyName = $"{user.FindFirst(ClaimTypes.GivenName)?.Value}_{Guid.NewGuid().ToString()[..RandomSuffixLength]}".ToLowerInvariant();
+            identifyName = $"{user.FindFirst(ClaimTypes.GivenName)?.Value}_{Guid.NewGuid().ToString()[..RandomSuffixLength]}".ToUpperInvariant();
         }
 
         var avatarUrlString = user.FindFirst("avatarUrl")?.Value;

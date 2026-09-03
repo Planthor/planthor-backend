@@ -7,13 +7,13 @@ public class SlugifyParameterTransformerTests
     [Theory]
     [InlineData(null, null)]
     [InlineData("", null)]
-    [InlineData("Members", "members")]
-    [InlineData("ExternalConnections", "external-connections")]
-    [InlineData("ActivityLogs", "activity-logs")]
-    [InlineData("PersonalPlans", "personal-plans")]
-    [InlineData("SportTypes", "sport-types")]
-    [InlineData("already-kebab", "already-kebab")]
-    [InlineData("API", "api")] // test consecutive capitals or just standard behaviour
+    [InlineData("Members", "MEMBERS")]
+    [InlineData("ExternalConnections", "EXTERNAL-CONNECTIONS")]
+    [InlineData("ActivityLogs", "ACTIVITY-LOGS")]
+    [InlineData("PersonalPlans", "PERSONAL-PLANS")]
+    [InlineData("SportTypes", "SPORT-TYPES")]
+    [InlineData("already-kebab", "ALREADY-KEBAB")]
+    [InlineData("API", "API")] // test consecutive capitals or just standard behaviour
     public void TransformOutbound_WithVariousInputs_ReturnsExpectedKebabCase(object? input, string? expected)
     {
         // Arrange
