@@ -53,6 +53,6 @@ public sealed class StravaWebhookPayload
     }
 
     /// <summary>Builds the deterministic delivery key used to coalesce duplicate webhook events.</summary>
-    public string GetIdempotencyKey() =>
+    public string IdempotencyKey =>
         $"{SubscriptionId}:{OwnerId}:{ObjectType}:{ObjectId}:{AspectType}:{EventTime}";
 }

@@ -117,7 +117,7 @@ internal sealed partial class RequestRunner<T>(
                 ErrorCode: "strava_authorization_required"),
             HttpStatusCode.TooManyRequests => new StravaApiResult<T>(
                 StravaApiOutcome.RateLimited,
-                RetryAt: _rateLimitCoordinator.GetRetryAt(),
+                RetryAt: _rateLimitCoordinator.RetryAt,
                 ErrorCode: "strava_rate_limited"),
             _ => TransientFailure()
         };

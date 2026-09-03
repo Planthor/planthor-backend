@@ -69,7 +69,7 @@ internal sealed class StravaApiClient(
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
-        if (_rateLimitCoordinator.GetHistoricalDeferral() is { } deferredUntil)
+        if (_rateLimitCoordinator.HistoricalDeferral is { } deferredUntil)
         {
             return Task.FromResult(new StravaApiResult<IReadOnlyList<StravaActivityResponse>>(
                 StravaApiOutcome.RateLimited,

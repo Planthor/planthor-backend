@@ -38,19 +38,22 @@ public sealed class StravaRateLimitCoordinator(IClock clock, IOptions<StravaOpti
     /// An <see cref="Instant"/> representing the next limit reset time if deferral is required, 
     /// or <c>null</c> if sufficient quota remains.
     /// </returns>
-    public Instant? GetHistoricalDeferral()
+    public Instant? HistoricalDeferral
     {
-        lock (_gate)
+        get
         {
-            var usableFraction = (100 - _headroomPercentage) / 100d;
-            if (_dailyUsage >= Math.Floor(_dailyLimit * usableFraction))
+            lock (_gate)
             {
-                return NextUtcMidnight();
-            }
+                var usableFraction = (100 - _headroomPercentage) / 100d;
+                if (_dailyUsage >= Math.Floor(_dailyLimit * usableFraction))
+                {
+                    return NextUtcMidnight();
+                }
 
-            return _quarterHourUsage >= Math.Floor(_quarterHourLimit * usableFraction)
-                ? NextQuarterHour()
-                : null;
+                return _quarterHourUsage >= Math.Floor(_quarterHourLimit * usableFraction)
+                    ? NextQuarterHour()
+                    : null;
+            }
         }
     }
 
@@ -96,11 +99,14 @@ public sealed class StravaRateLimitCoordinator(IClock clock, IOptions<StravaOpti
     /// determining whether the 15-minute or daily quota was exhausted.
     /// </remarks>
     /// <returns>An <see cref="Instant"/> specifying when to retry, inclusive of a 5-second safety jitter.</returns>
-    public Instant GetRetryAt()
+    public Instant RetryAt
     {
-        lock (_gate)
+        get
         {
-            return _dailyUsage >= _dailyLimit ? NextUtcMidnight() : NextQuarterHour();
+            lock (_gate)
+            {
+                return _dailyUsage >= _dailyLimit ? NextUtcMidnight() : NextQuarterHour();
+            }
         }
     }
 

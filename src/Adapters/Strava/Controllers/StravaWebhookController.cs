@@ -94,7 +94,7 @@ public sealed partial class StravaWebhookController(
                     ExternalProvider.Strava.Id,
                     externalUserId,
                     ExternalActivitySyncTrigger.Webhook,
-                    payload.GetIdempotencyKey(),
+                    payload.IdempotencyKey,
                     payload.ObjectId.ToString(CultureInfo.InvariantCulture)), cancellationToken);
             }
             else if (payload.OwnerId > 0 && payload.IsDeauthorization())
@@ -102,7 +102,7 @@ public sealed partial class StravaWebhookController(
                 await _sender.Send(new EnqueueExternalConnectionRevocationCommand(
                     ExternalProvider.Strava.Id,
                     externalUserId,
-                    payload.GetIdempotencyKey()), cancellationToken);
+                    payload.IdempotencyKey), cancellationToken);
             }
             else
             {
