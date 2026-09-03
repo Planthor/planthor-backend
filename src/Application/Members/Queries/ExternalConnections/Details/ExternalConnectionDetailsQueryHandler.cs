@@ -55,7 +55,8 @@ public sealed class ExternalConnectionDetailsQueryHandler : IQueryHandler<Extern
                 },
                 cancellationToken);
 
-            var connection = (member?.ExternalConnections.FirstOrDefault(c => c.Id == request.ConnectionId)) ?? throw new KeyNotFoundException($"External connection '{request.ConnectionId}' for member '{request.Identifier}' was not found.");
+            var connection = (member?.ExternalConnections.FirstOrDefault(c => c.Id == request.ConnectionId)) 
+                ?? throw new KeyNotFoundException($"External connection '{request.ConnectionId}' for member '{request.Identifier}' was not found.");
             
             return new ExternalConnectionDto(
                 connection.Id,

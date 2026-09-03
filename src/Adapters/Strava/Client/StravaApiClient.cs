@@ -13,175 +13,52 @@ using NodaTime;
 namespace Adapters.Strava.Client;
 
 /// <summary>
-/// Typed Strava HTTP client with proactive token refresh, one-time 401 refresh, and typed failures.
+/// Typed Strava HTTP client for fetching activity data. Handles automatic token injection, one-time 401 refresh, and typed failures.
+/// Token operations (exchange, refresh, and deauthorization) are delegated to <see cref="StravaTokenClient"/>.
 /// </summary>
 /// <param name="httpClient">The HTTP client used to communicate with the Strava API.</param>
-/// <param name="tokenDb">The database repository for managing tokens.</param>
+/// <param name="tokenClient">The client for managing and refreshing tokens.</param>
 /// <param name="options">The configuration options for Strava.</param>
 /// <param name="logger">The logger instance.</param>
 /// <param name="clock">The system clock.</param>
 /// <param name="rateLimitCoordinator">The rate limit coordinator.</param>
-public sealed partial class StravaApiClient(
+internal sealed partial class StravaApiClient(
     HttpClient httpClient,
-    StravaAdapterDatabase tokenDb,
+    StravaTokenClient tokenClient,
     IOptions<StravaOptions> options,
     ILogger<StravaApiClient> logger,
     IClock clock,
     StravaRateLimitCoordinator rateLimitCoordinator) : IStravaApiClient
 {
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-    private readonly StravaAdapterDatabase _tokenDb = tokenDb ?? throw new ArgumentNullException(nameof(tokenDb));
+    private readonly StravaTokenClient _tokenClient = tokenClient ?? throw new ArgumentNullException(nameof(tokenClient));
     private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     private readonly StravaOptions _options = options.Value;
 
-    private Uri TokenEndpoint => new(_options.BaseUrl, "oauth/token");
-    private Uri DeauthorizeEndpoint => new(_options.BaseUrl, "oauth/deauthorize");
-
     /// <inheritdoc />
-    public async Task<StravaTokenResponse?> ExchangeCodeAsync(
+    public Task<StravaTokenResponse?> ExchangeCodeAsync(
         string code,
         string identifyName,
-        CancellationToken cancellationToken)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(code);
-        ArgumentException.ThrowIfNullOrEmpty(identifyName);
-
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["client_id"] = _options.ClientId,
-            ["client_secret"] = _options.ClientSecret,
-            ["code"] = code,
-            ["grant_type"] = "authorization_code"
-        });
-        using var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            LogTokenExchangeFailed(response.StatusCode);
-            return null;
-        }
-
-        var tokenResponse = await response.Content.ReadFromJsonAsync<StravaTokenResponse>(cancellationToken);
-        if (tokenResponse?.Athlete is null)
-        {
-            LogTokenResponseDeserializationFailed();
-            return null;
-        }
-
-        await _tokenDb.UpsertAsync(new StravaTokenDocument
-        {
-            Id = identifyName,
-            AthleteId = tokenResponse.Athlete.Id,
-            AccessToken = tokenResponse.AccessToken,
-            RefreshToken = tokenResponse.RefreshToken,
-            ExpiresAt = tokenResponse.ExpiresAt,
-            LastRefreshedAtUtc = _clock.GetCurrentInstant().ToDateTimeOffset()
-        }, cancellationToken);
-
-        LogTokenExchangeSucceeded(identifyName, tokenResponse.Athlete.Id);
-        return tokenResponse;
-    }
+        CancellationToken cancellationToken) =>
+        _tokenClient.ExchangeCodeAsync(code, identifyName, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<StravaTokenDocument?> RefreshTokenAsync(
+    public Task<StravaTokenDocument?> RefreshTokenAsync(
         string identifyName,
-        CancellationToken cancellationToken)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(identifyName);
-
-        var existing = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
-        if (existing is null)
-        {
-            LogNoTokenFound(identifyName);
-            return null;
-        }
-
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["client_id"] = _options.ClientId,
-            ["client_secret"] = _options.ClientSecret,
-            ["refresh_token"] = existing.RefreshToken,
-            ["grant_type"] = "refresh_token"
-        });
-
-        using var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            LogTokenRefreshFailed(identifyName, response.StatusCode);
-            return null;
-        }
-
-        var refreshResponse = await response.Content.ReadFromJsonAsync<StravaRefreshResponse>(cancellationToken);
-        if (refreshResponse is null)
-        {
-            LogTokenResponseDeserializationFailed();
-            return null;
-        }
-
-        existing.AccessToken = refreshResponse.AccessToken;
-        existing.RefreshToken = refreshResponse.RefreshToken;
-        existing.ExpiresAt = refreshResponse.ExpiresAt;
-        existing.LastRefreshedAtUtc = _clock.GetCurrentInstant().ToDateTimeOffset();
-        await _tokenDb.UpsertAsync(existing, cancellationToken);
-
-        LogTokenRefreshSucceeded(identifyName);
-        return existing;
-    }
+        CancellationToken cancellationToken) =>
+        _tokenClient.RefreshTokenAsync(identifyName, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<StravaTokenDocument?> GetValidTokenAsync(
+    public Task<StravaTokenDocument?> GetValidTokenAsync(
         string identifyName,
-        CancellationToken cancellationToken)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(identifyName);
-
-        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
-        if (token is null)
-        {
-            return null;
-        }
-
-        return _clock.GetCurrentInstant().ToUnixTimeSeconds() > token.ExpiresAt - 60
-            ? await RefreshTokenAsync(identifyName, cancellationToken)
-            : token;
-    }
+        CancellationToken cancellationToken) =>
+        _tokenClient.GetValidTokenAsync(identifyName, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<bool> DeauthorizeAsync(
+    public Task<bool> DeauthorizeAsync(
         string identifyName,
-        CancellationToken cancellationToken)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(identifyName);
-
-        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
-        if (token is null)
-        {
-            return true;
-        }
-
-        try
-        {
-            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                ["access_token"] = token.AccessToken
-            });
-
-            using var response = await _httpClient.PostAsync(DeauthorizeEndpoint, content, cancellationToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                LogDeauthorizationFailed(identifyName, response.StatusCode);
-            }
-            else
-            {
-                LogDeauthorizationSucceeded(identifyName);
-            }
-        }
-        finally
-        {
-            await _tokenDb.DeleteAsync(identifyName, cancellationToken);
-        }
-
-        return true;
-    }
+        CancellationToken cancellationToken) =>
+        _tokenClient.DeauthorizeAsync(identifyName, cancellationToken);
 
     /// <inheritdoc />
     public Task<StravaApiResult<IReadOnlyList<StravaActivityResponse>>> GetAthleteActivitiesPageAsync(
@@ -201,9 +78,11 @@ public sealed partial class StravaApiClient(
                 ErrorCode: "strava_rate_limit_headroom"));
         }
 
-        var relativeUri = string.Create(
+        var relativeUriString = string.Create(
             CultureInfo.InvariantCulture,
             $"api/v3/athlete/activities?after={afterEpoch}&before={beforeEpoch}&page={page}&per_page={perPage}");
+        var relativeUri = new Uri(relativeUriString, UriKind.Relative);
+
         return SendAuthorizedAsync<IReadOnlyList<StravaActivityResponse>>(
             identifyName,
             accessToken => CreateAuthorizedGet(relativeUri, accessToken),
@@ -219,7 +98,7 @@ public sealed partial class StravaApiClient(
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
         ArgumentException.ThrowIfNullOrEmpty(externalActivityId);
 
-        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        var token = await _tokenClient.GetValidTokenAsync(identifyName, cancellationToken);
         if (token is null)
         {
             return new StravaApiResult<StravaActivityResponse>(
@@ -227,7 +106,9 @@ public sealed partial class StravaApiClient(
                 ErrorCode: "strava_token_missing");
         }
 
-        var relativeUri = $"api/v3/activities/{Uri.EscapeDataString(externalActivityId)}";
+        var relativeUriString = $"api/v3/activities/{Uri.EscapeDataString(externalActivityId)}";
+        var relativeUri = new Uri(relativeUriString, UriKind.Relative);
+
         var result = await SendAuthorizedAsync<StravaActivityResponse>(
             identifyName,
             accessToken => CreateAuthorizedGet(relativeUri, accessToken),
@@ -251,7 +132,7 @@ public sealed partial class StravaApiClient(
     {
         try
         {
-            var token = await GetValidTokenAsync(identifyName, cancellationToken);
+            var token = await _tokenClient.GetValidTokenAsync(identifyName, cancellationToken);
             if (token is null)
             {
                 return new StravaApiResult<T>(
@@ -267,7 +148,7 @@ public sealed partial class StravaApiClient(
                 return await ReadActivityResponseAsync<T>(firstResponse, cancellationToken);
             }
 
-            var refreshed = await RefreshTokenAsync(identifyName, cancellationToken);
+            var refreshed = await _tokenClient.RefreshTokenAsync(identifyName, cancellationToken);
             if (refreshed is null)
             {
                 return new StravaApiResult<T>(
@@ -330,36 +211,12 @@ public sealed partial class StravaApiClient(
         RetryAt: _clock.GetCurrentInstant().Plus(Duration.FromMinutes(1)),
         ErrorCode: "strava_temporarily_unavailable");
 
-    private HttpRequestMessage CreateAuthorizedGet(string relativeUri, string accessToken)
+    private HttpRequestMessage CreateAuthorizedGet(Uri relativeUri, string accessToken)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_options.BaseUrl, relativeUri));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         return request;
     }
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Strava token exchange failed with status {StatusCode}")]
-    private partial void LogTokenExchangeFailed(HttpStatusCode statusCode);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to deserialize a Strava token response")]
-    private partial void LogTokenResponseDeserializationFailed();
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Strava token exchange succeeded for member {IdentifyName}, athlete {AthleteId}")]
-    private partial void LogTokenExchangeSucceeded(string identifyName, long athleteId);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "No Strava token found for member {IdentifyName}")]
-    private partial void LogNoTokenFound(string identifyName);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Strava token refresh failed for member {IdentifyName} with status {StatusCode}")]
-    private partial void LogTokenRefreshFailed(string identifyName, HttpStatusCode statusCode);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Strava token refresh succeeded for member {IdentifyName}")]
-    private partial void LogTokenRefreshSucceeded(string identifyName);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Strava deauthorization failed for member {IdentifyName} with status {StatusCode}")]
-    private partial void LogDeauthorizationFailed(string identifyName, HttpStatusCode statusCode);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Strava deauthorization succeeded for member {IdentifyName}")]
-    private partial void LogDeauthorizationSucceeded(string identifyName);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Strava activity request failed for member {IdentifyName}")]
     private partial void LogActivityRequestFailed(Exception exception, string identifyName);
