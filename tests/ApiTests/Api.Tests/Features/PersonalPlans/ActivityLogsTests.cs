@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Api.Requests;
 using Application.Dtos;
+using Application.Shared;
 using Xunit;
 
 namespace Api.Tests.Features.PersonalPlans;
@@ -125,7 +126,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
         // 2. Validate empty logs returns empty result (Branch: logs.Count == 0)
         var emptyListRes = await _client.GetAsync($"/v1/plans/{planId}/activity-logs");
         emptyListRes.EnsureSuccessStatusCode();
-        var emptyList = await emptyListRes.Content.ReadFromJsonAsync<Application.Shared.CursorPagedResult<ActivityLogDto>>();
+        var emptyList = await emptyListRes.Content.ReadFromJsonAsync<CursorPagedResult<ActivityLogDto>>();
         Assert.Empty(emptyList!.Items);
 
         // Validate plan not found (Branch: plan == null)
@@ -149,7 +150,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
         // 5. Paginate with Limit = 2
         var page1Res = await _client.GetAsync($"/v1/plans/{planId}/activity-logs?limit=2");
         page1Res.EnsureSuccessStatusCode();
-        var page1 = await page1Res.Content.ReadFromJsonAsync<Application.Shared.CursorPagedResult<ActivityLogDto>>();
+        var page1 = await page1Res.Content.ReadFromJsonAsync<CursorPagedResult<ActivityLogDto>>();
         
         var page1Items = new System.Collections.Generic.List<ActivityLogDto>(page1!.Items);
         Assert.Equal(2, page1Items.Count);
@@ -164,7 +165,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
         var encodedCursor = Uri.EscapeDataString(page1.NextCursor);
         var page2Res = await _client.GetAsync($"/v1/plans/{planId}/activity-logs?limit=2&cursor={encodedCursor}");
         page2Res.EnsureSuccessStatusCode();
-        var page2 = await page2Res.Content.ReadFromJsonAsync<Application.Shared.CursorPagedResult<ActivityLogDto>>();
+        var page2 = await page2Res.Content.ReadFromJsonAsync<CursorPagedResult<ActivityLogDto>>();
         
         var page2Items = new System.Collections.Generic.List<ActivityLogDto>(page2!.Items);
         Assert.Single(page2Items);
@@ -174,7 +175,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
         // 7. Invalid cursor format (Branch: invalid cursor parsing)
         var invalidCursorRes = await _client.GetAsync($"/v1/plans/{planId}/activity-logs?cursor=invalid_cursor_format");
         invalidCursorRes.EnsureSuccessStatusCode(); // Falls back to ignoring cursor
-        var invalidCursorPage = await invalidCursorRes.Content.ReadFromJsonAsync<Application.Shared.CursorPagedResult<ActivityLogDto>>();
+        var invalidCursorPage = await invalidCursorRes.Content.ReadFromJsonAsync<CursorPagedResult<ActivityLogDto>>();
         var invalidCursorItems = new System.Collections.Generic.List<ActivityLogDto>(invalidCursorPage!.Items);
         Assert.Equal(3, invalidCursorItems.Count); // Returned all 3 since default limit is 10
     }
