@@ -115,53 +115,12 @@ public sealed class ProcessExternalActivitySyncCommandHandler(
             return nonSuccessResult;
         }
 
-        var externalProvider = ExternalProvider.FromId(request.ProviderId);
-        var changedPlans = new HashSet<Plan>();
-        var logsCreated = 0;
-
-        foreach (var activity in fetchResult.Activities)
-        {
-            if (!activity.ProviderId.Equals(request.ProviderId, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            foreach (var plan in eligiblePlans)
-            {
-                if (!ExternalActivityPlanPolicy.TryMatch(
-                        plan,
-                        activity.CanonicalSportTypeId,
-                        activity.OccurredAt,
-                        runUpperBound,
-                        out var activityLocalDate))
-                {
-                    continue;
-                }
-
-                var value = ActivityDistance.ConvertMeters(activity.DistanceMeters, plan.Unit);
-                if (value is null)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    plan.AddActivityLog(
-                        value.Value,
-                        activityLocalDate,
-                        new ExternalActivitySource(externalProvider, activity.ExternalActivityId),
-                        activity.OccurredAt,
-                        clock,
-                        member.Id);
-                    changedPlans.Add(plan);
-                    logsCreated++;
-                }
-                catch (DuplicateExternalActivityException)
-                {
-                    // A replay after a checkpoint failure or duplicate webhook is successful by definition.
-                }
-            }
-        }
+        var (changedPlans, logsCreated) = ProcessActivities(
+            fetchResult.Activities,
+            eligiblePlans,
+            request.ProviderId,
+            runUpperBound,
+            member.Id);
 
         foreach (var plan in changedPlans)
         {
@@ -243,5 +202,82 @@ public sealed class ProcessExternalActivitySyncCommandHandler(
             errorCode,
             cancellationToken);
         return new ProcessExternalActivitySyncResult(0, ErrorCode: errorCode);
+    }
+
+    private (HashSet<Plan> ChangedPlans, int LogsCreated) ProcessActivities(
+        IEnumerable<AdapterActivityDto> activities,
+        IEnumerable<Plan> eligiblePlans,
+        string providerId,
+        Instant runUpperBound,
+        Guid memberId)
+    {
+        var externalProvider = ExternalProvider.FromId(providerId);
+        var changedPlans = new HashSet<Plan>();
+        var logsCreated = 0;
+
+        foreach (var activity in activities)
+        {
+            if (!activity.ProviderId.Equals(providerId, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            logsCreated += ProcessActivityForPlans(
+                activity,
+                eligiblePlans,
+                externalProvider,
+                runUpperBound,
+                memberId,
+                changedPlans);
+        }
+
+        return (changedPlans, logsCreated);
+    }
+
+    private int ProcessActivityForPlans(
+        AdapterActivityDto activity,
+        IEnumerable<Plan> eligiblePlans,
+        ExternalProvider externalProvider,
+        Instant runUpperBound,
+        Guid memberId,
+        HashSet<Plan> changedPlans)
+    {
+        var logsCreated = 0;
+        foreach (var plan in eligiblePlans)
+        {
+            if (!ExternalActivityPlanPolicy.TryMatch(
+                    plan,
+                    activity.CanonicalSportTypeId,
+                    activity.OccurredAt,
+                    runUpperBound,
+                    out var activityLocalDate))
+            {
+                continue;
+            }
+
+            var value = ActivityDistance.ConvertMeters(activity.DistanceMeters, plan.Unit);
+            if (value is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                plan.AddActivityLog(
+                    value.Value,
+                    activityLocalDate,
+                    new ExternalActivitySource(externalProvider, activity.ExternalActivityId),
+                    activity.OccurredAt,
+                    clock,
+                    memberId);
+                changedPlans.Add(plan);
+                logsCreated++;
+            }
+            catch (DuplicateExternalActivityException)
+            {
+                // A replay after a checkpoint failure or duplicate webhook is successful by definition.
+            }
+        }
+        return logsCreated;
     }
 }

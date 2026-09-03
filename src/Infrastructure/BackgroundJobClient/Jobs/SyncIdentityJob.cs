@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Domain.Members;
 using Infrastructure.Services;
@@ -33,66 +34,66 @@ public partial class SyncIdentityJob(
     private readonly ILogger<SyncIdentityJob> _logger = logger;
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
-    public Task Execute(IJobExecutionContext context)
+    public async Task Execute(IJobExecutionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        return Core();
+        var dataMap = context.MergedJobDataMap;
+        var memberIdString = dataMap.GetString("MemberId");
+        var identifyName = dataMap.GetString("IdentifyName");
 
-        async Task Core()
+        if (!Guid.TryParse(memberIdString, out var memberId) || string.IsNullOrEmpty(identifyName))
         {
-            var dataMap = context.MergedJobDataMap;
-            var memberIdString = dataMap.GetString("MemberId");
-            var identifyName = dataMap.GetString("IdentifyName");
+            LogInvalidJobData();
+            return;
+        }
 
-            if (!Guid.TryParse(memberIdString, out var memberId) || string.IsNullOrEmpty(identifyName))
-            {
-                LogInvalidJobData();
-                return;
-            }
+        var member = await _memberRepository.GetByIdAsync(memberId, context.CancellationToken);
+        if (member == null)
+        {
+            LogMemberNotFound(memberId);
+            return;
+        }
 
-            var member = await _memberRepository.GetByIdAsync(memberId, context.CancellationToken);
-            if (member == null)
-            {
-                LogMemberNotFound(memberId);
-                return;
-            }
+        var keycloakConnection = member.ExternalConnections
+            .FirstOrDefault(c => c.Provider == ExternalProvider.Keycloak && 
+                                 c.Type == ExternalConnectionType.Identity && 
+                                 c.Status == ConnectionStatus.Active);
+        
+        if (keycloakConnection == null)
+        {
+            LogKeycloakConnectionNotFound(memberId);
+            return;
+        }
 
-            var keycloakConnection = member.ExternalConnections
-                .FirstOrDefault(c => c.Provider == ExternalProvider.Keycloak && 
-                                     c.Type == ExternalConnectionType.Identity && 
-                                     c.Status == ConnectionStatus.Active);
+        await SyncIdentitiesAsync(member, keycloakConnection.ExternalUserId, identifyName, context.CancellationToken);
+    }
+
+    private async Task SyncIdentitiesAsync(Member member, string externalUserId, string identifyName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var identities = await _keycloakAdminClient.GetUserFederatedIdentitiesAsync(externalUserId, cancellationToken);
             
-            if (keycloakConnection == null)
+            bool hasChanges = false;
+            foreach (var identity in identities)
             {
-                LogKeycloakConnectionNotFound(memberId);
-                return;
-            }
-
-            try
-            {
-                var identities = await _keycloakAdminClient.GetUserFederatedIdentitiesAsync(keycloakConnection.ExternalUserId, context.CancellationToken);
-                
-                bool hasChanges = false;
-                foreach (var identity in identities)
+                if (ProcessIdentity(member, identity, identifyName))
                 {
-                    if (ProcessIdentity(member, identity, identifyName))
-                    {
-                        hasChanges = true;
-                    }
-                }
-
-                if (hasChanges)
-                {
-                    await _memberRepository.SaveChangesAsync(context.CancellationToken);
-                    LogIdentitiesSynced(memberId);
+                    hasChanges = true;
                 }
             }
-            catch (Exception ex)
+
+            if (hasChanges)
             {
-                LogSyncFailed(ex, memberId);
-                throw; // Rethrow to let Quartz handle retries if configured
+                await _memberRepository.SaveChangesAsync(cancellationToken);
+                LogIdentitiesSynced(member.Id);
             }
+        }
+        catch (Exception ex)
+        {
+            LogSyncFailed(ex, member.Id);
+            throw; // Rethrow to let Quartz handle retries if configured
         }
     }
 

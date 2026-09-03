@@ -54,7 +54,9 @@ public sealed class StravaActivitySyncAdapter(
 
         var activities = new List<AdapterActivityDto>();
         var hasMorePages = true;
-        for (var page = 1; hasMorePages; page++)
+        var page = 1;
+        
+        while (hasMorePages)
         {
             var result = await client.GetAthleteActivitiesPageAsync(
                 token.Id,
@@ -81,6 +83,8 @@ public sealed class StravaActivitySyncAdapter(
             {
                 hasMorePages = false;
             }
+
+            page++;
         }
 
         return new ActivitySyncFetchResultDto(
