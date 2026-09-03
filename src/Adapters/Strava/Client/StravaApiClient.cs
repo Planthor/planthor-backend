@@ -29,6 +29,9 @@ public sealed partial class StravaApiClient(
     IClock clock,
     StravaRateLimitCoordinator rateLimitCoordinator) : IStravaApiClient
 {
+    private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+    private readonly StravaAdapterDatabase _tokenDb = tokenDb ?? throw new ArgumentNullException(nameof(tokenDb));
+    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     private readonly StravaOptions _options = options.Value;
 
     private Uri TokenEndpoint => new(_options.BaseUrl, "oauth/token");
@@ -50,7 +53,7 @@ public sealed partial class StravaApiClient(
             ["code"] = code,
             ["grant_type"] = "authorization_code"
         });
-        using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
+        using var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             LogTokenExchangeFailed(response.StatusCode);
@@ -64,14 +67,14 @@ public sealed partial class StravaApiClient(
             return null;
         }
 
-        await tokenDb.UpsertAsync(new StravaTokenDocument
+        await _tokenDb.UpsertAsync(new StravaTokenDocument
         {
             Id = identifyName,
             AthleteId = tokenResponse.Athlete.Id,
             AccessToken = tokenResponse.AccessToken,
             RefreshToken = tokenResponse.RefreshToken,
             ExpiresAt = tokenResponse.ExpiresAt,
-            LastRefreshedAtUtc = clock.GetCurrentInstant().ToDateTimeOffset()
+            LastRefreshedAtUtc = _clock.GetCurrentInstant().ToDateTimeOffset()
         }, cancellationToken);
 
         LogTokenExchangeSucceeded(identifyName, tokenResponse.Athlete.Id);
@@ -85,7 +88,7 @@ public sealed partial class StravaApiClient(
     {
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
 
-        var existing = await tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        var existing = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
         if (existing is null)
         {
             LogNoTokenFound(identifyName);
@@ -99,7 +102,8 @@ public sealed partial class StravaApiClient(
             ["refresh_token"] = existing.RefreshToken,
             ["grant_type"] = "refresh_token"
         });
-        using var response = await httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
+
+        using var response = await _httpClient.PostAsync(TokenEndpoint, content, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             LogTokenRefreshFailed(identifyName, response.StatusCode);
@@ -116,8 +120,8 @@ public sealed partial class StravaApiClient(
         existing.AccessToken = refreshResponse.AccessToken;
         existing.RefreshToken = refreshResponse.RefreshToken;
         existing.ExpiresAt = refreshResponse.ExpiresAt;
-        existing.LastRefreshedAtUtc = clock.GetCurrentInstant().ToDateTimeOffset();
-        await tokenDb.UpsertAsync(existing, cancellationToken);
+        existing.LastRefreshedAtUtc = _clock.GetCurrentInstant().ToDateTimeOffset();
+        await _tokenDb.UpsertAsync(existing, cancellationToken);
 
         LogTokenRefreshSucceeded(identifyName);
         return existing;
@@ -130,13 +134,13 @@ public sealed partial class StravaApiClient(
     {
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
 
-        var token = await tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
         if (token is null)
         {
             return null;
         }
 
-        return clock.GetCurrentInstant().ToUnixTimeSeconds() > token.ExpiresAt - 60
+        return _clock.GetCurrentInstant().ToUnixTimeSeconds() > token.ExpiresAt - 60
             ? await RefreshTokenAsync(identifyName, cancellationToken)
             : token;
     }
@@ -148,7 +152,7 @@ public sealed partial class StravaApiClient(
     {
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
 
-        var token = await tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
         if (token is null)
         {
             return true;
@@ -160,7 +164,8 @@ public sealed partial class StravaApiClient(
             {
                 ["access_token"] = token.AccessToken
             });
-            using var response = await httpClient.PostAsync(DeauthorizeEndpoint, content, cancellationToken);
+
+            using var response = await _httpClient.PostAsync(DeauthorizeEndpoint, content, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 LogDeauthorizationFailed(identifyName, response.StatusCode);
@@ -172,7 +177,7 @@ public sealed partial class StravaApiClient(
         }
         finally
         {
-            await tokenDb.DeleteAsync(identifyName, cancellationToken);
+            await _tokenDb.DeleteAsync(identifyName, cancellationToken);
         }
 
         return true;
@@ -214,7 +219,7 @@ public sealed partial class StravaApiClient(
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
         ArgumentException.ThrowIfNullOrEmpty(externalActivityId);
 
-        var token = await tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
+        var token = await _tokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken);
         if (token is null)
         {
             return new StravaApiResult<StravaActivityResponse>(
@@ -255,7 +260,7 @@ public sealed partial class StravaApiClient(
             }
 
             using var firstRequest = requestFactory(token.AccessToken);
-            using var firstResponse = await httpClient.SendAsync(firstRequest, cancellationToken);
+            using var firstResponse = await _httpClient.SendAsync(firstRequest, cancellationToken);
             rateLimitCoordinator.Observe(firstResponse);
             if (firstResponse.StatusCode != HttpStatusCode.Unauthorized)
             {
@@ -271,7 +276,7 @@ public sealed partial class StravaApiClient(
             }
 
             using var retryRequest = requestFactory(refreshed.AccessToken);
-            using var retryResponse = await httpClient.SendAsync(retryRequest, cancellationToken);
+            using var retryResponse = await _httpClient.SendAsync(retryRequest, cancellationToken);
             rateLimitCoordinator.Observe(retryResponse);
             return await ReadActivityResponseAsync<T>(retryResponse, cancellationToken);
         }
@@ -322,7 +327,7 @@ public sealed partial class StravaApiClient(
 
     private StravaApiResult<T> TransientFailure<T>() => new(
         StravaApiOutcome.TransientFailure,
-        RetryAt: clock.GetCurrentInstant().Plus(Duration.FromMinutes(1)),
+        RetryAt: _clock.GetCurrentInstant().Plus(Duration.FromMinutes(1)),
         ErrorCode: "strava_temporarily_unavailable");
 
     private HttpRequestMessage CreateAuthorizedGet(string relativeUri, string accessToken)
