@@ -22,13 +22,13 @@ public sealed class ExternalActivitySource(ExternalProvider provider, string ext
     /// <summary>
     /// Gets the external provider that produced this activity.
     /// </summary>
-    public ExternalProvider Provider { get; } = provider;
+    public ExternalProvider Provider { get; private set; } = provider;
 
     /// <summary>
     /// Gets the unique activity identifier on the external platform.
     /// </summary>
     /// <example>1234567890 (Strava activity ID), abc123def (GitHub commit SHA)</example>
-    public string ExternalActivityId { get; } = externalActivityId;
+    public string ExternalActivityId { get; private set; } = externalActivityId;
 
     /// <inheritdoc/>
     protected override IEnumerable<object> EqualityComponents

@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Members.Commands.DisconnectExternalProvider;
 using Domain.Members;
-using NSubstitute;
 using NodaTime;
-using System.Collections.Generic;
+using NSubstitute;
 
 namespace Application.Tests.Members.Commands;
 

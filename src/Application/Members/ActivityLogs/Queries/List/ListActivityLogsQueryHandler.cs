@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Dtos;
 using Application.Shared;
+using Domain.Members;
 using Domain.Plans;
 using NodaTime;
 
@@ -12,14 +14,18 @@ namespace Application.Members.ActivityLogs.Queries.List;
 /// <summary>
 /// Handler for listing activity logs of a specific plan with chronological cursor pagination.
 /// </summary>
-/// <param name="readOnlyContext">The read-only context used for querying data.</param>
-public sealed class ListActivityLogsQueryHandler(IReadOnlyContext readOnlyContext)
+/// <param name="memberRepository">The member repository used to enforce Plan ownership.</param>
+/// <param name="planRepository">The Plan aggregate repository.</param>
+public sealed class ListActivityLogsQueryHandler(
+    IMemberRepository memberRepository,
+    IPlanRepository planRepository)
     : IQueryHandler<ListActivityLogsQuery, CursorPagedResult<ActivityLogDto>>
 {
     /// <inheritdoc />
     public Task<CursorPagedResult<ActivityLogDto>> Handle(ListActivityLogsQuery request, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(readOnlyContext);
+        ArgumentNullException.ThrowIfNull(memberRepository);
+        ArgumentNullException.ThrowIfNull(planRepository);
         ArgumentNullException.ThrowIfNull(request);
 
         return HandleAsync(request, cancellationToken);
@@ -27,19 +33,21 @@ public sealed class ListActivityLogsQueryHandler(IReadOnlyContext readOnlyContex
 
     private async Task<CursorPagedResult<ActivityLogDto>> HandleAsync(ListActivityLogsQuery request, CancellationToken cancellationToken)
     {
-        var plan = await readOnlyContext.FirstOrDefaultAsync<Plan, Plan>(
-            q => q.Where(p => p.Id == request.PlanId),
-            cancellationToken);
-
-        if (plan == null)
+        var member = await memberRepository.GetByIdentifyNameAsync(request.IdentifyName, cancellationToken)
+            ?? throw new KeyNotFoundException("Activity ledger was not found.");
+            
+        if (!member.PersonalPlans.Any(personalPlan => personalPlan.PlanId == request.PlanId))
         {
-            return new CursorPagedResult<ActivityLogDto>([], null, false);
+            throw new KeyNotFoundException("Activity ledger was not found.");
         }
+
+        var plan = await planRepository.GetByIdAsync(request.PlanId, cancellationToken)
+            ?? throw new KeyNotFoundException("Activity ledger was not found.");
 
         var logs = plan.ActivityLogs.AsQueryable();
 
         // Sort descending: newest first. 
-        logs = logs.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id);
+        logs = logs.OrderByDescending(x => x.CompletedDate).ThenByDescending(x => x.Id);
 
         // Apply cursor filtering
         var decodedCursor = OpaqueCursor.Decode(request.Cursor);
@@ -51,8 +59,8 @@ public sealed class ListActivityLogsQueryHandler(IReadOnlyContext readOnlyContex
                 Guid.TryParse(parts[1], out var cursorId))
             {
                 var cursorInstant = Instant.FromUnixTimeMilliseconds(cursorMillis);
-                logs = logs.Where(x => x.CreatedAt < cursorInstant || 
-                                      (x.CreatedAt == cursorInstant && x.Id.CompareTo(cursorId) < 0));
+                logs = logs.Where(x => x.CompletedDate < cursorInstant ||
+                                      (x.CompletedDate == cursorInstant && x.Id.CompareTo(cursorId) < 0));
             }
         }
 
@@ -79,7 +87,7 @@ public sealed class ListActivityLogsQueryHandler(IReadOnlyContext readOnlyContex
         if (hasNextPage)
         {
             var lastLog = paginatedLogs[^1];
-            var plainCursor = $"{lastLog.CreatedAt.ToUnixTimeMilliseconds()}_{lastLog.Id}";
+            var plainCursor = $"{lastLog.CompletedDate.ToUnixTimeMilliseconds()}_{lastLog.Id}";
             nextCursor = OpaqueCursor.Encode(plainCursor);
         }
 

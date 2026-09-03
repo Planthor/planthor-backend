@@ -1,8 +1,12 @@
 namespace Api.Responses;
 
 /// <summary>
-/// Response model for a supported sport type.
+/// Describes a canonical sport type supported by Planthor.
 /// </summary>
-/// <param name="Id">The unique identifier of the sport type.</param>
-/// <param name="Name">The display name of the sport type.</param>
+/// <param name="Id">
+/// The stable, uppercase identifier clients use in sport-plan requests.
+/// </param>
+/// <param name="Name">
+/// The non-localized display name of the sport type. Clients must not use this value as an identifier.
+/// </param>
 public record SportTypeResponse(string Id, string Name);

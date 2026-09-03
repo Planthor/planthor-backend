@@ -31,7 +31,6 @@ public sealed class Plan : AggregateRoot<Guid>
         string name,
         string unit,
         float target,
-        float currentValue,
         Instant from,
         Instant to,
         string startDateLocal,
@@ -44,7 +43,6 @@ public sealed class Plan : AggregateRoot<Guid>
         Name = name;
         Unit = unit;
         Target = target;
-        CurrentValue = currentValue;
         From = from;
         To = to;
         StartDateLocal = startDateLocal;
@@ -75,6 +73,12 @@ public sealed class Plan : AggregateRoot<Guid>
     /// Gets the current aggregate value across all activity logs.
     /// Compared against <see cref="Target"/> to determine completion.
     /// </summary>
+    /// <remarks>
+    /// Persisted as a denormalized field in MongoDB to avoid recomputing from the
+    /// full <see cref="ActivityLogs"/> collection on every read. Updated internally
+    /// by <see cref="RecalculateCurrentValue"/> whenever logs are added or the plan
+    /// is modified.
+    /// </remarks>
     public float CurrentValue { get; private set; }
 
     /// <summary>
@@ -159,7 +163,6 @@ public sealed class Plan : AggregateRoot<Guid>
             name,
             unit,
             target,
-            currentValue: 0f,
             from,
             to,
             startDateLocal,
@@ -266,9 +269,57 @@ public sealed class Plan : AggregateRoot<Guid>
         IClock clock,
         Guid createUserId)
     {
-        if (clock == null)
+        if (clock is null)
         {
             throw new ArgumentNullException(nameof(clock));
+        }
+
+        return AddActivityLog(
+            value,
+            activityLocalDate,
+            externalSource,
+            clock.GetCurrentInstant(),
+            clock,
+            createUserId);
+    }
+
+    /// <summary>
+    /// Adds an activity log using the source activity's actual completion instant.
+    /// </summary>
+    /// <param name="value">The recorded value in this plan's unit.</param>
+    /// <param name="activityLocalDate">The source activity date in the plan timezone.</param>
+    /// <param name="externalSource">The provider activity identity used for idempotency.</param>
+    /// <param name="completedDate">The instant at which the source activity occurred.</param>
+    /// <param name="clock">The clock used for audit timestamps.</param>
+    /// <param name="createUserId">The member creating the log.</param>
+    /// <returns>The newly created activity log.</returns>
+    /// <exception cref="DuplicateExternalActivityException">
+    /// Thrown when this plan already contains the same provider activity.
+    /// </exception>
+    public ActivityLog AddActivityLog(
+        float value,
+        string activityLocalDate,
+        ExternalActivitySource? externalSource,
+        Instant completedDate,
+        IClock clock,
+        Guid createUserId)
+    {
+        if (clock is null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
+        if (externalSource is not null && _activityLogs.Any(log =>
+                log.ExternalSource is not null &&
+                log.ExternalSource.Provider.Id.Equals(externalSource.Provider.Id, StringComparison.OrdinalIgnoreCase) &&
+                log.ExternalSource.ExternalActivityId.Equals(
+                    externalSource.ExternalActivityId,
+                    StringComparison.Ordinal)))
+        {
+            throw new DuplicateExternalActivityException(
+                externalSource.Provider.Id,
+                externalSource.ExternalActivityId,
+                Id);
         }
 
         var activityLog = ActivityLog.Create(
@@ -276,6 +327,7 @@ public sealed class Plan : AggregateRoot<Guid>
             value,
             activityLocalDate,
             externalSource,
+            completedDate,
             createUserId,
             clock);
 
@@ -283,8 +335,13 @@ public sealed class Plan : AggregateRoot<Guid>
 
         RecalculateCurrentValue();
 
-        // Inform other parts of the system (if any) that an activity log was added.
-        // E.g., RaiseDomainEvent - ActivityLogAddedDomainEvent
+        RaiseDomainEvent(new ActivityLogAddedEvent(
+            Id,
+            activityLog.Id,
+            activityLog.Value,
+            CurrentValue,
+            clock,
+            $"{nameof(Plan)} / {nameof(AddActivityLog)}"));
 
         return activityLog;
     }
@@ -300,6 +357,10 @@ public sealed class Plan : AggregateRoot<Guid>
         if (Status == PlanStatus.Active && CurrentValue >= Target)
         {
             Status = PlanStatus.Completed;
+        }
+        else if (Status == PlanStatus.Completed && CurrentValue < Target)
+        {
+            Status = PlanStatus.Active;
         }
     }
 
@@ -332,7 +393,6 @@ public sealed class Plan : AggregateRoot<Guid>
     public void Update(
         string unit,
         float target,
-        float current,
         Instant from,
         Instant to,
         Guid byUserId,
@@ -345,9 +405,10 @@ public sealed class Plan : AggregateRoot<Guid>
 
         Unit = unit;
         Target = target;
-        CurrentValue = current;
         From = from;
         To = to;
+
+        RecalculateCurrentValue();
 
         StampUpdatedAudit(byUserId, clock);
     }

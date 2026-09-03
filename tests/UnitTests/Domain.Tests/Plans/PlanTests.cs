@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using Domain.Plans;
+using Domain.Plans.Events;
 using Domain.Shared.Exceptions;
 using NodaTime;
 using Xunit;
@@ -183,6 +185,37 @@ public class PlanTests
     }
 
     [Fact]
+    public void AddActivityLog_WithValue_UpdatesCurrentValue()
+    {
+        var plan = CreateValid(target: 100f);
+        typeof(Plan).GetProperty("Status")!.SetValue(plan, PlanStatus.Active);
+
+        plan.AddActivityLog(25f, "2026-01-02", null, Clock, Guid.NewGuid());
+
+        Assert.Equal(25f, plan.CurrentValue);
+
+        plan.AddActivityLog(10f, "2026-01-03", null, Clock, Guid.NewGuid());
+
+        Assert.Equal(35f, plan.CurrentValue);
+    }
+
+    [Fact]
+    public void AddActivityLog_ValidInput_RaisesActivityLogAddedEvent()
+    {
+        var plan = CreateValid(target: 100f);
+        typeof(Plan).GetProperty("Status")!.SetValue(plan, PlanStatus.Active);
+
+        var activityLog = plan.AddActivityLog(25f, "2026-01-02", null, Clock, Guid.NewGuid());
+
+        var domainEvent = Assert.Single(
+            plan.DomainEvents.OfType<ActivityLogAddedEvent>());
+        Assert.Equal(plan.Id, domainEvent.PlanId);
+        Assert.Equal(activityLog.Id, domainEvent.ActivityLogId);
+        Assert.Equal(25f, domainEvent.Value);
+        Assert.Equal(25f, domainEvent.NewCurrentValue);
+    }
+
+    [Fact]
     public void AddActivityLog_NullClock_ThrowsArgumentNullException()
     {
         var plan = CreateValid();
@@ -223,7 +256,7 @@ public class PlanTests
     public void Update_NullClock_ThrowsArgumentNullException()
     {
         var plan = CreateValid();
-        Assert.Throws<ArgumentNullException>(() => plan.Update("m", 200f, 10f, From, To, Guid.NewGuid(), null!));
+        Assert.Throws<ArgumentNullException>(() => plan.Update("m", 200f, From, To, Guid.NewGuid(), null!));
     }
 
     [Fact]
@@ -231,11 +264,11 @@ public class PlanTests
     {
         var plan = CreateValid();
         var byUserId = Guid.NewGuid();
-        plan.Update("m", 200f, 10f, From, To, byUserId, Clock);
+        plan.Update("m", 200f, From, To, byUserId, Clock);
         
         Assert.Equal("m", plan.Unit);
         Assert.Equal(200f, plan.Target);
-        Assert.Equal(10f, plan.CurrentValue);
+        Assert.Equal(0f, plan.CurrentValue);
         Assert.Equal(byUserId, plan.LastUpdatedBy);
     }
 

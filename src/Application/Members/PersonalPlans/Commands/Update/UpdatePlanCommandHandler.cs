@@ -58,7 +58,6 @@ public sealed class UpdatePlanCommandHandler(
         plan.Update(
             request.Unit,
             (float)request.Target,
-            (float)request.Current,
             from,
             to,
             member.Id,

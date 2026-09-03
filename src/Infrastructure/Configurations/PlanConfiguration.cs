@@ -21,6 +21,9 @@ public sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
 
         builder.HasKey(p => p.Id);
 
+        // Denormalized: maintained by the domain aggregate on every AddActivityLog / Update call.
+        builder.Property(p => p.CurrentValue).IsRequired();
+
         builder.Property(p => p.Status)
             .HasConversion(
                 v => v.Id,
@@ -34,6 +37,9 @@ public sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
             
             navigationBuilder.OwnsOne(al => al.ExternalSource, sourceBuilder =>
             {
+                // ActivityLog IDs are globally unique. Reuse the ownership FK as the nested
+                // value object's key so Mongo EF can track sources for multiple ledger rows.
+                sourceBuilder.HasKey("ActivityLogId");
                 sourceBuilder.Property(s => s.Provider)
                     .HasConversion(p => p.Id, id => ExternalProvider.FromId(id));
             });

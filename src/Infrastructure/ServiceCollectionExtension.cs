@@ -52,6 +52,23 @@ public static class ServiceCollectionExtension
         // Register Quartz.NET
         services.AddQuartz(q =>
         {
+            var quartzConnectionString = configuration.GetConnectionString("Quartz");
+            if (!string.IsNullOrWhiteSpace(quartzConnectionString))
+            {
+                q.SchedulerId = "AUTO";
+                q.UsePersistentStore(store =>
+                {
+                    store.UseProperties = true;
+                    store.UsePostgres(quartzConnectionString);
+                    store.UseSystemTextJsonSerializer();
+                    store.UseClustering(cluster =>
+                    {
+                        cluster.CheckinInterval = TimeSpan.FromSeconds(10);
+                        cluster.CheckinMisfireThreshold = TimeSpan.FromSeconds(20);
+                    });
+                });
+            }
+
             var downloadJobKey = new JobKey("DownloadAvatar");
             q.AddJob<DownloadAvatarJob>(opts => opts.WithIdentity(downloadJobKey).StoreDurably());
             

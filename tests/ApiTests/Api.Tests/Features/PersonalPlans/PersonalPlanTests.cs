@@ -62,7 +62,6 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
         var updateCmd = new UpdatePersonalPlanRequest(
             Unit: "km",
             Target: 100.0,
-            Current: 10.0,
             FromDate: DateTimeOffset.UtcNow,
             ToDate: DateTimeOffset.UtcNow.AddDays(30)
         );
@@ -145,7 +144,7 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
         var createRes = await _client.PostAsJsonAsync("/v1/members/me/personal-plans", createCmd);
         Assert.Equal(HttpStatusCode.Unauthorized, createRes.StatusCode);
 
-        var updateCmd = new UpdatePersonalPlanRequest("km", 10.0, 5.0, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1));
+        var updateCmd = new UpdatePersonalPlanRequest("km", 10.0, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1));
         var updateRes = await _client.PutAsJsonAsync("/v1/members/me/personal-plans/00000000-0000-0000-0000-000000000000", updateCmd);
         Assert.Equal(HttpStatusCode.Unauthorized, updateRes.StatusCode);
 

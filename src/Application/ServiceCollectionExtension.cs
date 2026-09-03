@@ -1,3 +1,4 @@
+using Domain.Shared;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,8 +27,12 @@ public static class ServiceCollectionExtension
         {
             var licenseKey = configuration["MediatR:LicenseKey"] ?? string.Empty;
             cfg.LicenseKey = licenseKey;
+            // DomainEventNotificationHandler<TEvent> is an open generic bridge. MediatR 14 does not close generic handlers during assembly scanning unless explicitly enabled.
+            cfg.RegisterGenericHandlers = true;
 
-            cfg.RegisterServicesFromAssembly(typeof(ServiceCollectionExtension).Assembly);
+            cfg.RegisterServicesFromAssemblies(
+                typeof(ServiceCollectionExtension).Assembly,
+                typeof(IDomainEvent).Assembly);
         });
 
         services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtension).Assembly);

@@ -2,64 +2,64 @@ using Adapters.Strava.Persistence;
 
 namespace Adapters.Strava.Client;
 
-/// <summary>
-/// Defines the contract for interacting with the Strava API.
-/// </summary>
+/// <summary>Defines the Strava-specific OAuth and activity HTTP boundary.</summary>
 public interface IStravaApiClient
 {
-    /// <summary>
-    /// Exchanges an authorization code for access and refresh tokens.
-    /// </summary>
-    /// <param name="code">The authorization code received from Strava's OAuth callback.</param>
-    /// <param name="identifyName">The Keycloak identify name to associate with the tokens.</param>
+    /// <summary>Exchanges an authorization code and persists the resulting athlete tokens.</summary>
+    /// <param name="code">The authorization code returned by Strava.</param>
+    /// <param name="identifyName">The internal unique identifier for the user.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    /// <returns>
-    /// A task that represents the asynchronous operation. 
-    /// The task result contains the token response, or null if the exchange fails.
-    /// </returns>
-    Task<StravaTokenResponse?> ExchangeCodeAsync(string code, string identifyName, CancellationToken cancellationToken);
+    /// <returns>The exchanged token response, or <c>null</c> if the exchange failed.</returns>
+    Task<StravaTokenResponse?> ExchangeCodeAsync(
+        string code,
+        string identifyName,
+        CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Refreshes an expired access token using the stored refresh token.
-    /// </summary>
-    /// <param name="identifyName">The Keycloak identify name whose token should be refreshed.</param>
+    /// <summary>Refreshes and immediately persists a rotated Strava token pair.</summary>
+    /// <param name="identifyName">The internal unique identifier for the user.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    /// <returns>
-    /// A task that represents the asynchronous operation. 
-    /// The task result contains the updated token document, or null if the refresh fails.
-    /// </returns>
-    Task<StravaTokenDocument?> RefreshTokenAsync(string identifyName, CancellationToken cancellationToken);
+    /// <returns>The newly refreshed and persisted token document, or <c>null</c> if the refresh failed.</returns>
+    Task<StravaTokenDocument?> RefreshTokenAsync(
+        string identifyName,
+        CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Retrieves a valid access token for the specified member, refreshing it proactively if necessary.
-    /// </summary>
-    /// <param name="identifyName">The Keycloak identify name.</param>
+    /// <summary>Gets a usable access token, refreshing proactively when required.</summary>
+    /// <param name="identifyName">The internal unique identifier for the user.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    /// <returns>
-    /// A task that represents the asynchronous operation. 
-    /// The task result contains the current token document with a valid access token, or null if no token exists or refresh fails.
-    /// </returns>
-    Task<StravaTokenDocument?> GetValidTokenAsync(string identifyName, CancellationToken cancellationToken);
+    /// <returns>A valid token document, or <c>null</c> if no valid token could be obtained.</returns>
+    Task<StravaTokenDocument?> GetValidTokenAsync(
+        string identifyName,
+        CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Deauthorizes the application from the member's Strava account and removes stored tokens.
-    /// </summary>
-    /// <param name="identifyName">The Keycloak identify name to deauthorize.</param>
+    /// <summary>Deauthorizes Strava and permanently removes the local token document.</summary>
+    /// <param name="identifyName">The internal unique identifier for the user.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    /// <returns>
-    /// A task that represents the asynchronous operation. 
-    /// The task result is true if deauthorization succeeds or the token is already removed; otherwise, false.
-    /// </returns>
+    /// <returns><c>true</c> if deauthorization was successful; otherwise, <c>false</c>.</returns>
     Task<bool> DeauthorizeAsync(string identifyName, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Fetches activities for the authenticated athlete.
-    /// </summary>
-    /// <param name="identifyName">The Keycloak identify name.</param>
-    /// <param name="afterEpoch">Optional timestamp (epoch seconds) to fetch activities after.</param>
-    /// <param name="page">Page number.</param>
-    /// <param name="perPage">Items per page (max 200).</param>
+    /// <summary>Fetches one bounded page of athlete activities using the maximum supported page size.</summary>
+    /// <param name="identifyName">The internal unique identifier for the user.</param>
+    /// <param name="afterEpoch">The epoch timestamp indicating the start of the historical range (exclusive).</param>
+    /// <param name="beforeEpoch">The epoch timestamp indicating the end of the historical range (exclusive).</param>
+    /// <param name="page">The 1-based page number to fetch.</param>
+    /// <param name="perPage">The maximum number of activities to return per page.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
-    /// <returns>A list of activities.</returns>
-    Task<IReadOnlyList<StravaActivityResponse>> GetAthleteActivitiesAsync(string identifyName, long? afterEpoch, int page, int perPage, CancellationToken cancellationToken);
+    /// <returns>A typed API result containing the list of activities or error details.</returns>
+    Task<StravaApiResult<IReadOnlyList<StravaActivityResponse>>> GetAthleteActivitiesPageAsync(
+        string identifyName,
+        long afterEpoch,
+        long beforeEpoch,
+        int page,
+        int perPage,
+        CancellationToken cancellationToken);
+
+    /// <summary>Fetches full details for one activity and verifies athlete ownership.</summary>
+    /// <param name="identifyName">The internal unique identifier for the user.</param>
+    /// <param name="externalActivityId">The Strava activity identifier to fetch.</param>
+    /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
+    /// <returns>A typed API result containing the activity details or error information.</returns>
+    Task<StravaApiResult<StravaActivityResponse>> GetActivityAsync(
+        string identifyName,
+        string externalActivityId,
+        CancellationToken cancellationToken);
 }

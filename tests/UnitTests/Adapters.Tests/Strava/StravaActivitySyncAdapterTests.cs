@@ -1,185 +1,148 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Adapters.Strava;
 using Adapters.Strava.Client;
 using Adapters.Strava.Persistence;
+using Application.Dtos;
 using MongoDB.Driver;
 using NodaTime;
+using NodaTime.Testing;
 using NSubstitute;
 
 namespace Adapters.Tests.Strava;
 
 public class StravaActivitySyncAdapterTests
 {
-    private readonly IStravaApiClient _mockStravaApiClient;
-    private readonly StravaAdapterDatabase _mockTokenDb;
+    private static readonly Instant Now = Instant.FromUtc(2026, 9, 2, 0, 0);
+    private readonly IStravaApiClient _client = Substitute.For<IStravaApiClient>();
+    private readonly StravaAdapterDatabase _tokenDatabase;
     private readonly StravaActivitySyncAdapter _adapter;
 
     public StravaActivitySyncAdapterTests()
     {
-        _mockStravaApiClient = Substitute.For<IStravaApiClient>();
-        
-        var mockClient = Substitute.For<IMongoClient>();
-        var mockDb = Substitute.For<IMongoDatabase>();
-        var mockCollection = Substitute.For<IMongoCollection<StravaTokenDocument>>();
-        mockClient.GetDatabase(Arg.Any<string>()).Returns(mockDb);
-        mockDb.GetCollection<StravaTokenDocument>(Arg.Any<string>()).Returns(mockCollection);
-        
-        _mockTokenDb = Substitute.For<StravaAdapterDatabase>(mockClient);
-        
-        _adapter = new StravaActivitySyncAdapter(_mockStravaApiClient, _mockTokenDb);
+        var mongoClient = Substitute.For<IMongoClient>();
+        var database = Substitute.For<IMongoDatabase>();
+        var collection = Substitute.For<IMongoCollection<StravaTokenDocument>>();
+        mongoClient.GetDatabase(Arg.Any<string>()).Returns(database);
+        database.GetCollection<StravaTokenDocument>(Arg.Any<string>()).Returns(collection);
+        _tokenDatabase = Substitute.For<StravaAdapterDatabase>(mongoClient);
+        _adapter = new StravaActivitySyncAdapter(
+            _client,
+            _tokenDatabase,
+            new FakeClock(Now));
     }
 
     [Fact]
-    public void ProviderId_ReturnsStrava()
-    {
-        // Act
-        var providerId = _adapter.ProviderId;
-
-        // Assert
-        Assert.Equal("STRAVA", providerId);
-    }
-
-    [Fact]
-    public async Task FetchActivitiesAsync_WithValidMemberId_ReturnsEmptyCollection()
+    public async Task FetchActivitiesAsync_MissingAthleteToken_ReturnsAuthorizationRequired()
     {
         // Arrange
-        var memberId = Guid.NewGuid();
-        var identifyName = "test-user";
-        var since = Instant.FromUtc(2026, 5, 1, 0, 0, 0);
-        var cancellationToken = CancellationToken.None;
-
-        _mockTokenDb.GetByIdentifyNameAsync(identifyName, cancellationToken).Returns(Task.FromResult<StravaTokenDocument?>(null));
+        _tokenDatabase.GetByAthleteIdAsync(123, Arg.Any<CancellationToken>())
+            .Returns((StravaTokenDocument?)null);
 
         // Act
-        var result = await _adapter.FetchActivitiesAsync(memberId, identifyName, since, cancellationToken);
+        var result = await _adapter.FetchActivitiesAsync(
+            "123",
+            Now.Minus(Duration.FromDays(30)),
+            Now,
+            CancellationToken.None);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.IsType<IReadOnlyList<object>>(result, exactMatch: false);
-        Assert.Empty(result);
+        Assert.Equal(ActivitySyncOutcome.AuthorizationRequired, result.Outcome);
+        Assert.Empty(result.Activities);
     }
 
     [Fact]
-    public async Task FetchActivitiesAsync_SupportsIActivitySyncAdapterContract()
+    public async Task FetchActivitiesAsync_Success_NormalizesAndDoesNotAdvanceWatermark()
     {
         // Arrange
-        var memberId = Guid.NewGuid();
-        var identifyName = "test-user";
-        var since = Instant.FromUtc(2026, 4, 1, 0, 0, 0);
-
-        _mockTokenDb.GetByIdentifyNameAsync(identifyName, Arg.Any<CancellationToken>()).Returns(Task.FromResult<StravaTokenDocument?>(null));
-
-        // Act
-        var result = await _adapter.FetchActivitiesAsync(memberId, identifyName, since, CancellationToken.None);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.IsType<IReadOnlyList<object>>(result, exactMatch: false);
-    }
-
-    [Fact]
-    public async Task FetchActivitiesAsync_NullIdentifyName_ThrowsArgumentNullException()
-    {
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => _adapter.FetchActivitiesAsync(Guid.NewGuid(), null!, null, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task FetchActivitiesAsync_WithExistingTokenAndNewActivities_ReturnsActivitiesAndUpdatesToken()
-    {
-        // Arrange
-        var memberId = Guid.NewGuid();
-        var identifyName = "test-user";
-        var lastSyncEpoch = Instant.FromUtc(2026, 6, 1, 0, 0, 0).ToUnixTimeSeconds();
-        var tokenDoc = new StravaTokenDocument { Id = identifyName, LastSyncEpoch = lastSyncEpoch };
-
-        _mockTokenDb.GetByIdentifyNameAsync(identifyName, Arg.Any<CancellationToken>()).Returns(Task.FromResult<StravaTokenDocument?>(tokenDoc));
-
-        var stravaActivities = new List<StravaActivityResponse>
+        var rangeStart = Now.Minus(Duration.FromDays(30));
+        var token = new StravaTokenDocument
         {
-            new() { Id = 1, Name = "Morning Run", StartDate = new DateTime(2026, 6, 2, 0, 0, 0, DateTimeKind.Utc), SportType = "Run", Distance = 5000 },
-            new() { Id = 2, Name = "", StartDate = new DateTime(2026, 6, 3, 0, 0, 0, DateTimeKind.Utc), Type = "Ride", Distance = 10000 }
+            Id = "member-1",
+            AthleteId = 123,
+            LastSyncEpoch = rangeStart.ToUnixTimeSeconds()
         };
-
-        _mockStravaApiClient.GetAthleteActivitiesAsync(identifyName, lastSyncEpoch, 1, 100, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<StravaActivityResponse>>(stravaActivities));
-
-        _mockStravaApiClient.GetAthleteActivitiesAsync(identifyName, lastSyncEpoch, 2, 100, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<StravaActivityResponse>>([]));
+        _tokenDatabase.GetByAthleteIdAsync(123, Arg.Any<CancellationToken>()).Returns(token);
+        _client.GetAthleteActivitiesPageAsync(
+                token.Id,
+                token.LastSyncEpoch.Value,
+                Now.ToUnixTimeSeconds() + 1,
+                1,
+                200,
+                Arg.Any<CancellationToken>())
+            .Returns(new StravaApiResult<IReadOnlyList<StravaActivityResponse>>(
+                StravaApiOutcome.Success,
+                [
+                    new StravaActivityResponse
+                    {
+                        Id = 456,
+                        SportType = "TrailRun",
+                        Distance = 5000,
+                        StartDate = Now.Minus(Duration.FromDays(1)).ToDateTimeOffset()
+                    },
+                    new StravaActivityResponse
+                    {
+                        Id = 789,
+                        SportType = "IceSkate",
+                        Distance = 1000,
+                        StartDate = Now.ToDateTimeOffset()
+                    }
+                ]));
 
         // Act
-        var result = await _adapter.FetchActivitiesAsync(memberId, identifyName, null, CancellationToken.None);
+        var result = await _adapter.FetchActivitiesAsync("123", rangeStart, Now, CancellationToken.None);
 
         // Assert
-        Assert.Equal(2, result.Count);
-        Assert.Equal("Morning Run", result[0].Name);
-        Assert.Equal("Strava Activity", result[1].Name);
-        Assert.Equal("Run", result[0].ActivityType);
-        Assert.Equal("Ride", result[1].ActivityType);
-
-        await _mockTokenDb.Received(1).UpsertAsync(Arg.Is<StravaTokenDocument>(d => d != null && d.LastSyncEpoch > lastSyncEpoch), Arg.Any<CancellationToken>());
+        Assert.Equal(ActivitySyncOutcome.Success, result.Outcome);
+        var activity = Assert.Single(result.Activities);
+        Assert.Equal("456", activity.ExternalActivityId);
+        Assert.Equal("RUN", activity.CanonicalSportTypeId);
+        Assert.Equal(5000d, activity.DistanceMeters);
+        Assert.Equal(Now, result.WatermarkCandidate);
+        await _tokenDatabase.DidNotReceive().UpsertAsync(
+            Arg.Any<StravaTokenDocument>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task FetchActivitiesAsync_SinceParamGreaterThanLastSync_UsesSinceParam()
+    public async Task FetchActivityAsync_RateLimited_MapsTypedDeferral()
     {
         // Arrange
-        var memberId = Guid.NewGuid();
-        var identifyName = "test-user";
-        var lastSyncEpoch = Instant.FromUtc(2026, 6, 1, 0, 0, 0).ToUnixTimeSeconds();
-        var tokenDoc = new StravaTokenDocument { Id = identifyName, LastSyncEpoch = lastSyncEpoch };
-        var since = Instant.FromUtc(2026, 6, 5, 0, 0, 0); // Newer than LastSyncEpoch
-
-        _mockTokenDb.GetByIdentifyNameAsync(identifyName, Arg.Any<CancellationToken>()).Returns(Task.FromResult<StravaTokenDocument?>(tokenDoc));
-
-        _mockStravaApiClient.GetAthleteActivitiesAsync(identifyName, since.ToUnixTimeSeconds(), 1, 100, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<StravaActivityResponse>>([]));
+        var retryAt = Now.Plus(Duration.FromMinutes(15));
+        var token = new StravaTokenDocument { Id = "member-1", AthleteId = 123 };
+        _tokenDatabase.GetByAthleteIdAsync(123, Arg.Any<CancellationToken>()).Returns(token);
+        _client.GetActivityAsync(token.Id, "456", Arg.Any<CancellationToken>())
+            .Returns(new StravaApiResult<StravaActivityResponse>(
+                StravaApiOutcome.RateLimited,
+                RetryAt: retryAt,
+                ErrorCode: "strava_rate_limited"));
 
         // Act
-        var result = await _adapter.FetchActivitiesAsync(memberId, identifyName, since, CancellationToken.None);
+        var result = await _adapter.FetchActivityAsync("123", "456", CancellationToken.None);
 
         // Assert
-        Assert.Empty(result);
-        await _mockStravaApiClient.Received(1).GetAthleteActivitiesAsync(identifyName, since.ToUnixTimeSeconds(), 1, 100, Arg.Any<CancellationToken>());
+        Assert.Equal(ActivitySyncOutcome.RateLimited, result.Outcome);
+        Assert.Equal(retryAt, result.RetryAt);
+        Assert.Equal("strava_rate_limited", result.ErrorCode);
     }
 
     [Fact]
-    public async Task FetchActivitiesAsync_PaginatedResults_FetchesAllPages()
+    public async Task MarkSucceededAsync_HistoricalRun_AdvancesWatermarkAfterCommitBoundary()
     {
         // Arrange
-        var memberId = Guid.NewGuid();
-        var identifyName = "test-user";
-        var lastSyncEpoch = Instant.FromUtc(2026, 6, 1, 0, 0, 0).ToUnixTimeSeconds();
-        var tokenDoc = new StravaTokenDocument { Id = identifyName, LastSyncEpoch = lastSyncEpoch };
-
-        _mockTokenDb.GetByIdentifyNameAsync(identifyName, Arg.Any<CancellationToken>()).Returns(Task.FromResult<StravaTokenDocument?>(tokenDoc));
-
-        var page1 = new List<StravaActivityResponse>();
-        for(int i = 0; i < 100; i++) 
-        {
-            page1.Add(new StravaActivityResponse { Id = i, StartDate = new DateTime(2026, 6, 2, 0, 0, 0, DateTimeKind.Utc) });
-        }
-
-        var page2 = new List<StravaActivityResponse>
-        {
-            new() { Id = 101, StartDate = new DateTime(2026, 6, 2, 0, 0, 0, DateTimeKind.Utc) }
-        };
-
-        _mockStravaApiClient.GetAthleteActivitiesAsync(identifyName, lastSyncEpoch, 1, 100, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<StravaActivityResponse>>(page1));
-            
-        _mockStravaApiClient.GetAthleteActivitiesAsync(identifyName, lastSyncEpoch, 2, 100, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<StravaActivityResponse>>(page2));
+        var token = new StravaTokenDocument { Id = "member-1", AthleteId = 123 };
+        _tokenDatabase.GetByAthleteIdAsync(123, Arg.Any<CancellationToken>()).Returns(token);
 
         // Act
-        var result = await _adapter.FetchActivitiesAsync(memberId, identifyName, null, CancellationToken.None);
+        await _adapter.MarkSucceededAsync("123", "initial", Now, 2, CancellationToken.None);
 
         // Assert
-        Assert.Equal(101, result.Count);
-        await _mockStravaApiClient.Received(1).GetAthleteActivitiesAsync(identifyName, lastSyncEpoch, 1, 100, Arg.Any<CancellationToken>());
-        await _mockStravaApiClient.Received(1).GetAthleteActivitiesAsync(identifyName, lastSyncEpoch, 2, 100, Arg.Any<CancellationToken>());
+        await _tokenDatabase.Received(1).UpsertAsync(
+            Arg.Is<StravaTokenDocument>(document => document != null &&
+                document.LastSyncEpoch == Now.ToUnixTimeSeconds() &&
+                document.InitialSyncState == "succeeded" &&
+                document.ActivityLogsCreated == 2),
+            Arg.Any<CancellationToken>());
     }
 }

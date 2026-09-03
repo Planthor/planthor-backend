@@ -91,4 +91,13 @@ public class StravaAdapterDatabase
         var filter = Builders<StravaTokenDocument>.Filter.Eq(t => t.Id, identifyName);
         await _tokens.DeleteOneAsync(filter, cancellationToken);
     }
+
+    /// <summary>Deletes the token and synchronization state for a Strava athlete.</summary>
+    /// <param name="athleteId">The Strava athlete identifier.</param>
+    /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
+    public virtual async Task DeleteByAthleteIdAsync(long athleteId, CancellationToken cancellationToken)
+    {
+        var filter = Builders<StravaTokenDocument>.Filter.Eq(token => token.AthleteId, athleteId);
+        await _tokens.DeleteOneAsync(filter, cancellationToken);
+    }
 }

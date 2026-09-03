@@ -1,8 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Domain.Members;
 using Infrastructure.Services;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using Quartz;
@@ -12,6 +12,15 @@ namespace Infrastructure.BackgroundJobClient.Jobs;
 /// <summary>
 /// Quartz job to synchronize federated identities from Keycloak for a member.
 /// </summary>
+/// <remarks>
+/// Marked with <see cref="DisallowConcurrentExecutionAttribute"/> to prevent database concurrency
+/// exceptions and duplicate connection inserts if multiple triggers fire for the same member simultaneously.
+/// </remarks>
+/// <param name="keycloakAdminClient">The client used to interact with the Keycloak Admin API.</param>
+/// <param name="memberRepository">The repository used to fetch and update member aggregates.</param>
+/// <param name="clock">The system clock used to timestamp new connections.</param>
+/// <param name="logger">The logger instance.</param>
+[DisallowConcurrentExecution]
 public partial class SyncIdentityJob(
     IKeycloakAdminClient keycloakAdminClient,
     IMemberRepository memberRepository,
@@ -23,6 +32,7 @@ public partial class SyncIdentityJob(
     private readonly IClock _clock = clock;
     private readonly ILogger<SyncIdentityJob> _logger = logger;
     /// <inheritdoc />
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
     public Task Execute(IJobExecutionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -86,6 +96,13 @@ public partial class SyncIdentityJob(
         }
     }
 
+    /// <summary>
+    /// Processes a single federated identity from Keycloak and ensures the member has a corresponding connection.
+    /// </summary>
+    /// <param name="member">The member aggregate.</param>
+    /// <param name="identity">The federated identity fetched from Keycloak.</param>
+    /// <param name="identifyName">The local member's identifying name, used for logging.</param>
+    /// <returns><c>true</c> if a new connection was added; otherwise, <c>false</c>.</returns>
     private bool ProcessIdentity(Member member, FederatedIdentityDto identity, string identifyName)
     {
         try 

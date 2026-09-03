@@ -17,6 +17,10 @@ namespace Infrastructure.BackgroundJobClient.Jobs;
 /// <param name="avatarStorageService">The service used to upload the avatar to storage.</param>
 /// <param name="sender">The MediatR sender used to update the member's profile with the new path.</param>
 /// <param name="logger">The logger instance.</param>
+/// <remarks>
+/// Marked with <see cref="DisallowConcurrentExecutionAttribute"/> to prevent race conditions when uploading
+/// to storage or updating the member aggregate, and to avoid wasted redundant network calls.
+/// </remarks>
 [DisallowConcurrentExecution]
 public partial class DownloadAvatarJob(
     IHttpClientFactory httpClientFactory,

@@ -1,13 +1,11 @@
-using Application.Interfaces;
 using Domain.Plans;
 
 namespace Adapters.Strava.Mapping;
 
 /// <summary>
-/// Implements <see cref="IProviderSportTypeMapper"/> for Strava.
 /// Maps Strava sport_type values to canonical Planthor sport types.
 /// </summary>
-public sealed class StravaSportTypeMapper : IProviderSportTypeMapper
+internal static class StravaSportTypeMapper
 {
     private static readonly Dictionary<string, PlanthorSportType> Mappings = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -32,8 +30,12 @@ public sealed class StravaSportTypeMapper : IProviderSportTypeMapper
         { "Swim", PlanthorSportType.Swim }
     };
 
-    /// <inheritdoc/>
-    public PlanthorSportType? MapToPlanthor(string providerSportType)
+    /// <summary>
+    /// Maps a Strava sport type to a canonical Planthor sport identifier.
+    /// </summary>
+    /// <param name="providerSportType">The Strava <c>sport_type</c> value.</param>
+    /// <returns>The canonical identifier, or <c>null</c> when unsupported.</returns>
+    public static string? MapToCanonicalId(string providerSportType)
     {
         if (string.IsNullOrWhiteSpace(providerSportType))
         {
@@ -41,7 +43,7 @@ public sealed class StravaSportTypeMapper : IProviderSportTypeMapper
         }
 
         return Mappings.TryGetValue(providerSportType, out var planthorSportType)
-            ? planthorSportType
+            ? planthorSportType.Id
             : null;
     }
 }

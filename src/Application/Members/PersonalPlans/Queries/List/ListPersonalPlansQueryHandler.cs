@@ -61,8 +61,20 @@ public sealed class ListPersonalPlansQueryHandler(IReadOnlyContext readOnlyConte
 
         // 3. Fetch the corresponding Plans from the database
         var planIds = paginatedPersonalPlans.Select(p => p.PlanId).ToList();
-        var plans = await readOnlyContext.QueryAsync<Plan, Plan>(
-            q => q.Where(p => planIds.Contains(p.Id)),
+        var plans = await readOnlyContext.QueryAsync(
+            (IQueryable<Plan> q) => q
+                .Where(p => planIds.Contains(p.Id))
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Unit,
+                    p.Target,
+                    p.CurrentValue,
+                    p.Status,
+                    p.From,
+                    p.To,
+                }),
             cancellationToken);
 
         // Filter valid plans if status filter is applied

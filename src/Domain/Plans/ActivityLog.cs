@@ -33,7 +33,7 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
 
     /// <summary>
     /// Gets the UTC instant at which this activity was completed.
-    /// Defaults to <see cref="CreatedAt"/> if not provided.
+    /// This is the source activity occurrence time, not the ingestion time.
     /// </summary>
     public Instant CompletedDate { get; private set; }
 
@@ -61,6 +61,7 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
         float value,
         string activityLocalDate,
         ExternalActivitySource? externalActivitySource,
+        Instant completedDate,
         Guid createdBy,
         IClock clock)
     {
@@ -72,7 +73,7 @@ public sealed class ActivityLog : IEntity<Guid>, IHasAudit
             PlanId = planId,
             Value = value,
             ActivityLocalDate = activityLocalDate,
-            CompletedDate = now,
+            CompletedDate = completedDate,
             ExternalSource = externalActivitySource,
             CreatedAt = now,
             CreatedBy = createdBy,

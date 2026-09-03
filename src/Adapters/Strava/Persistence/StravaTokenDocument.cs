@@ -55,4 +55,28 @@ public sealed class StravaTokenDocument
     /// Gets or sets the UTC timestamp of the last successful token refresh or initial token exchange.
     /// </summary>
     public DateTimeOffset LastRefreshedAtUtc { get; set; }
+
+    /// <summary>Gets or sets the initial historical synchronization state.</summary>
+    public string InitialSyncState { get; set; } = "not_started";
+
+    /// <summary>Gets or sets the most recent synchronization state.</summary>
+    public string SyncState { get; set; } = "idle";
+
+    /// <summary>Gets or sets the most recent provider-neutral trigger kind.</summary>
+    public string? LastSyncTrigger { get; set; }
+
+    /// <summary>Gets or sets when the most recent synchronization started.</summary>
+    public DateTimeOffset? LastSyncStartedAtUtc { get; set; }
+
+    /// <summary>Gets or sets when synchronization most recently completed successfully.</summary>
+    public DateTimeOffset? LastSuccessfulSyncAtUtc { get; set; }
+
+    /// <summary>Gets or sets the earliest time deferred work should resume.</summary>
+    public DateTimeOffset? NextSyncAttemptAtUtc { get; set; }
+
+    /// <summary>Gets or sets a stable machine-readable synchronization error code.</summary>
+    public string? SyncErrorCode { get; set; }
+
+    /// <summary>Gets or sets the total number of ActivityLogs created by successful runs.</summary>
+    public long ActivityLogsCreated { get; set; }
 }

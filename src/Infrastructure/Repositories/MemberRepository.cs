@@ -36,4 +36,23 @@ public sealed class MemberRepository(PlanthorDbContext context) : BaseRepository
                 c.ExternalUserId == externalUserId &&
                 c.Status == ConnectionStatus.Active), cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<Member?> GetByActiveExternalConnectionAsync(
+        string providerId,
+        string connectionTypeId,
+        string externalUserId,
+        CancellationToken cancellationToken)
+    {
+        var provider = ExternalProvider.FromId(providerId);
+        var connectionType = ExternalConnectionType.FromId(connectionTypeId);
+
+        return await Context.Members.FirstOrDefaultAsync(member =>
+            member.ExternalConnections.Any(connection =>
+                connection.Provider == provider &&
+                connection.Type == connectionType &&
+                connection.ExternalUserId == externalUserId &&
+                connection.Status == ConnectionStatus.Active),
+            cancellationToken);
+    }
 }

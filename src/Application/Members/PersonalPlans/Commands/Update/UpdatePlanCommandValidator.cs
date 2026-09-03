@@ -3,12 +3,11 @@ using FluentValidation;
 namespace Application.Members.PersonalPlans.Commands.Update;
 
 /// <summary>
-/// Validator for the <see cref="UpdatePersonalPlanCommand"/> to ensure all properties like target, current progress, and date ranges are valid.
+/// Validator for editable plan metadata. Progress remains derived from ActivityLogs.
 /// </summary>
 public sealed class UpdatePlanCommandValidator : AbstractValidator<UpdatePersonalPlanCommand>
 {
     private const int MinTarget = 0;
-    private const int MinCurrent = 0;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdatePlanCommandValidator"/> class.
@@ -30,10 +29,6 @@ public sealed class UpdatePlanCommandValidator : AbstractValidator<UpdatePersona
         RuleFor(x => x.Target)
             .GreaterThan(MinTarget)
             .WithErrorCode("error_target_invalid");
-
-        RuleFor(x => x.Current)
-            .GreaterThanOrEqualTo(MinCurrent)
-            .WithErrorCode("error_current_invalid");
 
         RuleFor(x => x.ToDate)
             .GreaterThan(x => x.FromDate)

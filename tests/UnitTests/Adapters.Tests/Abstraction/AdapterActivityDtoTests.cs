@@ -9,23 +9,18 @@ public class AdapterActivityDtoTests
     public void Properties_Work()
     {
         var instant = SystemClock.Instance.GetCurrentInstant();
-        var duration = Duration.FromHours(1);
         var dto = new AdapterActivityDto(
             "123",
             "Provider",
-            "Name",
+            "RUN",
             instant,
-            "Run",
-            10.0,
-            duration
+            10.0
         );
         
         Assert.Equal("123", dto.ExternalActivityId);
         Assert.Equal("Provider", dto.ProviderId);
-        Assert.Equal("Name", dto.Name);
+        Assert.Equal("RUN", dto.CanonicalSportTypeId);
         Assert.Equal(instant, dto.OccurredAt);
-        Assert.Equal("Run", dto.ActivityType);
         Assert.Equal(10.0, dto.DistanceMeters);
-        Assert.Equal(duration, dto.MovingTime);
     }
 }

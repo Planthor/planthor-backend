@@ -45,8 +45,19 @@ public sealed class PersonalPlanDetailsQueryHandler : IQueryHandler<PersonalPlan
             var personalPlan = (member?.PersonalPlans.FirstOrDefault(p => p.PlanId == request.PlanId))
                 ?? throw new KeyNotFoundException($"Personal plan with PlanID '{request.PlanId}' for member '{request.IdentifyName}' was not found.");
 
-            var plan = await _readOnlyContext.FirstOrDefaultAsync<Plan, Plan>(
-                q => q.Where(p => p.Id == request.PlanId),
+            var plan = await _readOnlyContext.FirstOrDefaultAsync(
+                (IQueryable<Plan> q) => q
+                    .Where(p => p.Id == request.PlanId)
+                    .Select(p => new
+                    {
+                        p.Name,
+                        p.Unit,
+                        p.Target,
+                        p.CurrentValue,
+                        p.Status,
+                        p.From,
+                        p.To,
+                    }),
                 cancellationToken) ?? throw new KeyNotFoundException($"Plan with PlanID '{request.PlanId}' was not found.");
 
             var progressPercentage = Math.Round((double)plan.CurrentValue / plan.Target * PercentageMultiplier, RoundingDecimals);

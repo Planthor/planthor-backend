@@ -12,7 +12,6 @@ public record UpdatePersonalPlanCommand(
     Guid PlanId,
     string Unit,
     double Target,
-    double Current,
     DateTimeOffset FromDate,
     DateTimeOffset ToDate)
     : ICommand<PersonalPlanDto>;

@@ -107,7 +107,7 @@ public sealed class ActivityLogsController(
         await createActivityLogCommandValidator.ValidateAndThrowAsync(createLogCommand, token);
         var newLogGuid = await _sender.Send(createLogCommand, token);
 
-        var query = new ActivityLogDetailsQuery(planId, newLogGuid);
+        var query = new ActivityLogDetailsQuery(planId, newLogGuid, identifyName);
         await activityLogDetailsQueryValidator.ValidateAndThrowAsync(query, token);
         var activityLogDto = await _sender.Send(query, token);
 
@@ -162,7 +162,7 @@ public sealed class ActivityLogsController(
             return Unauthorized();
         }
 
-        var query = new ListActivityLogsQuery(planId, limit ?? 10, cursor);
+        var query = new ListActivityLogsQuery(planId, identifyName, limit ?? 10, cursor);
         await listActivityLogsQueryValidator.ValidateAndThrowAsync(query, token);
         var result = await _sender.Send(query, token);
 
@@ -187,7 +187,7 @@ public sealed class ActivityLogsController(
             return Unauthorized();
         }
 
-        var query = new ActivityLogDetailsQuery(planId, logId);
+        var query = new ActivityLogDetailsQuery(planId, logId, identifyName);
         await activityLogDetailsQueryValidator.ValidateAndThrowAsync(query, token);
         var activityLogDto = await _sender.Send(query, token);
 

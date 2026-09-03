@@ -9,4 +9,5 @@ namespace Application.Members.ActivityLogs.Queries.Details;
 /// </summary>
 /// <param name="PlanId">The unique identifier of the plan.</param>
 /// <param name="LogId">The unique identifier of the activity log.</param>
-public record ActivityLogDetailsQuery(Guid PlanId, Guid LogId) : IQuery<ActivityLogDto>;
+/// <param name="IdentifyName">The authenticated member identity used to enforce Plan ownership.</param>
+public record ActivityLogDetailsQuery(Guid PlanId, Guid LogId, string IdentifyName) : IQuery<ActivityLogDto>;

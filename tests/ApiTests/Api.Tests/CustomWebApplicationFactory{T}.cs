@@ -51,6 +51,10 @@ public class CustomWebApplicationFactory<TProgram>
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "Strava:BaseUrl", WireMockServer.Url },
+                { "Strava:WebhookVerifyToken", "test-webhook-token" },
+                { "Strava:WebhookSubscriptionId", "99" },
+                { "Strava:AutomaticSyncEnabled", "false" },
+                { "ConnectionStrings:Quartz", "" },
                 { "Keycloak:BaseUrl", WireMockServer.Url }
             });
         });

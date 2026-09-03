@@ -3,15 +3,16 @@ using NodaTime;
 namespace Application.Dtos;
 
 /// <summary>
-/// Normalized activity returned by any an activity sync adapter.
-/// Maps to <c>ActivityLog</c> in the domain.
+/// Provider-neutral activity data normalized by an external adapter.
 /// </summary>
-public record AdapterActivityDto(
-    string ExternalActivityId,      // Strava activity ID, GitHub commit SHA…
-    string ProviderId,              // "STRAVA" | "GITHUB"
-    string Name,                    // Activity name / commit message
-    Instant OccurredAt,             // When the activity happened (UTC)
-    string? ActivityType,           // "Run", "Ride", "commit" (raw provider value)
-    double? DistanceMeters,         // null for non-fitness activities
-    Duration? MovingTime            // null for non-fitness activities
-);
+/// <param name="ExternalActivityId">The provider's immutable activity identifier.</param>
+/// <param name="ProviderId">The Planthor external-provider identifier.</param>
+/// <param name="CanonicalSportTypeId">The canonical Planthor sport identifier.</param>
+/// <param name="OccurredAt">The instant at which the athlete performed the activity.</param>
+/// <param name="DistanceMeters">The positive SI distance, or <c>null</c> when unavailable.</param>
+public sealed record AdapterActivityDto(
+    string ExternalActivityId,
+    string ProviderId,
+    string CanonicalSportTypeId,
+    Instant OccurredAt,
+    double? DistanceMeters);

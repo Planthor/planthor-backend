@@ -3,8 +3,10 @@
     <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="Google.Cloud.Storage.V1" />
     <PackageReference Include="MongoDB.EntityFrameworkCore" />
+    <PackageReference Include="Npgsql" />
     <PackageReference Include="Quartz" />
     <PackageReference Include="Quartz.Extensions.Hosting" />
+    <PackageReference Include="Quartz.Serialization.SystemTextJson" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

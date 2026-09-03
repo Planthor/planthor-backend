@@ -11,14 +11,14 @@ namespace Domain.Plans;
 /// Modelled as an owned entity (not a separate aggregate) since it has
 /// no meaningful existence outside of its parent <see cref="Plan"/>.
 /// <para>
-/// Assumption: <c>sportType</c> stores Strava sport type identifiers
-/// as a list. An empty list means ALL sport types are accepted.
+/// <see cref="SportTypes"/> stores canonical Planthor sport-type identifiers.
+/// The explicit <c>ALL</c> identifier represents the wildcard selection.
 /// </para>
 /// </remarks>
 public sealed class SportPlanDetails : ValueObject
 {
     /// <summary>
-    /// Initializes sport plan details accepting all sport types.
+    /// Initializes sport plan details with the default unit and no selected sport types.
     /// </summary>
     public SportPlanDetails() : this("km", []) { }
 
@@ -33,20 +33,20 @@ public sealed class SportPlanDetails : ValueObject
         }
 
         Unit = unit;
-        SportTypes = sportTypes ?? new List<string>().AsReadOnly();
+        SportTypes = sportTypes is null ? [] : [.. sportTypes];
     }
 
 
     /// <summary>
     /// Gets the unit of measurement. Defaults to <c>kilometer</c>.
     /// </summary>
-    public string Unit { get; }
+    public string Unit { get; private set; }
 
     /// <summary>
-    /// Gets the list of accepted Strava sport type identifiers.
-    /// An empty list means all sport types are accepted.
+    /// Gets the canonical Planthor sport-type identifiers accepted by the plan.
+    /// Use <c>ALL</c> as the only entry to represent every supported sport type.
     /// </summary>
-    public IReadOnlyList<string> SportTypes { get; }
+    public IReadOnlyList<string> SportTypes { get; private set; }
 
 
     /// <inheritdoc/>

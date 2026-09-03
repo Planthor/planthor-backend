@@ -1,7 +1,7 @@
 using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
+using Adapters.Strava.Coordinator;
 using Adapters.Strava.EventHandlers;
-using Adapters.Strava.Mapping;
 using Adapters.Strava.Persistence;
 using Application.Interfaces;
 using Application.Shared;
@@ -46,11 +46,16 @@ public static class ServiceCollectionExtension
         services.AddSingleton<StravaAdapterDatabase>();
 
         // Typed HTTP client for Strava API
+        services.AddSingleton<StravaRateLimitCoordinator>();
         services.AddHttpClient<IStravaApiClient, StravaApiClient>();
 
-        services.AddKeyedScoped<IActivitySyncAdapter, StravaActivitySyncAdapter>("STRAVA");
-        services.AddKeyedSingleton<IProviderSportTypeMapper, StravaSportTypeMapper>("STRAVA");
+        services.AddScoped<StravaActivitySyncAdapter>();
+        services.AddScoped<IActivitySyncAdapter>(provider =>
+            provider.GetRequiredService<StravaActivitySyncAdapter>());
+        services.AddKeyedScoped<IActivitySyncAdapter>("STRAVA", (provider, _) =>
+            provider.GetRequiredService<StravaActivitySyncAdapter>());
 
+        services.AddTransient<IDomainEventHandler<ExternalConnectionEstablishedEvent>, StravaConnectionEstablishedEventHandler>();
         services.AddTransient<IDomainEventHandler<ExternalConnectionRevokedEvent>, StravaConnectionRevokedEventHandler>();
 
         return services;

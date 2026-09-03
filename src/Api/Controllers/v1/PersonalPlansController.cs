@@ -157,7 +157,6 @@ public sealed class PersonalPlansController(
             planId,
             request.Unit,
             request.Target,
-            request.Current,
             request.FromDate,
             request.ToDate);
 

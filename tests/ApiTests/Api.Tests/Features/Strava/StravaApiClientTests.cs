@@ -164,8 +164,8 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
         var memberId = Guid.NewGuid().ToString("N");
         
         // No token
-        var actsEmpty = await _apiClient.GetAthleteActivitiesAsync(memberId, null, 1, 30, CancellationToken.None);
-        Assert.Empty(actsEmpty);
+        var actsEmpty = await _apiClient.GetAthleteActivitiesPageAsync(memberId, 0, 100, 1, 30, CancellationToken.None);
+        Assert.Equal(StravaApiOutcome.AuthorizationRequired, actsEmpty.Outcome);
 
         // Seed valid token
         _factory.WireMockServer
@@ -175,15 +175,16 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         // API returns activities
         _factory.WireMockServer
-            .Given(Request.Create().WithPath("/athlete/activities").UsingGet().WithHeader("Authorization", "Bearer acc_val"))
+            .Given(Request.Create().WithPath("/api/v3/athlete/activities").UsingGet().WithHeader("Authorization", "Bearer acc_val"))
             .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("[{\"id\":101,\"name\":\"Morning Run\"}]"));
         
-        var acts = await _apiClient.GetAthleteActivitiesAsync(memberId, 12345678, 1, 30, CancellationToken.None);
-        Assert.Single(acts);
+        var acts = await _apiClient.GetAthleteActivitiesPageAsync(memberId, 12345678, 22345678, 1, 30, CancellationToken.None);
+        Assert.Equal(StravaApiOutcome.Success, acts.Outcome);
+        Assert.Single(acts.Value!);
 
         // API returns 400
         _factory.WireMockServer
-            .Given(Request.Create().WithPath("/athlete/activities").UsingGet().WithHeader("Authorization", "Bearer acc_fail"))
+            .Given(Request.Create().WithPath("/api/v3/athlete/activities").UsingGet().WithHeader("Authorization", "Bearer acc_fail"))
             .RespondWith(Response.Create().WithStatusCode(400));
             
         // Seed new token to hit 400
@@ -192,7 +193,7 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
             .RespondWith(Response.Create().WithStatusCode(200).WithHeader("Content-Type", "application/json").WithBody("{\"access_token\":\"acc_fail\",\"refresh_token\":\"ref_fail\",\"expires_at\":2147483647,\"athlete\":{\"id\":2}}"));
         await _apiClient.ExchangeCodeAsync("fail_exch", memberId, CancellationToken.None);
 
-        var actsFail = await _apiClient.GetAthleteActivitiesAsync(memberId, null, 1, 30, CancellationToken.None);
-        Assert.Empty(actsFail);
+        var actsFail = await _apiClient.GetAthleteActivitiesPageAsync(memberId, 0, 100, 1, 30, CancellationToken.None);
+        Assert.Equal(StravaApiOutcome.TransientFailure, actsFail.Outcome);
     }
 }

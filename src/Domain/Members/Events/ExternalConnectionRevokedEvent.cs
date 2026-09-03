@@ -11,6 +11,7 @@ namespace Domain.Members.Events;
 /// <param name="externalConnectionId">The identifier of the revoked connection.</param>
 /// <param name="provider">The external service provider that was disconnected.</param>
 /// <param name="type">The type or purpose of the connection.</param>
+/// <param name="externalUserId">The member identifier at the external provider.</param>
 /// <param name="clock">The system clock used to timestamp when this event occurred.</param>
 /// <param name="occurredBy">The name or identifier of the component that raised this event.</param>
 public sealed class ExternalConnectionRevokedEvent(
@@ -18,6 +19,7 @@ public sealed class ExternalConnectionRevokedEvent(
     Guid externalConnectionId,
     ExternalProvider provider,
     ExternalConnectionType type,
+    string externalUserId,
     IClock clock,
     string occurredBy) : DomainEvent(clock, occurredBy)
 {
@@ -40,4 +42,9 @@ public sealed class ExternalConnectionRevokedEvent(
     /// Gets the type or purpose of the connection.
     /// </summary>
     public ExternalConnectionType Type { get; } = type;
+
+    /// <summary>
+    /// Gets the member identifier at the external provider so cleanup remains possible after revocation.
+    /// </summary>
+    public string ExternalUserId { get; } = externalUserId;
 }
