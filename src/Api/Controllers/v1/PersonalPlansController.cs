@@ -153,7 +153,7 @@ public sealed class PersonalPlansController(
         }
 
         var updatePlanCommand = new UpdatePersonalPlanCommand(
-            targetIdentifyName!,
+            targetIdentifyName,
             planId,
             request.Unit,
             request.Target,

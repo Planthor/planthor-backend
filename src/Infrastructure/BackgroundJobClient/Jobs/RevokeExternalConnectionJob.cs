@@ -20,17 +20,22 @@ public sealed class RevokeExternalConnectionJob(ISender sender) : IJob
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when <c>ProviderId</c> or <c>ExternalUserId</c> is missing from the job data.</exception>
-    public async Task Execute(IJobExecutionContext context)
+    public Task Execute(IJobExecutionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var providerId = context.MergedJobDataMap.GetString("ProviderId")
-            ?? throw new InvalidOperationException("ProviderId is missing.");
-        var externalUserId = context.MergedJobDataMap.GetString("ExternalUserId")
-            ?? throw new InvalidOperationException("ExternalUserId is missing.");
+        return Core();
 
-        await _sender.Send(
-            new RevokeExternalConnectionByExternalUserCommand(providerId, externalUserId),
-            context.CancellationToken);
+        async Task Core()
+        {
+            var providerId = context.MergedJobDataMap.GetString("ProviderId")
+                ?? throw new InvalidOperationException("ProviderId is missing.");
+            var externalUserId = context.MergedJobDataMap.GetString("ExternalUserId")
+                ?? throw new InvalidOperationException("ExternalUserId is missing.");
+
+            await _sender.Send(
+                new RevokeExternalConnectionByExternalUserCommand(providerId, externalUserId),
+                context.CancellationToken);
+        }
     }
 }

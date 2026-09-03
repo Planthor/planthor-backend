@@ -64,11 +64,7 @@ public sealed partial class StravaConnectionRevokedEventHandler(
                     await _stravaClient.DeauthorizeAsync(token.Id, cancellationToken);
                 }
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception exception)
+            catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 LogUpstreamCleanupFailed(exception, domainEvent.ExternalUserId);
             }

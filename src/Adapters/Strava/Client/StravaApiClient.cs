@@ -85,7 +85,10 @@ internal sealed partial class StravaApiClient(
             $"api/v3/athlete/activities?after={afterEpoch}&before={beforeEpoch}&page={page}&per_page={perPage}");
         var relativeUri = new Uri(relativeUriString, UriKind.Relative);
 
-        return new RequestRunner<IReadOnlyList<StravaActivityResponse>>(this).SendAuthorizedAsync(
+        var requestRunner = new RequestRunner<IReadOnlyList<StravaActivityResponse>>(
+            _httpClient, _tokenClient, _clock, _rateLimitCoordinator, logger);
+
+        return requestRunner.SendAuthorizedAsync(
             identifyName,
             accessToken => CreateAuthorizedGet(relativeUri, accessToken),
             cancellationToken);
@@ -111,7 +114,10 @@ internal sealed partial class StravaApiClient(
         var relativeUriString = $"api/v3/activities/{Uri.EscapeDataString(externalActivityId)}";
         var relativeUri = new Uri(relativeUriString, UriKind.Relative);
 
-        var result = await new RequestRunner<StravaActivityResponse>(this).SendAuthorizedAsync(
+        var requestRunner = new RequestRunner<StravaActivityResponse>(
+            _httpClient, _tokenClient, _clock, _rateLimitCoordinator, logger);
+
+        var result = await requestRunner.SendAuthorizedAsync(
             identifyName,
             accessToken => CreateAuthorizedGet(relativeUri, accessToken),
             cancellationToken);
@@ -127,102 +133,10 @@ internal sealed partial class StravaApiClient(
         return result;
     }
 
-    private sealed class RequestRunner<T>(StravaApiClient client)
-    {
-        public async Task<StravaApiResult<T>> SendAuthorizedAsync(
-            string identifyName,
-            Func<string, HttpRequestMessage> requestFactory,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                var token = await client._tokenClient.GetValidTokenAsync(identifyName, cancellationToken);
-                if (token is null)
-                {
-                    return new StravaApiResult<T>(
-                        StravaApiOutcome.AuthorizationRequired,
-                        ErrorCode: "strava_authorization_required");
-                }
-
-                using var firstRequest = requestFactory(token.AccessToken);
-                using var firstResponse = await client._httpClient.SendAsync(firstRequest, cancellationToken);
-                client._rateLimitCoordinator.Observe(firstResponse);
-                if (firstResponse.StatusCode != HttpStatusCode.Unauthorized)
-                {
-                    return await ReadActivityResponseAsync(firstResponse, cancellationToken);
-                }
-
-                var refreshed = await client._tokenClient.RefreshTokenAsync(identifyName, cancellationToken);
-                if (refreshed is null)
-                {
-                    return new StravaApiResult<T>(
-                        StravaApiOutcome.AuthorizationRequired,
-                        ErrorCode: "strava_token_refresh_failed");
-                }
-
-                using var retryRequest = requestFactory(refreshed.AccessToken);
-                using var retryResponse = await client._httpClient.SendAsync(retryRequest, cancellationToken);
-                client._rateLimitCoordinator.Observe(retryResponse);
-                return await ReadActivityResponseAsync(retryResponse, cancellationToken);
-            }
-            catch (HttpRequestException exception)
-            {
-                client.LogActivityRequestFailed(exception, identifyName);
-                return TransientFailure();
-            }
-            catch (JsonException exception)
-            {
-                client.LogActivityRequestFailed(exception, identifyName);
-                return TransientFailure();
-            }
-            catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-            {
-                client.LogActivityRequestFailed(exception, identifyName);
-                return TransientFailure();
-            }
-        }
-
-        private async Task<StravaApiResult<T>> ReadActivityResponseAsync(
-            HttpResponseMessage response,
-            CancellationToken cancellationToken)
-        {
-            if (response.IsSuccessStatusCode)
-            {
-                var value = await response.Content.ReadFromJsonAsync<T>(cancellationToken);
-                return value is null
-                    ? TransientFailure()
-                    : new StravaApiResult<T>(StravaApiOutcome.Success, value);
-            }
-
-            return response.StatusCode switch
-            {
-                HttpStatusCode.NotFound => new StravaApiResult<T>(
-                    StravaApiOutcome.NotFound,
-                    ErrorCode: "strava_activity_not_found"),
-                HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden => new StravaApiResult<T>(
-                    StravaApiOutcome.AuthorizationRequired,
-                    ErrorCode: "strava_authorization_required"),
-                HttpStatusCode.TooManyRequests => new StravaApiResult<T>(
-                    StravaApiOutcome.RateLimited,
-                    RetryAt: client._rateLimitCoordinator.GetRetryAt(),
-                    ErrorCode: "strava_rate_limited"),
-                _ => TransientFailure()
-            };
-        }
-
-        private StravaApiResult<T> TransientFailure() => new(
-            StravaApiOutcome.TransientFailure,
-            RetryAt: client._clock.GetCurrentInstant().Plus(Duration.FromMinutes(1)),
-            ErrorCode: "strava_temporarily_unavailable");
-    }
-
     private HttpRequestMessage CreateAuthorizedGet(Uri relativeUri, string accessToken)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_options.BaseUrl, relativeUri));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         return request;
     }
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Strava activity request failed for member {IdentifyName}")]
-    private partial void LogActivityRequestFailed(Exception exception, string identifyName);
 }

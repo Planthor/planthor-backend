@@ -29,77 +29,94 @@ public sealed partial class QuartzBackgroundJobClient(
 
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="avatarUrl"/> is null.</exception>
-    public async Task EnqueueAvatarDownloadAsync(
+    public Task EnqueueAvatarDownloadAsync(
         Guid memberId,
         Uri avatarUrl,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(avatarUrl);
-        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
-        await scheduler.TriggerJob(new JobKey("DownloadAvatar"), new JobDataMap
+
+        return Core();
+
+        async Task Core()
         {
-            { "MemberId", memberId.ToString() },
-            { "Url", avatarUrl.ToString() }
-        }, cancellationToken);
+            var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
+            await scheduler.TriggerJob(new JobKey("DownloadAvatar"), new JobDataMap
+            {
+                { "MemberId", memberId.ToString() },
+                { "Url", avatarUrl.ToString() }
+            }, cancellationToken);
+        }
     }
 
     /// <inheritdoc />
     /// <exception cref="ArgumentException">Thrown when <paramref name="identifyName"/> is null or empty.</exception>
-    public async Task EnqueueIdentitySyncAsync(
+    public Task EnqueueIdentitySyncAsync(
         Guid memberId,
         string identifyName,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
-        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
-        await scheduler.TriggerJob(new JobKey("SyncIdentity"), new JobDataMap
+
+        return Core();
+
+        async Task Core()
         {
-            { "MemberId", memberId.ToString() },
-            { "IdentifyName", identifyName }
-        }, cancellationToken);
+            var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
+            await scheduler.TriggerJob(new JobKey("SyncIdentity"), new JobDataMap
+            {
+                { "MemberId", memberId.ToString() },
+                { "IdentifyName", identifyName }
+            }, cancellationToken);
+        }
     }
 
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
-    public async Task EnqueueExternalActivitySyncAsync(
+    public Task EnqueueExternalActivitySyncAsync(
         ExternalActivitySyncJobRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
-        var jobKey = GetActivityJobKey(request.ProviderId, request.ExternalUserId);
-        await EnsureActivityJobAsync(scheduler, jobKey, request, cancellationToken);
+        return Core();
 
-        var triggerBuilder = TriggerBuilder.Create()
-            .WithIdentity(GetTriggerKey(request.IdempotencyKey, ActivityJobGroup))
-            .ForJob(jobKey)
-            .UsingJobData("Trigger", request.Trigger)
-            .UsingJobData("IdempotencyKey", request.IdempotencyKey)
-            .UsingJobData("ExternalActivityId", request.ExternalActivityId ?? string.Empty)
-            .UsingJobData("RetryCount", request.RetryCount.ToString(CultureInfo.InvariantCulture));
-
-        triggerBuilder = request.NotBefore is null
-            ? triggerBuilder.StartNow()
-            : triggerBuilder.StartAt(request.NotBefore.Value.ToDateTimeOffset());
-
-        var trigger = triggerBuilder
-            .WithSimpleSchedule(schedule => schedule.WithMisfireHandlingInstructionFireNow())
-            .Build();
-
-        try
+        async Task Core()
         {
-            await scheduler.ScheduleJob(trigger, cancellationToken);
-        }
-        catch (ObjectAlreadyExistsException)
-        {
-            LogCoalescedActivitySyncTrigger(trigger.Key);
+            var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
+            var jobKey = GetActivityJobKey(request.ProviderId, request.ExternalUserId);
+            await EnsureActivityJobAsync(scheduler, jobKey, request, cancellationToken);
+
+            var triggerBuilder = TriggerBuilder.Create()
+                .WithIdentity(GetTriggerKey(request.IdempotencyKey, ActivityJobGroup))
+                .ForJob(jobKey)
+                .UsingJobData("Trigger", request.Trigger)
+                .UsingJobData("IdempotencyKey", request.IdempotencyKey)
+                .UsingJobData("ExternalActivityId", request.ExternalActivityId ?? string.Empty)
+                .UsingJobData("RetryCount", request.RetryCount.ToString(CultureInfo.InvariantCulture));
+
+            triggerBuilder = request.NotBefore is null
+                ? triggerBuilder.StartNow()
+                : triggerBuilder.StartAt(request.NotBefore.Value.ToDateTimeOffset());
+
+            var trigger = triggerBuilder
+                .WithSimpleSchedule(schedule => schedule.WithMisfireHandlingInstructionFireNow())
+                .Build();
+
+            try
+            {
+                await scheduler.ScheduleJob(trigger, cancellationToken);
+            }
+            catch (ObjectAlreadyExistsException)
+            {
+                LogCoalescedActivitySyncTrigger(trigger.Key);
+            }
         }
     }
 
     /// <inheritdoc />
     /// <exception cref="ArgumentException">Thrown when <paramref name="providerId"/>, <paramref name="externalUserId"/>, or <paramref name="idempotencyKey"/> is null or empty.</exception>
-    public async Task EnqueueExternalConnectionRevocationAsync(
+    public Task EnqueueExternalConnectionRevocationAsync(
         string providerId,
         string externalUserId,
         string idempotencyKey,
@@ -109,47 +126,52 @@ public sealed partial class QuartzBackgroundJobClient(
         ArgumentException.ThrowIfNullOrEmpty(externalUserId);
         ArgumentException.ThrowIfNullOrEmpty(idempotencyKey);
 
-        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
-        var jobKey = new JobKey(
-            $"{Normalize(providerId)}-{Hash(externalUserId)}",
-            RevocationJobGroup);
-        var job = JobBuilder.Create<RevokeExternalConnectionJob>()
-            .WithIdentity(jobKey)
-            .UsingJobData("ProviderId", providerId)
-            .UsingJobData("ExternalUserId", externalUserId)
-            .StoreDurably()
-            .RequestRecovery()
-            .Build();
+        return Core();
 
-        try
+        async Task Core()
         {
-            await scheduler.AddJob(job, replace: false, storeNonDurableWhileAwaitingScheduling: false, cancellationToken);
-        }
-        catch (ObjectAlreadyExistsException)
-        {
-            LogCoalescedRevocationJob(jobKey);
-        }
+            var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
+            var jobKey = new JobKey(
+                $"{Normalize(providerId)}-{Hash(externalUserId)}",
+                RevocationJobGroup);
+            var job = JobBuilder.Create<RevokeExternalConnectionJob>()
+                .WithIdentity(jobKey)
+                .UsingJobData("ProviderId", providerId)
+                .UsingJobData("ExternalUserId", externalUserId)
+                .StoreDurably()
+                .RequestRecovery()
+                .Build();
 
-        var trigger = TriggerBuilder.Create()
-            .WithIdentity(GetTriggerKey(idempotencyKey, RevocationJobGroup))
-            .ForJob(jobKey)
-            .StartNow()
-            .WithSimpleSchedule(schedule => schedule.WithMisfireHandlingInstructionFireNow())
-            .Build();
+            try
+            {
+                await scheduler.AddJob(job, replace: false, storeNonDurableWhileAwaitingScheduling: false, cancellationToken);
+            }
+            catch (ObjectAlreadyExistsException)
+            {
+                LogCoalescedRevocationJob(jobKey);
+            }
 
-        try
-        {
-            await scheduler.ScheduleJob(trigger, cancellationToken);
-        }
-        catch (ObjectAlreadyExistsException)
-        {
-            LogCoalescedRevocationTrigger(trigger.Key);
+            var trigger = TriggerBuilder.Create()
+                .WithIdentity(GetTriggerKey(idempotencyKey, RevocationJobGroup))
+                .ForJob(jobKey)
+                .StartNow()
+                .WithSimpleSchedule(schedule => schedule.WithMisfireHandlingInstructionFireNow())
+                .Build();
+
+            try
+            {
+                await scheduler.ScheduleJob(trigger, cancellationToken);
+            }
+            catch (ObjectAlreadyExistsException)
+            {
+                LogCoalescedRevocationTrigger(trigger.Key);
+            }
         }
     }
 
     /// <inheritdoc />
     /// <exception cref="ArgumentException">Thrown when <paramref name="providerId"/> or <paramref name="externalUserId"/> is null or empty.</exception>
-    public async Task CancelExternalActivitySyncAsync(
+    public Task CancelExternalActivitySyncAsync(
         string providerId,
         string externalUserId,
         CancellationToken cancellationToken)
@@ -157,8 +179,13 @@ public sealed partial class QuartzBackgroundJobClient(
         ArgumentException.ThrowIfNullOrEmpty(providerId);
         ArgumentException.ThrowIfNullOrEmpty(externalUserId);
 
-        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
-        await scheduler.DeleteJob(GetActivityJobKey(providerId, externalUserId), cancellationToken);
+        return Core();
+
+        async Task Core()
+        {
+            var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
+            await scheduler.DeleteJob(GetActivityJobKey(providerId, externalUserId), cancellationToken);
+        }
     }
 
     /// <summary>

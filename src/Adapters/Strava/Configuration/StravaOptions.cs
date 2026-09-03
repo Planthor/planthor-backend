@@ -62,9 +62,14 @@ public sealed class StravaOptions
     public string Scopes { get; set; } = "activity:read_all,profile:read_all";
 
     /// <summary>
+    /// The default Strava API Base URL.
+    /// </summary>
+    public const string DefaultBaseUrl = "https://www.strava.com";
+
+    /// <summary>
     /// Gets or sets the Strava API Base URL (useful for mocking).
     /// </summary>
-    public Uri BaseUrl { get; set; } = new Uri("https://www.strava.com");
+    public Uri BaseUrl { get; set; } = new Uri(DefaultBaseUrl);
 
     /// <summary>
     /// Gets or sets whether OAuth and webhook events automatically enqueue activity synchronization.

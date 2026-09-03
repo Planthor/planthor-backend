@@ -68,8 +68,8 @@ public class DomainEventNotificationHandlerTests
     {
         public Guid EventId => Guid.NewGuid();
         public Instant OccurredAt => SystemClock.Instance.GetCurrentInstant();
-        public string Source => "Test";
-        public string OccurredBy => "System";
+        public string Source { get; } = "Test";
+        public string OccurredBy { get; } = "System";
     }
 
     [Fact]

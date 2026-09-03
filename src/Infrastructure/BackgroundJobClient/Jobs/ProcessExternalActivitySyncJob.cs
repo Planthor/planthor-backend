@@ -36,47 +36,52 @@ public sealed partial class ProcessExternalActivitySyncJob(
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when <c>ProviderId</c> or <c>ExternalUserId</c> is missing from the job data.</exception>
-    public async Task Execute(IJobExecutionContext context)
+    public Task Execute(IJobExecutionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var data = context.MergedJobDataMap;
-        var providerId = data.GetString("ProviderId") ?? throw new InvalidOperationException("ProviderId is missing.");
-        var externalUserId = data.GetString("ExternalUserId") ?? throw new InvalidOperationException("ExternalUserId is missing.");
-        var trigger = data.GetString("Trigger") ?? ExternalActivitySyncTrigger.Retry;
-        var idempotencyKey = data.GetString("IdempotencyKey") ?? Guid.NewGuid().ToString("N");
-        var activityId = data.GetString("ExternalActivityId");
-        _ = int.TryParse(data.GetString("RetryCount"), CultureInfo.InvariantCulture, out var retryCount);
+        return Core();
 
-        var request = new ExternalActivitySyncJobRequest(
-            providerId,
-            externalUserId,
-            trigger,
-            idempotencyKey,
-            string.IsNullOrWhiteSpace(activityId) ? null : activityId,
-            RetryCount: retryCount);
-
-        try
+        async Task Core()
         {
-            var result = await _sender.Send(
-                new ProcessExternalActivitySyncCommand(request),
-                context.CancellationToken);
+            var data = context.MergedJobDataMap;
+            var providerId = data.GetString("ProviderId") ?? throw new InvalidOperationException("ProviderId is missing.");
+            var externalUserId = data.GetString("ExternalUserId") ?? throw new InvalidOperationException("ExternalUserId is missing.");
+            var trigger = data.GetString("Trigger") ?? ExternalActivitySyncTrigger.Retry;
+            var idempotencyKey = data.GetString("IdempotencyKey") ?? Guid.NewGuid().ToString("N");
+            var activityId = data.GetString("ExternalActivityId");
+            _ = int.TryParse(data.GetString("RetryCount"), CultureInfo.InvariantCulture, out var retryCount);
 
-            if (result.RetryAt is not null)
+            var request = new ExternalActivitySyncJobRequest(
+                providerId,
+                externalUserId,
+                trigger,
+                idempotencyKey,
+                string.IsNullOrWhiteSpace(activityId) ? null : activityId,
+                RetryCount: retryCount);
+
+            try
             {
-                await EnqueueRetryAsync(request, result.RetryAt.Value, retryCount, context);
+                var result = await _sender.Send(
+                    new ProcessExternalActivitySyncCommand(request),
+                    context.CancellationToken);
+
+                if (result.RetryAt is not null)
+                {
+                    await EnqueueRetryAsync(request, result.RetryAt.Value, retryCount, context);
+                }
             }
-        }
-        catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception) when (retryCount < MaximumInfrastructureRetries)
-        {
-            LogRetry(exception, providerId, externalUserId, retryCount + 1);
-            var delays = new[] { 1, 5, 15 };
-            var retryAt = _clock.GetCurrentInstant().Plus(Duration.FromMinutes(delays[retryCount]));
-            await EnqueueRetryAsync(request, retryAt, retryCount + 1, context);
+            catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception) when (retryCount < MaximumInfrastructureRetries)
+            {
+                LogRetry(exception, providerId, externalUserId, retryCount + 1);
+                var delays = new[] { 1, 5, 15 };
+                var retryAt = _clock.GetCurrentInstant().Plus(Duration.FromMinutes(delays[retryCount]));
+                await EnqueueRetryAsync(request, retryAt, retryCount + 1, context);
+            }
         }
     }
 
