@@ -20,6 +20,7 @@ public sealed partial class QuartzBackgroundJobClient(
     ISchedulerFactory schedulerFactory,
     ILogger<QuartzBackgroundJobClient> logger) : IBackgroundJobClient
 {
+    private readonly ISchedulerFactory _schedulerFactory = schedulerFactory ?? throw new ArgumentNullException(nameof(schedulerFactory));
     /// <summary>The Quartz group name used for external activity synchronization jobs.</summary>
     private const string ActivityJobGroup = "external-activity-sync";
 
@@ -34,7 +35,7 @@ public sealed partial class QuartzBackgroundJobClient(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(avatarUrl);
-        var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
         await scheduler.TriggerJob(new JobKey("DownloadAvatar"), new JobDataMap
         {
             { "MemberId", memberId.ToString() },
@@ -50,7 +51,7 @@ public sealed partial class QuartzBackgroundJobClient(
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(identifyName);
-        var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
         await scheduler.TriggerJob(new JobKey("SyncIdentity"), new JobDataMap
         {
             { "MemberId", memberId.ToString() },
@@ -66,7 +67,7 @@ public sealed partial class QuartzBackgroundJobClient(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
         var jobKey = GetActivityJobKey(request.ProviderId, request.ExternalUserId);
         await EnsureActivityJobAsync(scheduler, jobKey, request, cancellationToken);
 
@@ -108,7 +109,7 @@ public sealed partial class QuartzBackgroundJobClient(
         ArgumentException.ThrowIfNullOrEmpty(externalUserId);
         ArgumentException.ThrowIfNullOrEmpty(idempotencyKey);
 
-        var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
         var jobKey = new JobKey(
             $"{Normalize(providerId)}-{Hash(externalUserId)}",
             RevocationJobGroup);
@@ -156,7 +157,7 @@ public sealed partial class QuartzBackgroundJobClient(
         ArgumentException.ThrowIfNullOrEmpty(providerId);
         ArgumentException.ThrowIfNullOrEmpty(externalUserId);
 
-        var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+        var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
         await scheduler.DeleteJob(GetActivityJobKey(providerId, externalUserId), cancellationToken);
     }
 

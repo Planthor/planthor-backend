@@ -15,6 +15,8 @@ namespace Infrastructure.BackgroundJobClient.Jobs;
 [DisallowConcurrentExecution]
 public sealed class RevokeExternalConnectionJob(ISender sender) : IJob
 {
+    private readonly ISender _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when <c>ProviderId</c> or <c>ExternalUserId</c> is missing from the job data.</exception>
@@ -27,7 +29,7 @@ public sealed class RevokeExternalConnectionJob(ISender sender) : IJob
         var externalUserId = context.MergedJobDataMap.GetString("ExternalUserId")
             ?? throw new InvalidOperationException("ExternalUserId is missing.");
 
-        await sender.Send(
+        await _sender.Send(
             new RevokeExternalConnectionByExternalUserCommand(providerId, externalUserId),
             context.CancellationToken);
     }

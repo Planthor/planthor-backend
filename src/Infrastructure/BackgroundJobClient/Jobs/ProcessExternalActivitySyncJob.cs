@@ -28,6 +28,9 @@ public sealed partial class ProcessExternalActivitySyncJob(
     IClock clock,
     ILogger<ProcessExternalActivitySyncJob> logger) : IJob
 {
+    private readonly ISender _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+    private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient ?? throw new ArgumentNullException(nameof(backgroundJobClient));
+    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     private const int MaximumInfrastructureRetries = 3;
 
     /// <inheritdoc />
@@ -55,7 +58,7 @@ public sealed partial class ProcessExternalActivitySyncJob(
 
         try
         {
-            var result = await sender.Send(
+            var result = await _sender.Send(
                 new ProcessExternalActivitySyncCommand(request),
                 context.CancellationToken);
 
@@ -72,7 +75,7 @@ public sealed partial class ProcessExternalActivitySyncJob(
         {
             LogRetry(exception, providerId, externalUserId, retryCount + 1);
             var delays = new[] { 1, 5, 15 };
-            var retryAt = clock.GetCurrentInstant().Plus(Duration.FromMinutes(delays[retryCount]));
+            var retryAt = _clock.GetCurrentInstant().Plus(Duration.FromMinutes(delays[retryCount]));
             await EnqueueRetryAsync(request, retryAt, retryCount + 1, context);
         }
     }
@@ -91,7 +94,7 @@ public sealed partial class ProcessExternalActivitySyncJob(
         IJobExecutionContext context)
     {
         var retryKey = $"{request.IdempotencyKey}:retry:{retryAt.ToUnixTimeSeconds()}:{retryCount}";
-        return backgroundJobClient.EnqueueExternalActivitySyncAsync(
+        return _backgroundJobClient.EnqueueExternalActivitySyncAsync(
             request with
             {
                 IdempotencyKey = retryKey,

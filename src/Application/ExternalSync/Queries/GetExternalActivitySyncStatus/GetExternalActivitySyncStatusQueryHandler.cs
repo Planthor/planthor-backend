@@ -20,6 +20,8 @@ public sealed class GetExternalActivitySyncStatusQueryHandler(
     IEnumerable<IActivitySyncAdapter> activitySyncAdapters)
     : IQueryHandler<GetExternalActivitySyncStatusQuery, ExternalActivitySyncStatusDto>
 {
+    private readonly IMemberRepository _memberRepository = memberRepository ?? throw new ArgumentNullException(nameof(memberRepository));
+    private readonly IEnumerable<IActivitySyncAdapter> _activitySyncAdapters = activitySyncAdapters ?? throw new ArgumentNullException(nameof(activitySyncAdapters));
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
     /// <exception cref="KeyNotFoundException">Thrown when the specified member, connection, or adapter is not found.</exception>
@@ -29,7 +31,7 @@ public sealed class GetExternalActivitySyncStatusQueryHandler(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var member = await memberRepository.GetByIdentifyNameAsync(
+        var member = await _memberRepository.GetByIdentifyNameAsync(
             request.CurrentIdentifyName,
             cancellationToken)
             ?? throw new KeyNotFoundException($"Member '{request.CurrentIdentifyName}' was not found.");
@@ -46,7 +48,7 @@ public sealed class GetExternalActivitySyncStatusQueryHandler(
             candidate.Status == ConnectionStatus.Active)
             ?? throw new KeyNotFoundException("External activity connection was not found.");
 
-        var adapter = activitySyncAdapters.FirstOrDefault(candidate =>
+        var adapter = _activitySyncAdapters.FirstOrDefault(candidate =>
             candidate.ProviderId.Equals(request.ProviderId, StringComparison.OrdinalIgnoreCase))
             ?? throw new KeyNotFoundException("External activity adapter was not found.");
 

@@ -12,13 +12,14 @@ namespace Application.ExternalSync.Commands.EnqueueExternalActivitySync;
 public sealed class EnqueueExternalActivitySyncCommandHandler(IBackgroundJobClient backgroundJobClient)
     : ICommandHandler<EnqueueExternalActivitySyncCommand>
 {
+    private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient ?? throw new ArgumentNullException(nameof(backgroundJobClient));
     /// <inheritdoc />
     public Task Handle(EnqueueExternalActivitySyncCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ArgumentNullException.ThrowIfNull(backgroundJobClient);
+        ArgumentNullException.ThrowIfNull(_backgroundJobClient);
 
-        return backgroundJobClient.EnqueueExternalActivitySyncAsync(
+        return _backgroundJobClient.EnqueueExternalActivitySyncAsync(
             new ExternalActivitySyncJobRequest(
                 request.ProviderId,
                 request.ExternalUserId,

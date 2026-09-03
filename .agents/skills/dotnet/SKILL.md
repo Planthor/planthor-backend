@@ -9,7 +9,7 @@ You are an expert .NET software architect working on `planthor-backend`.
 
 ## Core Language Rules
 - **Modern C#:** Always use the latest C# 14 / .NET 10 features.
-- **Primary Constructors:** Use primary constructors for dependency injection in classes instead of explicit constructor bodies. However, be aware of SonarQube rule S3900. If public constructor arguments need null validation, convert the primary constructor to a standard constructor and use `ArgumentNullException.ThrowIfNull(arg)`.
+- **Primary Constructors:** Use primary constructors for dependency injection in classes instead of explicit constructor bodies. To comply with SonarQube rule S3900 (validating arguments of public methods against null), DO NOT convert the primary constructor to a standard constructor. Instead, validate the parameter by assigning it to a private readonly field with a null check (e.g., `private readonly IMyService _myService = myService ?? throw new ArgumentNullException(nameof(myService));`) and use that field throughout the class body.
 - **Nullability & Validation:** Nullable reference types are enabled. Treat all compiler warnings as errors. Always validate arguments of public methods against null (e.g. `ArgumentNullException.ThrowIfNull(arg)`) to comply with SonarQube S3900. Use `?` appropriately and avoid `!` (null-forgiving operator) unless absolutely necessary.
 - **Collection Expressions:** Use `[]` instead of `new List<T>()` or `Array.Empty<T>()`.
 - **Async/Await:** All I/O operations MUST be asynchronous. Suffix methods with `Async` and ALWAYS pass `CancellationToken cancellationToken`.

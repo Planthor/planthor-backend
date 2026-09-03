@@ -20,6 +20,9 @@ public sealed class StravaActivitySyncAdapter(
     StravaAdapterDatabase tokenDb,
     IClock clock) : IActivitySyncAdapter
 {
+    private readonly IStravaApiClient _client = client ?? throw new ArgumentNullException(nameof(client));
+    private readonly StravaAdapterDatabase _tokenDb = tokenDb ?? throw new ArgumentNullException(nameof(tokenDb));
+    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     private const int PageSize = 200;
 
     /// <inheritdoc />
@@ -58,7 +61,7 @@ public sealed class StravaActivitySyncAdapter(
         
         while (hasMorePages)
         {
-            var result = await client.GetAthleteActivitiesPageAsync(
+            var result = await _client.GetAthleteActivitiesPageAsync(
                 token.Id,
                 afterEpoch,
                 beforeEpoch,
@@ -108,7 +111,7 @@ public sealed class StravaActivitySyncAdapter(
             return AuthorizationRequired();
         }
 
-        var result = await client.GetActivityAsync(token.Id, externalActivityId, cancellationToken);
+        var result = await _client.GetActivityAsync(token.Id, externalActivityId, cancellationToken);
         if (result.Outcome != StravaApiOutcome.Success)
         {
             return MapFailure(result);
@@ -140,7 +143,7 @@ public sealed class StravaActivitySyncAdapter(
         {
             token.SyncState = "running";
             token.LastSyncTrigger = trigger;
-            token.LastSyncStartedAtUtc = clock.GetCurrentInstant().ToDateTimeOffset();
+            token.LastSyncStartedAtUtc = _clock.GetCurrentInstant().ToDateTimeOffset();
             token.NextSyncAttemptAtUtc = null;
             token.SyncErrorCode = null;
             if (trigger == ExternalActivitySyncTrigger.Initial)
@@ -160,7 +163,7 @@ public sealed class StravaActivitySyncAdapter(
         {
             token.SyncState = "succeeded";
             token.LastSyncTrigger = trigger;
-            token.LastSuccessfulSyncAtUtc = clock.GetCurrentInstant().ToDateTimeOffset();
+            token.LastSuccessfulSyncAtUtc = _clock.GetCurrentInstant().ToDateTimeOffset();
             token.NextSyncAttemptAtUtc = null;
             token.SyncErrorCode = null;
             token.ActivityLogsCreated += logsCreated;
@@ -240,7 +243,7 @@ public sealed class StravaActivitySyncAdapter(
     {
         if (long.TryParse(externalUserId, NumberStyles.None, CultureInfo.InvariantCulture, out var athleteId))
         {
-            await tokenDb.DeleteByAthleteIdAsync(athleteId, cancellationToken);
+            await _tokenDb.DeleteByAthleteIdAsync(athleteId, cancellationToken);
         }
     }
 
@@ -262,7 +265,7 @@ public sealed class StravaActivitySyncAdapter(
         }
 
         mutation(token);
-        await tokenDb.UpsertAsync(token, cancellationToken);
+        await _tokenDb.UpsertAsync(token, cancellationToken);
     }
 
     /// <summary>
@@ -276,7 +279,7 @@ public sealed class StravaActivitySyncAdapter(
         CancellationToken cancellationToken)
     {
         return long.TryParse(externalUserId, NumberStyles.None, CultureInfo.InvariantCulture, out var athleteId)
-            ? await tokenDb.GetByAthleteIdAsync(athleteId, cancellationToken)
+            ? await _tokenDb.GetByAthleteIdAsync(athleteId, cancellationToken)
             : null;
     }
 

@@ -18,6 +18,9 @@ public sealed class StravaConnectionEstablishedEventHandler(
     IOptions<StravaOptions> options)
     : IDomainEventHandler<ExternalConnectionEstablishedEvent>
 {
+    private readonly StravaActivitySyncAdapter _activitySyncAdapter = activitySyncAdapter ?? throw new ArgumentNullException(nameof(activitySyncAdapter));
+    private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient ?? throw new ArgumentNullException(nameof(backgroundJobClient));
+    private readonly IOptions<StravaOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="domainEvent"/> is null.</exception>
     public async Task HandleAsync(
@@ -25,18 +28,18 @@ public sealed class StravaConnectionEstablishedEventHandler(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
-        if (!options.Value.AutomaticSyncEnabled ||
+        if (!_options.Value.AutomaticSyncEnabled ||
             domainEvent.Provider != ExternalProvider.Strava ||
             domainEvent.Type != ExternalConnectionType.ActivitiesSync)
         {
             return;
         }
 
-        await activitySyncAdapter.MarkQueuedAsync(
+        await _activitySyncAdapter.MarkQueuedAsync(
             domainEvent.ExternalUserId,
             ExternalActivitySyncTrigger.Initial,
             cancellationToken);
-        await backgroundJobClient.EnqueueExternalActivitySyncAsync(
+        await _backgroundJobClient.EnqueueExternalActivitySyncAsync(
             new ExternalActivitySyncJobRequest(
                 ExternalProvider.Strava.Id,
                 domainEvent.ExternalUserId,

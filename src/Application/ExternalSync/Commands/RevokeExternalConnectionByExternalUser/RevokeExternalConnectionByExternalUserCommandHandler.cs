@@ -17,6 +17,8 @@ public sealed class RevokeExternalConnectionByExternalUserCommandHandler(
     IClock clock)
     : ICommandHandler<RevokeExternalConnectionByExternalUserCommand, bool>
 {
+    private readonly IMemberRepository _memberRepository = memberRepository ?? throw new ArgumentNullException(nameof(memberRepository));
+    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
     public async Task<bool> Handle(
@@ -25,7 +27,7 @@ public sealed class RevokeExternalConnectionByExternalUserCommandHandler(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var member = await memberRepository.GetByActiveExternalConnectionAsync(
+        var member = await _memberRepository.GetByActiveExternalConnectionAsync(
             request.ProviderId,
             ExternalConnectionType.ActivitiesSync.Id,
             request.ExternalUserId,
@@ -38,9 +40,9 @@ public sealed class RevokeExternalConnectionByExternalUserCommandHandler(
         member.RevokeExternalProvider(
             ExternalProvider.FromId(request.ProviderId),
             ExternalConnectionType.ActivitiesSync,
-            clock);
-        await memberRepository.UpdateAsync(member, cancellationToken);
-        await memberRepository.SaveChangesAsync(cancellationToken);
+            _clock);
+        await _memberRepository.UpdateAsync(member, cancellationToken);
+        await _memberRepository.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

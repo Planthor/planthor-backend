@@ -39,6 +39,9 @@ public sealed partial class StravaController(
     ISender sender,
     ILogger<StravaController> logger) : ControllerBase
 {
+    private readonly IStravaApiClient _stravaClient = stravaClient ?? throw new ArgumentNullException(nameof(stravaClient));
+    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+    private readonly ISender _sender = sender ?? throw new ArgumentNullException(nameof(sender));
     private readonly StravaOptions _options = options.Value;
 
     /// <summary>
@@ -64,7 +67,7 @@ public sealed partial class StravaController(
         {
             IdentifyName = identifyName,
             Nonce = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture),
-            TimestampUtc = clock.GetCurrentInstant().ToUnixTimeSeconds()
+            TimestampUtc = _clock.GetCurrentInstant().ToUnixTimeSeconds()
         };
 
         var json = JsonSerializer.Serialize(payload);
@@ -142,14 +145,14 @@ public sealed partial class StravaController(
             return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", "invalid_state"));
         }
 
-        var nowEpoch = clock.GetCurrentInstant().ToUnixTimeSeconds();
+        var nowEpoch = _clock.GetCurrentInstant().ToUnixTimeSeconds();
         if (nowEpoch - payload.TimestampUtc > 900) // 15 minutes expiration
         {
             LogCallbackStateExpired(payload.IdentifyName);
             return Redirect(QueryHelpers.AddQueryString(_options.FrontendErrorUrl.ToString(), "error", "state_expired"));
         }
 
-        var tokenResponse = await stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
+        var tokenResponse = await _stravaClient.ExchangeCodeAsync(code, payload.IdentifyName, cancellationToken);
         if (tokenResponse == null)
         {
             LogCallbackTokenExchangeFailed(payload.IdentifyName);
@@ -158,7 +161,7 @@ public sealed partial class StravaController(
 
         var scopesList = _options.Scopes.Split(',').Select(s => s.Trim()).ToList();
 
-        await sender.Send(new ConnectExternalProviderCommand(
+        await _sender.Send(new ConnectExternalProviderCommand(
             payload.IdentifyName,
             ExternalProvider.Strava.Id,
             ExternalConnectionType.ActivitiesSync.Id,
@@ -229,7 +232,7 @@ public sealed partial class StravaController(
                 payload.ObjectId > 0 &&
                 payload.OwnerId > 0)
             {
-                await sender.Send(new EnqueueExternalActivitySyncCommand(
+                await _sender.Send(new EnqueueExternalActivitySyncCommand(
                     ExternalProvider.Strava.Id,
                     externalUserId,
                     ExternalActivitySyncTrigger.Webhook,
@@ -238,7 +241,7 @@ public sealed partial class StravaController(
             }
             else if (payload.OwnerId > 0 && payload.IsDeauthorization())
             {
-                await sender.Send(new EnqueueExternalConnectionRevocationCommand(
+                await _sender.Send(new EnqueueExternalConnectionRevocationCommand(
                     ExternalProvider.Strava.Id,
                     externalUserId,
                     payload.GetIdempotencyKey()), cancellationToken);
@@ -282,7 +285,7 @@ public sealed partial class StravaController(
             return Unauthorized();
         }
 
-        var result = await sender.Send(
+        var result = await _sender.Send(
             new RequestExternalActivitySyncCommand(identifyName, ExternalProvider.Strava.Id),
             cancellationToken);
 

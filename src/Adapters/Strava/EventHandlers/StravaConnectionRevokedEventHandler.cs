@@ -25,6 +25,10 @@ public sealed partial class StravaConnectionRevokedEventHandler(
     ILogger<StravaConnectionRevokedEventHandler> logger)
     : IDomainEventHandler<ExternalConnectionRevokedEvent>
 {
+    private readonly IStravaApiClient _stravaClient = stravaClient ?? throw new ArgumentNullException(nameof(stravaClient));
+    private readonly StravaAdapterDatabase _tokenDatabase = tokenDatabase ?? throw new ArgumentNullException(nameof(tokenDatabase));
+    private readonly StravaActivitySyncAdapter _activitySyncAdapter = activitySyncAdapter ?? throw new ArgumentNullException(nameof(activitySyncAdapter));
+    private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient ?? throw new ArgumentNullException(nameof(backgroundJobClient));
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="domainEvent"/> is null.</exception>
     public async Task HandleAsync(
@@ -40,7 +44,7 @@ public sealed partial class StravaConnectionRevokedEventHandler(
 
         try
         {
-            await backgroundJobClient.CancelExternalActivitySyncAsync(
+            await _backgroundJobClient.CancelExternalActivitySyncAsync(
                 ExternalProvider.Strava.Id,
                 domainEvent.ExternalUserId,
                 cancellationToken);
@@ -50,9 +54,9 @@ public sealed partial class StravaConnectionRevokedEventHandler(
                     NumberStyles.None,
                     CultureInfo.InvariantCulture,
                     out var athleteId) &&
-                await tokenDatabase.GetByAthleteIdAsync(athleteId, cancellationToken) is { } token)
+                await _tokenDatabase.GetByAthleteIdAsync(athleteId, cancellationToken) is { } token)
             {
-                await stravaClient.DeauthorizeAsync(token.Id, cancellationToken);
+                await _stravaClient.DeauthorizeAsync(token.Id, cancellationToken);
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -65,7 +69,7 @@ public sealed partial class StravaConnectionRevokedEventHandler(
         }
         finally
         {
-            await activitySyncAdapter.DeleteOperationalDataAsync(
+            await _activitySyncAdapter.DeleteOperationalDataAsync(
                 domainEvent.ExternalUserId,
                 CancellationToken.None);
         }
