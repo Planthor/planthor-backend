@@ -51,11 +51,20 @@ public class CustomWebApplicationFactory<TProgram>
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "Strava:BaseUrl", WireMockServer.Url },
+                { "Strava:ClientId", "test-client-id" },
+                { "Strava:ClientSecret", "test-client-secret" },
+                { "Strava:StateEncryptionKey", "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=" },
+                { "Strava:Scopes", "activity:read_all,profile:read_all" },
+                { "Strava:FrontendSuccessUrl", "https://app.planthor.test/connections?status=success" },
+                { "Strava:FrontendErrorUrl", "https://app.planthor.test/connections?status=error" },
                 { "Strava:WebhookVerifyToken", "test-webhook-token" },
                 { "Strava:WebhookSubscriptionId", "99" },
                 { "Strava:AutomaticSyncEnabled", "false" },
                 { "ConnectionStrings:Quartz", "" },
-                { "Keycloak:BaseUrl", WireMockServer.Url }
+                { "Keycloak:BaseUrl", WireMockServer.Url },
+                { "Authentication:Keycloak:Authority", $"{WireMockServer.Url}/realms/planthor" },
+                { "Authentication:Keycloak:ClientId", "test-client" },
+                { "Authentication:Keycloak:ClientSecret", "test-secret" }
             });
         });
 

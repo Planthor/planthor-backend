@@ -181,10 +181,81 @@ public class ValueObjectTests
 #pragma warning restore CS8604
     }
 
+    [Fact]
+    public void Equals_WithSameReference_ReturnsTrue()
+    {
+        // Arrange
+        var valueObject = new TestValueObject { Value = 1 };
+
+        // Act
+        var result = valueObject.Equals(valueObject);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void Equals_WithDifferentValueObjectType_ReturnsFalse()
+    {
+        // Arrange
+        ValueObject left = new TestValueObject { Value = 1 };
+        ValueObject right = new OtherValueObject { Value = 1 };
+
+        // Act
+        var result = left.Equals(right);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void Equals_WithNullEqualityComponents_TreatsComponentsAsEmpty()
+    {
+        // Arrange
+        var left = new NullComponentsValueObject();
+        var right = new NullComponentsValueObject();
+
+        // Act
+        var result = left.Equals(right);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void GetHashCode_WithNullComponent_IncludesZeroComponentHash()
+    {
+        // Arrange
+        var valueObject = new NullableComponentValueObject();
+
+        // Act
+        var result = valueObject.GetHashCode();
+
+        // Assert
+        Assert.Equal(17 * 31, result);
+    }
+
     private class TestValueObject : ValueObject
     {
         public int Value { get; init; }
 
         protected override IEnumerable<object> EqualityComponents => [Value];
+    }
+
+    private sealed class OtherValueObject : ValueObject
+    {
+        public int Value { get; init; }
+
+        protected override IEnumerable<object> EqualityComponents => [Value];
+    }
+
+    private sealed class NullComponentsValueObject : ValueObject
+    {
+        protected override IEnumerable<object> EqualityComponents => null!;
+    }
+
+    private sealed class NullableComponentValueObject : ValueObject
+    {
+        protected override IEnumerable<object> EqualityComponents => [null!];
     }
 }

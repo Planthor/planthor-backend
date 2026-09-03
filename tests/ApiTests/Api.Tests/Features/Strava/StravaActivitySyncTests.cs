@@ -223,6 +223,32 @@ public sealed class StravaActivitySyncTests(CustomWebApplicationFactory<Program>
         Assert.Equal(2, logsAfterReplay.Items.Count());
         var planAfterReplay = await ReadPlanAsync(client, linkedPlan.PlanId);
         Assert.Equal(7f, planAfterReplay.CurrentValue);
+
+        factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath("/oauth/deauthorize")
+                .UsingPost())
+            .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.OK));
+        var revocationResponse = await webhookClient.PostAsJsonAsync("/v1/Strava/webhook", new
+        {
+            object_type = "athlete",
+            object_id = AthleteId,
+            aspect_type = "update",
+            owner_id = AthleteId,
+            subscription_id = 99,
+            event_time = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            updates = new { authorized = false }
+        });
+        Assert.Equal(HttpStatusCode.OK, revocationResponse.StatusCode);
+
+        var revokedConnection = await WaitForConnectionStatusAsync(client, ConnectionStatus.Revoked.Id);
+        Assert.NotNull(revokedConnection.DisconnectedAt);
+        await using (var scope = syncFactory.Services.CreateAsyncScope())
+        {
+            var tokenDatabase = scope.ServiceProvider.GetRequiredService<StravaAdapterDatabase>();
+            var deletedToken = await tokenDatabase.GetByAthleteIdAsync(AthleteId, CancellationToken.None);
+            Assert.Null(deletedToken);
+        }
     }
 
     private static async Task<PersonalPlanDto> CreateAndActivatePlanAsync(
@@ -344,6 +370,32 @@ public sealed class StravaActivitySyncTests(CustomWebApplicationFactory<Program>
 
         throw new TimeoutException(
             $"Provider endpoint '{path}' did not receive {expectedCount} requests.");
+    }
+
+    private static async Task<ExternalConnectionDto> WaitForConnectionStatusAsync(
+        HttpClient client,
+        string expectedStatusId)
+    {
+        for (var attempt = 0; attempt < 100; attempt++)
+        {
+            var response = await client.GetAsync("/v1/members/me/external-connections");
+            if (response.IsSuccessStatusCode)
+            {
+                var connections = await response.Content.ReadFromJsonAsync<ExternalConnectionDto[]>();
+                var connection = connections?.SingleOrDefault(candidate =>
+                    candidate.ProviderId == ExternalProvider.Strava.Id &&
+                    candidate.StatusId == expectedStatusId);
+                if (connection is not null)
+                {
+                    return connection;
+                }
+            }
+
+            await Task.Delay(100);
+        }
+
+        throw new TimeoutException(
+            $"Strava connection did not reach status '{expectedStatusId}'.");
     }
 
     private sealed class EmptyKeycloakAdminClient : IKeycloakAdminClient
