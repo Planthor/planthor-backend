@@ -47,6 +47,7 @@ public static class ServiceCollectionExtension
 
         // Typed HTTP client for Strava API
         services.AddSingleton<StravaRateLimitCoordinator>();
+        services.AddHttpClient<StravaTokenClient>();
         services.AddHttpClient<IStravaApiClient, StravaApiClient>();
 
         services.AddScoped<StravaActivitySyncAdapter>();
