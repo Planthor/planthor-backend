@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Shared;
-using Microsoft.Extensions.Logging;
 using Infrastructure.BackgroundJobClient.Jobs;
+using Microsoft.Extensions.Logging;
 using Quartz;
 
 namespace Infrastructure.BackgroundJobClient;

@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Adapters.Strava.Client;
@@ -195,5 +196,237 @@ public class StravaApiClientTests : IClassFixture<CustomWebApplicationFactory<Pr
 
         var actsFail = await _apiClient.GetAthleteActivitiesPageAsync(memberId, 0, 100, 1, 30, CancellationToken.None);
         Assert.Equal(StravaApiOutcome.TransientFailure, actsFail.Outcome);
+    }
+
+    [Fact]
+    public async Task GetActivityAsync_WithoutToken_ReturnsAuthorizationRequired()
+    {
+        // Arrange
+        var memberId = Guid.NewGuid().ToString("N");
+
+        // Act
+        var result = await _apiClient.GetActivityAsync(memberId, "123", CancellationToken.None);
+
+        // Assert
+        Assert.Equal(StravaApiOutcome.AuthorizationRequired, result.Outcome);
+        Assert.Equal("strava_token_missing", result.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    public async Task GetActivityAsync_WithMatchingAndMismatchingOwner_ReturnsExpectedOutcome(
+        bool includeAthlete,
+        bool ownerMatches)
+    {
+        // Arrange
+        var memberId = Guid.NewGuid().ToString("N");
+        var activityId = Random.Shared.NextInt64(100_000, 999_999).ToString();
+        var accessToken = $"owner-{Guid.NewGuid():N}";
+        await SeedTokenAsync(memberId, accessToken, 42);
+        var athleteJson = includeAthlete
+            ? $",\"athlete\":{{\"id\":{(ownerMatches ? 42 : 99)}}}"
+            : "";
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath($"/api/v3/activities/{activityId}")
+                .UsingGet()
+                .WithHeader("Authorization", $"Bearer {accessToken}"))
+            .RespondWith(Response.Create()
+                .WithStatusCode(HttpStatusCode.OK)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody($"{{\"id\":{activityId},\"name\":\"Run\"{athleteJson}}}"));
+
+        // Act
+        var result = await _apiClient.GetActivityAsync(memberId, activityId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(
+            ownerMatches ? StravaApiOutcome.Success : StravaApiOutcome.AuthorizationRequired,
+            result.Outcome);
+        Assert.Equal(ownerMatches ? null : "strava_activity_owner_mismatch", result.ErrorCode);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound, "NOT_FOUND", "strava_activity_not_found")]
+    [InlineData(HttpStatusCode.Forbidden, "AUTHORIZATION_REQUIRED", "strava_authorization_required")]
+    [InlineData(HttpStatusCode.TooManyRequests, "RATE_LIMITED", "strava_rate_limited")]
+    [InlineData(HttpStatusCode.BadGateway, "TRANSIENT_FAILURE", "strava_temporarily_unavailable")]
+    public async Task GetActivityAsync_WithProviderFailure_MapsTypedOutcome(
+        HttpStatusCode statusCode,
+        string expectedOutcomeId,
+        string expectedErrorCode)
+    {
+        // Arrange
+        var expectedOutcome = StravaApiOutcome.FromId(expectedOutcomeId);
+        var memberId = Guid.NewGuid().ToString("N");
+        var activityId = Random.Shared.NextInt64(100_000, 999_999).ToString();
+        var accessToken = $"failure-{Guid.NewGuid():N}";
+        await SeedTokenAsync(memberId, accessToken, 42);
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath($"/api/v3/activities/{activityId}")
+                .UsingGet()
+                .WithHeader("Authorization", $"Bearer {accessToken}"))
+            .RespondWith(Response.Create().WithStatusCode(statusCode));
+
+        // Act
+        var result = await _apiClient.GetActivityAsync(memberId, activityId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(expectedOutcome, result.Outcome);
+        Assert.Equal(expectedErrorCode, result.ErrorCode);
+        var expectsRetry = expectedOutcome == StravaApiOutcome.RateLimited ||
+            expectedOutcome == StravaApiOutcome.TransientFailure;
+        Assert.Equal(expectsRetry, result.RetryAt is not null);
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("{ invalid json")]
+    public async Task GetActivityAsync_WithInvalidSuccessPayload_ReturnsTransientFailure(string responseBody)
+    {
+        // Arrange
+        var memberId = Guid.NewGuid().ToString("N");
+        var activityId = Random.Shared.NextInt64(100_000, 999_999).ToString();
+        var accessToken = $"payload-{Guid.NewGuid():N}";
+        await SeedTokenAsync(memberId, accessToken, 42);
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath($"/api/v3/activities/{activityId}")
+                .UsingGet()
+                .WithHeader("Authorization", $"Bearer {accessToken}"))
+            .RespondWith(Response.Create()
+                .WithStatusCode(HttpStatusCode.OK)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody(responseBody));
+
+        // Act
+        var result = await _apiClient.GetActivityAsync(memberId, activityId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(StravaApiOutcome.TransientFailure, result.Outcome);
+        Assert.Equal("strava_temporarily_unavailable", result.ErrorCode);
+        Assert.NotNull(result.RetryAt);
+    }
+
+    [Fact]
+    public async Task GetActivityAsync_WhenUnauthorizedAndRefreshFails_ReturnsAuthorizationRequired()
+    {
+        // Arrange
+        var memberId = Guid.NewGuid().ToString("N");
+        var activityId = Random.Shared.NextInt64(100_000, 999_999).ToString();
+        var accessToken = $"refresh-failure-{Guid.NewGuid():N}";
+        var refreshToken = $"refresh-{Guid.NewGuid():N}";
+        await SeedTokenAsync(memberId, accessToken, 42, refreshToken);
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath($"/api/v3/activities/{activityId}")
+                .UsingGet()
+                .WithHeader("Authorization", $"Bearer {accessToken}"))
+            .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.Unauthorized));
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath("/oauth/token")
+                .UsingPost()
+                .WithBody(body => body != null && body.Contains($"refresh_token={refreshToken}")))
+            .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.BadGateway));
+
+        // Act
+        var result = await _apiClient.GetActivityAsync(memberId, activityId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(StravaApiOutcome.AuthorizationRequired, result.Outcome);
+        Assert.Equal("strava_token_refresh_failed", result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetActivityAsync_WhenUnauthorizedAndRefreshSucceeds_RetriesWithRotatedToken()
+    {
+        // Arrange
+        var memberId = Guid.NewGuid().ToString("N");
+        var activityId = Random.Shared.NextInt64(100_000, 999_999).ToString();
+        var accessToken = $"old-{Guid.NewGuid():N}";
+        var refreshedAccessToken = $"new-{Guid.NewGuid():N}";
+        var refreshToken = $"refresh-{Guid.NewGuid():N}";
+        await SeedTokenAsync(memberId, accessToken, 42, refreshToken);
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath($"/api/v3/activities/{activityId}")
+                .UsingGet()
+                .WithHeader("Authorization", $"Bearer {accessToken}"))
+            .RespondWith(Response.Create().WithStatusCode(HttpStatusCode.Unauthorized));
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath("/oauth/token")
+                .UsingPost()
+                .WithBody(body => body != null && body.Contains($"refresh_token={refreshToken}")))
+            .RespondWith(Response.Create()
+                .WithStatusCode(HttpStatusCode.OK)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody($"{{\"access_token\":\"{refreshedAccessToken}\",\"refresh_token\":\"rotated\",\"expires_at\":2147483647}}"));
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath($"/api/v3/activities/{activityId}")
+                .UsingGet()
+                .WithHeader("Authorization", $"Bearer {refreshedAccessToken}"))
+            .RespondWith(Response.Create()
+                .WithStatusCode(HttpStatusCode.OK)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody($"{{\"id\":{activityId},\"name\":\"Retried run\",\"athlete\":{{\"id\":42}}}}"));
+
+        // Act
+        var result = await _apiClient.GetActivityAsync(memberId, activityId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(StravaApiOutcome.Success, result.Outcome);
+        Assert.Equal(long.Parse(activityId), result.Value?.Id);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public async Task GetActivityAsync_WithMissingArguments_ThrowsArgumentException(string? missingValue)
+    {
+        // Arrange
+        var validValue = Guid.NewGuid().ToString("N");
+
+        // Act
+        var missingMemberException = await Assert.ThrowsAnyAsync<ArgumentException>(() =>
+            _apiClient.GetActivityAsync(missingValue!, validValue, CancellationToken.None));
+        var missingActivityException = await Assert.ThrowsAnyAsync<ArgumentException>(() =>
+            _apiClient.GetActivityAsync(validValue, missingValue!, CancellationToken.None));
+
+        // Assert
+        Assert.NotNull(missingMemberException);
+        Assert.NotNull(missingActivityException);
+    }
+
+    private async Task SeedTokenAsync(
+        string memberId,
+        string accessToken,
+        long athleteId,
+        string? refreshToken = null)
+    {
+        var authorizationCode = $"seed-{Guid.NewGuid():N}";
+        var persistedRefreshToken = refreshToken ?? $"refresh-{Guid.NewGuid():N}";
+        _factory.WireMockServer
+            .Given(Request.Create()
+                .WithPath("/oauth/token")
+                .UsingPost()
+                .WithBody(body => body != null && body.Contains($"code={authorizationCode}")))
+            .RespondWith(Response.Create()
+                .WithStatusCode(HttpStatusCode.OK)
+                .WithHeader("Content-Type", "application/json")
+                .WithBody(
+                    $"{{\"access_token\":\"{accessToken}\",\"refresh_token\":\"{persistedRefreshToken}\",\"expires_at\":2147483647,\"athlete\":{{\"id\":{athleteId}}}}}"));
+
+        var token = await _apiClient.ExchangeCodeAsync(
+            authorizationCode,
+            memberId,
+            CancellationToken.None);
+
+        Assert.NotNull(token);
     }
 }

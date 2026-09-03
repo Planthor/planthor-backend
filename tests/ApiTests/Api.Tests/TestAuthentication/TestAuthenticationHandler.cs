@@ -38,6 +38,11 @@ public class TestAuthenticationHandler(
             claims.Add(new Claim(ClaimTypes.NameIdentifier, userIdHeader));
         }
 
+        AddOptionalClaim(claims, "X-TestPreferredUsername", "preferred_username");
+        AddOptionalClaim(claims, "X-TestGivenName", ClaimTypes.GivenName);
+        AddOptionalClaim(claims, "X-TestSurname", ClaimTypes.Surname);
+        AddOptionalClaim(claims, "X-TestAvatarUrl", "avatarUrl");
+
         // Add role claims after trimming whitespace
         foreach (var role in roles)
         {
@@ -49,5 +54,14 @@ public class TestAuthenticationHandler(
         var ticket = new AuthenticationTicket(principal, "TestScheme");
 
         return Task.FromResult(AuthenticateResult.Success(ticket));
+    }
+
+    private void AddOptionalClaim(List<Claim> claims, string headerName, string claimType)
+    {
+        var value = Request.Headers[headerName].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            claims.Add(new Claim(claimType, value));
+        }
     }
 }
