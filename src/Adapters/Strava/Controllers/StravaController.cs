@@ -243,6 +243,10 @@ public sealed partial class StravaController(
                     externalUserId,
                     payload.GetIdempotencyKey()), cancellationToken);
             }
+            else
+            {
+                // Ignore other webhook events
+            }
         }
         catch (JsonException exception)
         {

@@ -302,6 +302,10 @@ public sealed class Member(
                 $"'{PreferredTimezone}' is not a valid IANA timezone identifier.",
                 "INVALID_TIMEZONE"));
         }
+        else
+        {
+            // Timezone is valid
+        }
 
         return errors.Count == 0
             ? new ValidationResult(new List<ValidationError>().AsReadOnly())

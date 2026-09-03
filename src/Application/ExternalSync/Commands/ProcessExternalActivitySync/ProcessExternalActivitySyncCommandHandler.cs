@@ -212,11 +212,17 @@ public sealed class ProcessExternalActivitySyncCommandHandler(
         if (errorCode is null)
         {
             if (fetchResult.Outcome == ActivitySyncOutcome.AuthorizationRequired)
+            {
                 errorCode = "external_authorization_required";
+            }
             else if (fetchResult.Outcome == ActivitySyncOutcome.RateLimited)
+            {
                 errorCode = "external_rate_limited";
+            }
             else
+            {
                 errorCode = "external_provider_unavailable";
+            }
         }
 
         if (fetchResult.Outcome == ActivitySyncOutcome.RateLimited || fetchResult.Outcome == ActivitySyncOutcome.TransientFailure)

@@ -34,6 +34,10 @@ internal sealed class ValidationExceptionHandler : IExceptionHandler
                 errors.Add(new { field = e.Field, message = e.Message, code = e.Code });
             }
         }
+        else
+        {
+            // Exception is not a validation exception
+        }
 
         if (errors is null)
         {

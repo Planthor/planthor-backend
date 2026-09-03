@@ -362,6 +362,10 @@ public sealed class Plan : AggregateRoot<Guid>
         {
             Status = PlanStatus.Active;
         }
+        else
+        {
+            // Status remains unchanged
+        }
     }
 
     /// <summary>
