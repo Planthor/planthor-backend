@@ -13,6 +13,6 @@ public sealed class UploadMemberAvatarCommandHandler : IRequestHandler<UploadMem
     /// <inheritdoc />
     public Task<string> Handle(UploadMemberAvatarCommand request, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 }

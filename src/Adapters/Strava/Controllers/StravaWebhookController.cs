@@ -113,7 +113,7 @@ public sealed partial class StravaWebhookController(
         {
             LogWebhookIgnored(exception);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (InvalidOperationException exception)
         {
             // Strava requires acknowledgement even when internal scheduling is temporarily unavailable.
             LogWebhookSchedulingFailed(exception);

@@ -64,7 +64,7 @@ public sealed class StravaOptions
     /// <summary>
     /// The default Strava API Base URL.
     /// </summary>
-    public const string DefaultBaseUrl = "https://www.strava.com";
+    public static string DefaultBaseUrl { get; } = "https://www.strava.com";
 
     /// <summary>
     /// Gets or sets the Strava API Base URL (useful for mocking).

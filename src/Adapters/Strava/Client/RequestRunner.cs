@@ -42,7 +42,7 @@ internal sealed partial class RequestRunner<T>(
     private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     private readonly StravaRateLimitCoordinator _rateLimitCoordinator = rateLimitCoordinator ?? throw new ArgumentNullException(nameof(rateLimitCoordinator));
 
-    public async Task<StravaApiResult<T>> SendAuthorizedAsync(
+    internal async Task<StravaApiResult<T>> SendAuthorizedAsync(
         string identifyName,
         Func<string, HttpRequestMessage> requestFactory,
         CancellationToken cancellationToken)
@@ -123,7 +123,7 @@ internal sealed partial class RequestRunner<T>(
         };
     }
 
-    public StravaApiResult<T> TransientFailure() => new(
+    internal StravaApiResult<T> TransientFailure() => new(
         StravaApiOutcome.TransientFailure,
         RetryAt: _clock.GetCurrentInstant().Plus(Duration.FromMinutes(1)),
         ErrorCode: "strava_temporarily_unavailable");

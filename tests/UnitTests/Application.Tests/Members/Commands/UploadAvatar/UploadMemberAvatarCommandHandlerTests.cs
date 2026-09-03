@@ -8,12 +8,12 @@ namespace Application.Tests.Members.Commands.UploadAvatar;
 public class UploadMemberAvatarCommandHandlerTests
 {
     [Fact]
-    public async Task Handle_NotYetImplemented_ThrowsNotImplementedException()
+    public async Task Handle_NotYetImplemented_ThrowsNotSupportedException()
     {
         var handler = new UploadMemberAvatarCommandHandler();
         var command = new UploadMemberAvatarCommand();
 
-        await Assert.ThrowsAsync<NotImplementedException>(() =>
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
             handler.Handle(command, CancellationToken.None));
     }
 }

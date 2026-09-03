@@ -1,8 +1,5 @@
 using System.Globalization;
-using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Coordinator;
 using Adapters.Strava.Persistence;
@@ -22,7 +19,7 @@ namespace Adapters.Strava.Client;
 /// <param name="logger">The logger instance.</param>
 /// <param name="clock">The system clock.</param>
 /// <param name="rateLimitCoordinator">The rate limit coordinator.</param>
-internal sealed partial class StravaApiClient(
+internal sealed class StravaApiClient(
     HttpClient httpClient,
     StravaTokenClient tokenClient,
     IOptions<StravaOptions> options,
