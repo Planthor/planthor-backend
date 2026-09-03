@@ -10,7 +10,7 @@ namespace Domain.Plans;
 public sealed class PlanthorSportType
 {
     /// <summary>
-    /// Wildcard - accepts any Strava activity type. User does not care about specific sport types.
+    /// Wildcard selection representing every canonical sport type supported by Planthor.
     /// </summary>
     public static readonly PlanthorSportType All = new("ALL", "All Sport Types", "SportType_All_Desc");
 

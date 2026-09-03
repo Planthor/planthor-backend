@@ -11,7 +11,11 @@ namespace Domain.Shared.Exceptions;
 /// <param name="providerId">The external provider identifier.</param>
 /// <param name="externalActivityId">The provider's activity identifier.</param>
 /// <param name="planId">The plan that already contains the activity.</param>
-public sealed class DuplicateExternalActivityException(string providerId, string externalActivityId, Guid planId) : InvalidOperationException($"External activity '{providerId}/{externalActivityId}' already exists on plan '{planId}'.")
+public sealed class DuplicateExternalActivityException(
+    string providerId,
+    string externalActivityId,
+    Guid planId)
+    : InvalidOperationException($"External activity '{providerId}/{externalActivityId}' already exists on plan '{planId}'.")
 {
 
     /// <summary>Gets the external provider identifier.</summary>

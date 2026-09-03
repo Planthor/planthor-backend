@@ -250,6 +250,7 @@ curl -H "Authorization: Bearer <your-jwt-token>" https://localhost:5001/v1/membe
 #### Sport Types
 
 - `GET /v1/sport-types` — List supported Planthor sport types (e.g. ALL, RUN, WALK, HIKE, RIDE, SWIM)
+- [Strava sport-type normalization](src/Adapters/Strava/README.md#sport-type-normalization) — Provider mappings, wildcard semantics, and unsupported activity behavior
 
 ### Interactive API Documentation
 

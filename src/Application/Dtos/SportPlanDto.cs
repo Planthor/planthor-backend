@@ -20,7 +20,7 @@ namespace Application.Dtos;
 /// <param name="EnableActivityLog">Indicates whether activity logging is enabled for this plan.</param>
 /// <param name="StatusI18nKey">The i18n localization key for the current lifecycle status of this plan.</param>
 /// <param name="LikeCount">The total number of likes on this plan.</param>
-/// <param name="SportTypes">The list of accepted Strava sport type identifiers.</param>
+/// <param name="SportTypes">The canonical Planthor sport-type identifiers accepted by the plan.</param>
 public record SportPlanDto(
     Guid Id,
     Guid MemberId,

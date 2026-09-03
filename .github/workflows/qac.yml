@@ -117,6 +117,7 @@ jobs:
           /d:sonar.exclusions="**/wwwroot/lib/**,**/obj/**,**/bin/**" \
           /d:sonar.test.exclusions="**/wwwroot/lib/**" \
           /d:sonar.cs.opencover.reportsPaths="coverage-report/**/coverage.opencover.xml" \
+          /d:sonar.plsql.file.suffixes="-" \
           $SONAR_PR_PARAMS
           dotnet restore
           dotnet build --no-incremental

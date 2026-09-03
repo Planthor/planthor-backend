@@ -2,7 +2,6 @@ using Adapters.Strava.Client;
 using Adapters.Strava.Configuration;
 using Adapters.Strava.Coordinator;
 using Adapters.Strava.EventHandlers;
-using Adapters.Strava.Mapping;
 using Adapters.Strava.Persistence;
 using Application.Interfaces;
 using Application.Shared;
@@ -50,7 +49,6 @@ public static class ServiceCollectionExtension
         services.AddSingleton<StravaRateLimitCoordinator>();
         services.AddHttpClient<IStravaApiClient, StravaApiClient>();
 
-        services.AddSingleton<StravaSportTypeMapper>();
         services.AddScoped<StravaActivitySyncAdapter>();
         services.AddScoped<IActivitySyncAdapter>(provider =>
             provider.GetRequiredService<StravaActivitySyncAdapter>());

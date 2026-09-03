@@ -128,7 +128,7 @@ public sealed class ProcessExternalActivitySyncCommandHandler(
 
             foreach (var plan in eligiblePlans)
             {
-                if (!ExternalActivityPlanPolicy.Matches(
+                if (!ExternalActivityPlanPolicy.TryMatch(
                         plan,
                         activity.CanonicalSportTypeId,
                         activity.OccurredAt,

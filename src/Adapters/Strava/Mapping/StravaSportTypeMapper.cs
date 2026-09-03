@@ -5,7 +5,7 @@ namespace Adapters.Strava.Mapping;
 /// <summary>
 /// Maps Strava sport_type values to canonical Planthor sport types.
 /// </summary>
-public sealed class StravaSportTypeMapper
+internal static class StravaSportTypeMapper
 {
     private static readonly Dictionary<string, PlanthorSportType> Mappings = new(StringComparer.OrdinalIgnoreCase)
     {

@@ -22,7 +22,7 @@ public sealed class PlanRepository(PlanthorDbContext context) : BaseRepository<P
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<Plan>> GetByIdsAsync(
+    public Task<IReadOnlyList<Plan>> GetByIdsAsync(
         IReadOnlyCollection<Guid> ids,
         CancellationToken cancellationToken)
     {
@@ -30,9 +30,16 @@ public sealed class PlanRepository(PlanthorDbContext context) : BaseRepository<P
 
         if (ids.Count == 0)
         {
-            return [];
+            return Task.FromResult<IReadOnlyList<Plan>>([]);
         }
 
+        return GetByIdsCoreAsync(ids, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<Plan>> GetByIdsCoreAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken)
+    {
         return await Context.Plans
             .Where(plan => ids.Contains(plan.Id))
             .ToListAsync(cancellationToken);

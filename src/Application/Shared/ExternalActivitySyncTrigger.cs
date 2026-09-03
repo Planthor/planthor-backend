@@ -40,7 +40,11 @@ public sealed class ExternalActivitySyncTrigger : IEquatable<ExternalActivitySyn
     public static IReadOnlyCollection<ExternalActivitySyncTrigger> All => [Initial, Manual, Webhook, Retry];
 
     /// <summary>Implicitly converts the trigger to its string name.</summary>
-    public static implicit operator string(ExternalActivitySyncTrigger trigger) => trigger.Name;
+    public static implicit operator string(ExternalActivitySyncTrigger trigger)
+    {
+        ArgumentNullException.ThrowIfNull(trigger);
+        return trigger.Name;
+    }
     
     /// <summary>Implicitly converts a string name to its corresponding trigger.</summary>
     public static implicit operator ExternalActivitySyncTrigger(string name) => FromName(name);
@@ -60,8 +64,16 @@ public sealed class ExternalActivitySyncTrigger : IEquatable<ExternalActivitySyn
     /// <summary>Compares two triggers for equality.</summary>
     public static bool operator ==(ExternalActivitySyncTrigger? left, ExternalActivitySyncTrigger? right)
     {
-        if (left is null && right is null) return true;
-        if (left is null || right is null) return false;
+        if (ReferenceEquals(left, right))
+        {
+            return true;
+        }
+
+        if (left is null || right is null)
+        {
+            return false;
+        }
+
         return left.Equals(right);
     }
 

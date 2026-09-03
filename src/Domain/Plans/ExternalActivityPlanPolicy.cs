@@ -1,7 +1,7 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using NodaTime;
+using NodaTime.Text;
 
 namespace Domain.Plans;
 
@@ -10,7 +10,6 @@ namespace Domain.Plans;
 /// </summary>
 public static class ExternalActivityPlanPolicy
 {
-    private const string LocalDatePattern = "yyyy-MM-dd";
 
     /// <summary>
     /// Determines whether a plan may be included in an automatic-sync run snapshot.
@@ -42,7 +41,7 @@ public static class ExternalActivityPlanPolicy
     /// <param name="runUpperBound">The frozen upper bound for this sync run.</param>
     /// <param name="activityLocalDate">Receives the activity date in the plan timezone.</param>
     /// <returns><c>true</c> when sport and inclusive local-date boundaries match.</returns>
-    public static bool Matches(
+    public static bool TryMatch(
         Plan plan,
         string canonicalSportTypeId,
         Instant occurredAt,
@@ -83,7 +82,7 @@ public static class ExternalActivityPlanPolicy
             return false;
         }
 
-        activityLocalDate = occurredAt.InZone(zone).Date.ToString(LocalDatePattern, CultureInfo.InvariantCulture);
+        activityLocalDate = LocalDatePattern.Iso.Format(occurredAt.InZone(zone).Date);
         return string.Compare(activityLocalDate, plan.StartDateLocal, StringComparison.Ordinal) >= 0 &&
                string.Compare(activityLocalDate, plan.EndDateLocal, StringComparison.Ordinal) <= 0;
     }

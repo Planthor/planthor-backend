@@ -4,12 +4,6 @@ namespace Adapters.Tests.Strava.Mapping;
 
 public class StravaSportTypeMapperTests
 {
-    private readonly StravaSportTypeMapper _mapper;
-
-    public StravaSportTypeMapperTests()
-    {
-        _mapper = new StravaSportTypeMapper();
-    }
 
     [Theory]
     [InlineData("Run", "RUN")]
