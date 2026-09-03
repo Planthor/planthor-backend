@@ -23,28 +23,34 @@ public sealed class StravaConnectionEstablishedEventHandler(
     private readonly IOptions<StravaOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="domainEvent"/> is null.</exception>
-    public async Task HandleAsync(
+    public Task HandleAsync(
         ExternalConnectionEstablishedEvent domainEvent,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
-        if (!_options.Value.AutomaticSyncEnabled ||
-            domainEvent.Provider != ExternalProvider.Strava ||
-            domainEvent.Type != ExternalConnectionType.ActivitiesSync)
-        {
-            return;
-        }
 
-        await _activitySyncAdapter.MarkQueuedAsync(
-            domainEvent.ExternalUserId,
-            ExternalActivitySyncTrigger.Initial,
-            cancellationToken);
-        await _backgroundJobClient.EnqueueExternalActivitySyncAsync(
-            new ExternalActivitySyncJobRequest(
-                ExternalProvider.Strava.Id,
+        return Core();
+
+        async Task Core()
+        {
+            if (!_options.Value.AutomaticSyncEnabled ||
+                domainEvent.Provider != ExternalProvider.Strava ||
+                domainEvent.Type != ExternalConnectionType.ActivitiesSync)
+            {
+                return;
+            }
+
+            await _activitySyncAdapter.MarkQueuedAsync(
                 domainEvent.ExternalUserId,
                 ExternalActivitySyncTrigger.Initial,
-                $"initial:{domainEvent.ExternalConnectionId}"),
-            cancellationToken);
+                cancellationToken);
+            await _backgroundJobClient.EnqueueExternalActivitySyncAsync(
+                new ExternalActivitySyncJobRequest(
+                    ExternalProvider.Strava.Id,
+                    domainEvent.ExternalUserId,
+                    ExternalActivitySyncTrigger.Initial,
+                    $"initial:{domainEvent.ExternalConnectionId}"),
+                cancellationToken);
+        }
     }
 }

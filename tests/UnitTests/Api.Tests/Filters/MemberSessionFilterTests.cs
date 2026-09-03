@@ -97,7 +97,7 @@ public class MemberSessionFilterTests
         await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
             c != null &&
             c.SubjectId == "sub123" &&
-            c.IdentifyName.StartsWith("user_") &&
+            c.IdentifyName.StartsWith("USER_") &&
             c.IdentifyName.Length == 9 && // 'user_' (5) + 4 random chars = 9.
             c.FirstName == "New" && // default
             c.LastName == "User" && // default
@@ -152,7 +152,7 @@ public class MemberSessionFilterTests
         // Assert
         await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
             c != null &&
-            c.IdentifyName.StartsWith("alice_") &&
+            c.IdentifyName.StartsWith("ALICE_") &&
             c.IdentifyName.Length == 14 // 'alice_' (6) + 8 random chars = 14
         ), Arg.Any<CancellationToken>());
     }

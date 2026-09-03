@@ -31,47 +31,53 @@ public sealed partial class StravaConnectionRevokedEventHandler(
     private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient ?? throw new ArgumentNullException(nameof(backgroundJobClient));
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="domainEvent"/> is null.</exception>
-    public async Task HandleAsync(
+    public Task HandleAsync(
         ExternalConnectionRevokedEvent domainEvent,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
-        if (domainEvent.Provider != ExternalProvider.Strava ||
-            domainEvent.Type != ExternalConnectionType.ActivitiesSync)
-        {
-            return;
-        }
 
-        try
-        {
-            await _backgroundJobClient.CancelExternalActivitySyncAsync(
-                ExternalProvider.Strava.Id,
-                domainEvent.ExternalUserId,
-                cancellationToken);
+        return Core();
 
-            if (long.TryParse(
-                    domainEvent.ExternalUserId,
-                    NumberStyles.None,
-                    CultureInfo.InvariantCulture,
-                    out var athleteId) &&
-                await _tokenDatabase.GetByAthleteIdAsync(athleteId, cancellationToken) is { } token)
+        async Task Core()
+        {
+            if (domainEvent.Provider != ExternalProvider.Strava ||
+                domainEvent.Type != ExternalConnectionType.ActivitiesSync)
             {
-                await _stravaClient.DeauthorizeAsync(token.Id, cancellationToken);
+                return;
             }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            LogUpstreamCleanupFailed(exception, domainEvent.ExternalUserId);
-        }
-        finally
-        {
-            await _activitySyncAdapter.DeleteOperationalDataAsync(
-                domainEvent.ExternalUserId,
-                CancellationToken.None);
+
+            try
+            {
+                await _backgroundJobClient.CancelExternalActivitySyncAsync(
+                    ExternalProvider.Strava.Id,
+                    domainEvent.ExternalUserId,
+                    cancellationToken);
+
+                if (long.TryParse(
+                        domainEvent.ExternalUserId,
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out var athleteId) &&
+                    await _tokenDatabase.GetByAthleteIdAsync(athleteId, cancellationToken) is { } token)
+                {
+                    await _stravaClient.DeauthorizeAsync(token.Id, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                LogUpstreamCleanupFailed(exception, domainEvent.ExternalUserId);
+            }
+            finally
+            {
+                await _activitySyncAdapter.DeleteOperationalDataAsync(
+                    domainEvent.ExternalUserId,
+                    CancellationToken.None);
+            }
         }
     }
 

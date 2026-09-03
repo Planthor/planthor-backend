@@ -28,6 +28,6 @@ public partial class SlugifyParameterTransformer : IOutboundParameterTransformer
             return null;
         }
 
-        return KebabCaseRegex().Replace(stringValue, ReplacementPattern).ToLowerInvariant();
+        return KebabCaseRegex().Replace(stringValue, ReplacementPattern).ToUpperInvariant();
     }
 }

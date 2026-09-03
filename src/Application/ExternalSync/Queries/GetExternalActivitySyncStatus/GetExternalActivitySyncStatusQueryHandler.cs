@@ -25,42 +25,47 @@ public sealed class GetExternalActivitySyncStatusQueryHandler(
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
     /// <exception cref="KeyNotFoundException">Thrown when the specified member, connection, or adapter is not found.</exception>
-    public async Task<ExternalActivitySyncStatusDto> Handle(
+    public Task<ExternalActivitySyncStatusDto> Handle(
         GetExternalActivitySyncStatusQuery request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var member = await _memberRepository.GetByIdentifyNameAsync(
-            request.CurrentIdentifyName,
-            cancellationToken)
-            ?? throw new KeyNotFoundException($"Member '{request.CurrentIdentifyName}' was not found.");
+        return Core();
 
-        if (!request.Identifier.Equals("me", StringComparison.OrdinalIgnoreCase) &&
-            (!Guid.TryParse(request.Identifier, out var requestedMemberId) || requestedMemberId != member.Id))
+        async Task<ExternalActivitySyncStatusDto> Core()
         {
-            throw new KeyNotFoundException("External activity sync status was not found.");
+            var member = await _memberRepository.GetByIdentifyNameAsync(
+                request.CurrentIdentifyName,
+                cancellationToken)
+                ?? throw new KeyNotFoundException($"Member '{request.CurrentIdentifyName}' was not found.");
+
+            if (!request.Identifier.Equals("me", StringComparison.OrdinalIgnoreCase) &&
+                (!Guid.TryParse(request.Identifier, out var requestedMemberId) || requestedMemberId != member.Id))
+            {
+                throw new KeyNotFoundException("External activity sync status was not found.");
+            }
+
+            var connection = member.ExternalConnections.FirstOrDefault(candidate =>
+                candidate.Provider.Id.Equals(request.ProviderId, StringComparison.OrdinalIgnoreCase) &&
+                candidate.Type == ExternalConnectionType.ActivitiesSync &&
+                candidate.Status == ConnectionStatus.Active)
+                ?? throw new KeyNotFoundException("External activity connection was not found.");
+
+            var adapter = _activitySyncAdapters.FirstOrDefault(candidate =>
+                candidate.ProviderId.Equals(request.ProviderId, StringComparison.OrdinalIgnoreCase))
+                ?? throw new KeyNotFoundException("External activity adapter was not found.");
+
+            return await adapter.GetSyncStatusAsync(connection.ExternalUserId, cancellationToken)
+                ?? new ExternalActivitySyncStatusDto(
+                    request.ProviderId,
+                    InitialSyncState: "not_started",
+                    State: "idle",
+                    LastTrigger: null,
+                    LastStartedAt: null,
+                    LastSuccessfulSyncAt: null,
+                    NextAttemptAt: null,
+                    ErrorCode: null);
         }
-
-        var connection = member.ExternalConnections.FirstOrDefault(candidate =>
-            candidate.Provider.Id.Equals(request.ProviderId, StringComparison.OrdinalIgnoreCase) &&
-            candidate.Type == ExternalConnectionType.ActivitiesSync &&
-            candidate.Status == ConnectionStatus.Active)
-            ?? throw new KeyNotFoundException("External activity connection was not found.");
-
-        var adapter = _activitySyncAdapters.FirstOrDefault(candidate =>
-            candidate.ProviderId.Equals(request.ProviderId, StringComparison.OrdinalIgnoreCase))
-            ?? throw new KeyNotFoundException("External activity adapter was not found.");
-
-        return await adapter.GetSyncStatusAsync(connection.ExternalUserId, cancellationToken)
-            ?? new ExternalActivitySyncStatusDto(
-                request.ProviderId,
-                InitialSyncState: "not_started",
-                State: "idle",
-                LastTrigger: null,
-                LastStartedAt: null,
-                LastSuccessfulSyncAt: null,
-                NextAttemptAt: null,
-                ErrorCode: null);
     }
 }

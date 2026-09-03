@@ -35,7 +35,7 @@ internal static class StravaSportTypeMapper
     /// </summary>
     /// <param name="providerSportType">The Strava <c>sport_type</c> value.</param>
     /// <returns>The canonical identifier, or <c>null</c> when unsupported.</returns>
-    public static string? MapToCanonicalId(string providerSportType)
+    internal static string? MapToCanonicalId(string providerSportType)
     {
         if (string.IsNullOrWhiteSpace(providerSportType))
         {

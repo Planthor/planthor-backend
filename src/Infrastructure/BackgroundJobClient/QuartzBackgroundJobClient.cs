@@ -226,7 +226,7 @@ public sealed partial class QuartzBackgroundJobClient(
     private static string Hash(string value)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
+        return Convert.ToHexString(bytes).ToUpperInvariant();
     }
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Coalesced duplicate external activity sync trigger '{TriggerKey}'")]

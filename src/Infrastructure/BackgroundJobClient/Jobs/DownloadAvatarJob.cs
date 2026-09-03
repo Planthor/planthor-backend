@@ -83,8 +83,8 @@ public partial class DownloadAvatarJob(
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid job data: MemberId={MemberId}, Url={Url}")]
-    private partial void LogInvalidJobData(string? memberId, string? url);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid job data: MemberId={MemberId}, UrlString={UrlString}")]
+    private partial void LogInvalidJobData(string? memberId, string? urlString);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Successfully updated avatar for member {MemberId}")]
     private partial void LogAvatarUpdated(Guid memberId);

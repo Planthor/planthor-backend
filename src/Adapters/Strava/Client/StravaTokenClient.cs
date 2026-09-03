@@ -41,7 +41,7 @@ internal sealed partial class StravaTokenClient(
     /// <param name="identifyName">The internal unique identifier for the user.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns>The exchanged token response, or <c>null</c> if the exchange failed.</returns>
-    public async Task<StravaTokenResponse?> ExchangeCodeAsync(
+    internal async Task<StravaTokenResponse?> ExchangeCodeAsync(
         string code,
         string identifyName,
         CancellationToken cancellationToken)
@@ -90,7 +90,7 @@ internal sealed partial class StravaTokenClient(
     /// <param name="identifyName">The internal unique identifier for the user.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns>The newly refreshed and persisted token document, or <c>null</c> if the refresh failed.</returns>
-    public async Task<StravaTokenDocument?> RefreshTokenAsync(
+    internal async Task<StravaTokenDocument?> RefreshTokenAsync(
         string identifyName,
         CancellationToken cancellationToken)
     {
@@ -141,7 +141,7 @@ internal sealed partial class StravaTokenClient(
     /// <param name="identifyName">The internal unique identifier for the user.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns>A valid token document, or <c>null</c> if no valid token could be obtained.</returns>
-    public async Task<StravaTokenDocument?> GetValidTokenAsync(
+    internal async Task<StravaTokenDocument?> GetValidTokenAsync(
         string identifyName,
         CancellationToken cancellationToken)
     {
@@ -164,7 +164,7 @@ internal sealed partial class StravaTokenClient(
     /// <param name="identifyName">The internal unique identifier for the user.</param>
     /// <param name="cancellationToken">A token to observe for cancellation requests.</param>
     /// <returns><c>true</c> if deauthorization was successful; otherwise, <c>false</c>.</returns>
-    public async Task<bool> DeauthorizeAsync(
+    internal async Task<bool> DeauthorizeAsync(
         string identifyName,
         CancellationToken cancellationToken)
     {
