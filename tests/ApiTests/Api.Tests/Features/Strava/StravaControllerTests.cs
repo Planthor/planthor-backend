@@ -46,6 +46,9 @@ public class StravaControllerTests(CustomWebApplicationFactory<Program> factory)
         var query = QueryHelpers.ParseQuery(location.Query);
         Assert.Equal("test-client-id", query["client_id"]);
         Assert.Equal("code", query["response_type"]);
+        Assert.Equal(
+            "https://api.planthor.test/v1/Strava/callback",
+            query["redirect_uri"]);
         Assert.Equal("force", query["approval_prompt"]);
         Assert.Equal("activity:read_all,profile:read_all", query["scope"]);
 

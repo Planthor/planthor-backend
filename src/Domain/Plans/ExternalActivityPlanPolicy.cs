@@ -10,7 +10,6 @@ namespace Domain.Plans;
 /// </summary>
 public static class ExternalActivityPlanPolicy
 {
-
     /// <summary>
     /// Determines whether a plan may be included in an automatic-sync run snapshot.
     /// </summary>

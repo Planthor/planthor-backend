@@ -68,11 +68,7 @@ public sealed partial class StravaOAuthController(
         var json = JsonSerializer.Serialize(payload);
         var encryptedState = AesEncryptionHelper.Encrypt(json, _options.StateEncryptionKey);
 
-        var redirectUri = Url.Action(nameof(Callback), "StravaOAuth", null, Request.Scheme);
-        if (string.IsNullOrEmpty(redirectUri))
-        {
-            return BadRequest("Could not generate redirect URI.");
-        }
+        var redirectUri = _options.RedirectUri.ToString();
 
         var authorizeUrl = $"https://www.strava.com/oauth/authorize" +
                            $"?client_id={_options.ClientId}" +
