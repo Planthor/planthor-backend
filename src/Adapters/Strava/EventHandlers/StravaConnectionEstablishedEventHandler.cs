@@ -21,6 +21,7 @@ public sealed class StravaConnectionEstablishedEventHandler(
     private readonly StravaActivitySyncAdapter _activitySyncAdapter = activitySyncAdapter ?? throw new ArgumentNullException(nameof(activitySyncAdapter));
     private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient ?? throw new ArgumentNullException(nameof(backgroundJobClient));
     private readonly IOptions<StravaOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="domainEvent"/> is null.</exception>
     public Task HandleAsync(

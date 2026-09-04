@@ -53,6 +53,7 @@ public class CustomWebApplicationFactory<TProgram>
                 { "Strava:BaseUrl", WireMockServer.Url },
                 { "Strava:ClientId", "test-client-id" },
                 { "Strava:ClientSecret", "test-client-secret" },
+                { "Strava:RedirectUri", "https://api.planthor.test/v1/Strava/callback" },
                 { "Strava:StateEncryptionKey", "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=" },
                 { "Strava:Scopes", "activity:read_all,profile:read_all" },
                 { "Strava:FrontendSuccessUrl", "https://app.planthor.test/connections?status=success" },
