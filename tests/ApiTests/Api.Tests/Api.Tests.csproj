@@ -26,4 +26,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Api\Api.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../../infrastructure/quartz/tables_postgres.sql"
+          Link="quartz/tables_postgres.sql"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

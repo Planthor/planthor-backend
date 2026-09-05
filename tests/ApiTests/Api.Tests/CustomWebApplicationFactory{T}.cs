@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Api.Tests.TestAuthentication;
@@ -13,6 +14,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+using Quartz;
 using WireMock.Server;
 using Xunit;
 
@@ -32,6 +35,27 @@ public class CustomWebApplicationFactory<TProgram>
         .WithPortBinding(27017, true)
         .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(27017))
         .Build();
+
+    private readonly IContainer _quartzDbContainer = new ContainerBuilder("postgres:16-alpine")
+        .WithEnvironment("POSTGRES_DB", "quartz_test")
+        .WithEnvironment("POSTGRES_USER", "quartz")
+        .WithEnvironment("POSTGRES_PASSWORD", "quartz_test_password")
+        .WithPortBinding(5432, true)
+        .WithResourceMapping(
+            new FileInfo(Path.Combine(AppContext.BaseDirectory, "quartz", "tables_postgres.sql")),
+            new FileInfo("/docker-entrypoint-initdb.d/001-quartz.sql"))
+        .WithWaitStrategy(Wait.ForUnixContainer().UntilExternalTcpPortIsAvailable(5432))
+        .Build();
+
+    private string QuartzConnectionString => new NpgsqlConnectionStringBuilder
+    {
+        Host = _quartzDbContainer.Hostname,
+        Port = _quartzDbContainer.GetMappedPublicPort(5432),
+        Database = "quartz_test",
+        Username = "quartz",
+        Password = "quartz_test_password"
+    }.ConnectionString;
+
     public WireMockServer WireMockServer { get; private set; }
 
     public CustomWebApplicationFactory()
@@ -61,7 +85,7 @@ public class CustomWebApplicationFactory<TProgram>
                 { "Strava:WebhookVerifyToken", "test-webhook-token" },
                 { "Strava:WebhookSubscriptionId", "99" },
                 { "Strava:AutomaticSyncEnabled", "false" },
-                { "ConnectionStrings:Quartz", "" },
+                { "ConnectionStrings:Quartz", QuartzConnectionString },
                 { "Keycloak:BaseUrl", WireMockServer.Url },
                 { "Authentication:Keycloak:Authority", $"{WireMockServer.Url}/realms/planthor" },
                 { "Authentication:Keycloak:ClientId", "test-client" },
@@ -71,6 +95,11 @@ public class CustomWebApplicationFactory<TProgram>
 
         builder.ConfigureServices(services =>
         {
+            // Each test host owns its scheduler, including hosts created by WithWebHostBuilder.
+            var schedulerName = $"api-tests-{Guid.NewGuid():N}";
+            services.PostConfigure<QuartzOptions>(options =>
+                options[Quartz.Impl.StdSchedulerFactory.PropertySchedulerInstanceName] = schedulerName);
+
             // Replace the production database context with a test container one
             var dbContextDescriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<PlanthorDbContext>));
@@ -121,14 +150,18 @@ public class CustomWebApplicationFactory<TProgram>
 
     public async Task InitializeAsync()
     {
-        await _mongoDbContainer.StartAsync();
+        await Task.WhenAll(_mongoDbContainer.StartAsync(), _quartzDbContainer.StartAsync());
         await Task.Delay(2000); // Give Mongo time to start listening
         await _mongoDbContainer.ExecAsync(["mongosh", "--quiet", "--eval", "rs.initiate()"]);
         await Task.Delay(2000); // Give Replica Set time to elect primary
     }
+
     public new async Task DisposeAsync()
     {
+        // Stop schedulers and their jobs before disposing the databases and HTTP stubs they use.
+        await base.DisposeAsync();
         WireMockServer.Stop();
         await _mongoDbContainer.DisposeAsync();
+        await _quartzDbContainer.DisposeAsync();
     }
 }
