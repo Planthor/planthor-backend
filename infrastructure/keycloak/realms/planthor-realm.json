@@ -1406,7 +1406,7 @@
       "syncMode" : "IMPORT",
       "clientSecret" : "${FACEBOOK_CLIENT_SECRET}",
       "caseSensitiveOriginalUsername" : "false",
-      "fetchedFields" : "picture",
+      "fetchedFields" : "picture.width(500).height(500)",
       "defaultScope" : "openid email"
     },
     "types" : [ ]
