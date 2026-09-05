@@ -246,7 +246,16 @@ public sealed class StravaActivitySyncTests(CustomWebApplicationFactory<Program>
         await using (var scope = syncFactory.Services.CreateAsyncScope())
         {
             var tokenDatabase = scope.ServiceProvider.GetRequiredService<StravaAdapterDatabase>();
-            var deletedToken = await tokenDatabase.GetByAthleteIdAsync(AthleteId, CancellationToken.None);
+            StravaTokenDocument? deletedToken = null;
+            for (var attempt = 0; attempt < 100; attempt++)
+            {
+                deletedToken = await tokenDatabase.GetByAthleteIdAsync(AthleteId, CancellationToken.None);
+                if (deletedToken is null)
+                {
+                    break;
+                }
+                await Task.Delay(100);
+            }
             Assert.Null(deletedToken);
         }
     }
