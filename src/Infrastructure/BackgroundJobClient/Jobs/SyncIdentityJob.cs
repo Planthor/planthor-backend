@@ -31,7 +31,7 @@ public partial class SyncIdentityJob(
     private readonly IKeycloakAdminClient _keycloakAdminClient = keycloakAdminClient;
     private readonly IMemberRepository _memberRepository = memberRepository;
     private readonly IClock _clock = clock;
-    private readonly ILogger<SyncIdentityJob> _logger = logger;
+
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is null.</exception>
     public Task Execute(IJobExecutionContext context)
@@ -74,7 +74,11 @@ public partial class SyncIdentityJob(
         }
     }
 
-    private async Task SyncIdentitiesAsync(Member member, string externalUserId, string identifyName, CancellationToken cancellationToken)
+    private async Task SyncIdentitiesAsync(
+        Member member, 
+        string externalUserId, 
+        string identifyName, 
+        CancellationToken cancellationToken)
     {
         try
         {

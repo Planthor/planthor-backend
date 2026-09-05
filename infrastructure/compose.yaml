@@ -88,23 +88,6 @@ services:
       - mongo_setup_configdb:/data/configdb
     entrypoint: ["mongosh", "--host", "mongodb1:27017", "--file", "/mongo-setup.js"]
 
-  mongo-express:
-    image: mongo-express:latest
-    depends_on:
-      mongodb1:
-        condition: service_healthy
-      mongodb2:
-        condition: service_healthy
-    environment:
-      ME_CONFIG_MONGODB_SERVER: mongodb1
-      ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_MONGODB_URL: mongodb://mongodb1:27017,mongodb2:27017/?replicaSet=rs0
-      ME_CONFIG_BASICAUTH: "false"
-    ports:
-      - ${MONGO_EXPRESS_PORT:-8081}:8081
-    networks:
-      - app_network
-
   keycloak-postgres:
     image: postgres:16-alpine
     container_name: keycloak-postgres

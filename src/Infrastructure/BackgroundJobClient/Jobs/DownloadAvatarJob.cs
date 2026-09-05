@@ -28,8 +28,6 @@ public partial class DownloadAvatarJob(
     ISender sender,
     ILogger<DownloadAvatarJob> logger) : IJob
 {
-    private readonly ILogger<DownloadAvatarJob> _logger = logger;
-
     /// <summary>
     /// Executes the avatar download and storage process.
     /// </summary>
