@@ -107,7 +107,7 @@ public sealed partial class QuartzBackgroundJobClient(
             {
                 await scheduler.ScheduleJob(trigger, cancellationToken);
             }
-            catch (ObjectAlreadyExistsException)
+            catch (JobPersistenceException exception) when (IsDuplicateObject(exception))
             {
                 LogCoalescedActivitySyncTrigger(trigger.Key);
             }
@@ -146,7 +146,7 @@ public sealed partial class QuartzBackgroundJobClient(
             {
                 await scheduler.AddJob(job, replace: false, storeNonDurableWhileAwaitingScheduling: false, cancellationToken);
             }
-            catch (ObjectAlreadyExistsException)
+            catch (JobPersistenceException exception) when (IsDuplicateObject(exception))
             {
                 LogCoalescedRevocationJob(jobKey);
             }
@@ -162,7 +162,7 @@ public sealed partial class QuartzBackgroundJobClient(
             {
                 await scheduler.ScheduleJob(trigger, cancellationToken);
             }
-            catch (ObjectAlreadyExistsException)
+            catch (JobPersistenceException exception) when (IsDuplicateObject(exception))
             {
                 LogCoalescedRevocationTrigger(trigger.Key);
             }
@@ -214,11 +214,20 @@ public sealed partial class QuartzBackgroundJobClient(
         {
             await scheduler.AddJob(job, replace: false, storeNonDurableWhileAwaitingScheduling: false, cancellationToken);
         }
-        catch (ObjectAlreadyExistsException)
+        catch (JobPersistenceException exception) when (IsDuplicateObject(exception))
         {
             LogCoalescedActivitySyncJob(jobKey);
         }
     }
+
+    /// <summary>
+    /// Recognizes duplicate jobs and triggers, including the wrapper used by the persistent store.
+    /// Other persistence failures must propagate to the caller.
+    /// </summary>
+    /// <param name="exception">The scheduling failure to inspect.</param>
+    /// <returns>Whether the failure represents an already stored job or trigger.</returns>
+    private static bool IsDuplicateObject(JobPersistenceException exception) =>
+        exception is ObjectAlreadyExistsException || exception.InnerException is ObjectAlreadyExistsException;
 
     /// <summary>
     /// Computes a stable Quartz job key for an athlete based on their provider and external identifier.

@@ -128,10 +128,11 @@ try
     Log.Information("The app started.");
     await app.RunAsync();
 }
-catch (InvalidOperationException ex)  // Catch specific exception
+catch (InvalidOperationException ex)
 {
     // Log detailed exception information for InvalidOperationException
     Log.Error(ex, "An unexpected operation occurred.");
+    throw;
 }
 catch (AppDomainUnloadedException ex)
 {

@@ -31,5 +31,14 @@ You are a QA automation expert writing tests for `planthor-backend`.
 - **Verification:** Ensure tests explore both the "happy path" and edge cases (especially `if/else` logic) to satisfy the 80% branch coverage requirement. (Note: Coverlet is used to enforce these metrics).
 
 ## Mocking & Fakes (For Unit Tests Only)
+
 - If a low-level Unit Test is absolutely necessary, mock external dependencies using a mocking framework or hand-rolled fakes.
 - Use `TimeProvider.Fake` (from `Microsoft.Extensions.TimeProvider.Testing`) when testing time-dependent logic.
+
+## Quartz Persistence Verification
+
+- Use the existing `CustomWebApplicationFactory` with isolated MongoDB and PostgreSQL Testcontainers for scheduler/API tests. Keep its dynamic `ConnectionStrings:Quartz` override and the test project's copy of `infrastructure/quartz/tables_postgres.sql`; do not point tests at the developer's Compose database or weaken startup validation with a blank connection string/in-memory store.
+- Configuration overrides must take effect before Quartz resolves its connection string. Give each API host, including derived factories, a unique scheduler instance name using `StdSchedulerFactory.PropertySchedulerInstanceName`; dispose hosts/schedulers before their databases and HTTP stubs.
+- When changing scheduling behavior, cover missing/blank startup configuration, persisted durable jobs and pending delayed triggers, and duplicate activity/revocation requests against PostgreSQL. Include the persistent store's wrapped duplicate exceptions; scheduler mocks alone cannot verify this behavior. Preserve propagation of non-duplicate database failures.
+- Reuse `QuartzStartupTests`, `QuartzPersistenceTests`, and the existing Strava/member-provisioning API scenarios. Do not assert that completed one-shot triggers remain in the database as an execution history.
+- See [API test setup and verification commands](../../../tests/ApiTests/README.md#quartz-persistence-tests). After executable scheduler changes, run `dotnet build PlanthorBackend.slnx` and `dotnet test PlanthorBackend.slnx` with Docker available and resolve failures before reporting success.

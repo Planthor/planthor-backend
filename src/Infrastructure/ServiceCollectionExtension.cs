@@ -26,11 +26,17 @@ public static class ServiceCollectionExtension
     /// <param name="connectionString">The connection string of the database.</param>
     /// <param name="configuration">The application configuration.</param>
     /// <returns>The same service collection so that multiple calls can be chained.</returns>
+    /// <exception cref="ArgumentNullException">A required argument is null.</exception>
+    /// <remarks>Scheduler initialization fails with an <see cref="InvalidOperationException"/> when the Quartz connection string is missing or blank.</remarks>
     public static IServiceCollection AddPlanthorDbContext(
         this IServiceCollection services,
         string connectionString,
         IConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(connectionString);
+        ArgumentNullException.ThrowIfNull(configuration);
+
         var mongoClient = new MongoDB.Driver.MongoClient(connectionString);
         services.AddSingleton<MongoDB.Driver.IMongoClient>(mongoClient);
 
@@ -50,24 +56,29 @@ public static class ServiceCollectionExtension
         services.AddHttpClient<IKeycloakAdminClient, KeycloakAdminClient>();
 
         // Register Quartz.NET
-        services.AddQuartz(q =>
+        services.AddQuartz((q, serviceProvider) =>
         {
-            var quartzConnectionString = configuration.GetConnectionString("Quartz");
-            if (!string.IsNullOrWhiteSpace(quartzConnectionString))
+            // Resolve the final host configuration before the scheduler starts accepting work.
+            var quartzConnectionString = serviceProvider.GetRequiredService<IConfiguration>()
+                .GetConnectionString("Quartz");
+            if (string.IsNullOrWhiteSpace(quartzConnectionString))
             {
-                q.SchedulerId = "AUTO";
-                q.UsePersistentStore(store =>
-                {
-                    store.UseProperties = true;
-                    store.UsePostgres(quartzConnectionString);
-                    store.UseSystemTextJsonSerializer();
-                    store.UseClustering(cluster =>
-                    {
-                        cluster.CheckinInterval = TimeSpan.FromSeconds(10);
-                        cluster.CheckinMisfireThreshold = TimeSpan.FromSeconds(20);
-                    });
-                });
+                throw new InvalidOperationException(
+                    "ConnectionStrings:Quartz is required. Configure it in appsettings or set the ConnectionStrings__Quartz environment variable.");
             }
+
+            q.SchedulerId = "AUTO";
+            q.UsePersistentStore(store =>
+            {
+                store.UseProperties = true;
+                store.UsePostgres(quartzConnectionString);
+                store.UseSystemTextJsonSerializer();
+                store.UseClustering(cluster =>
+                {
+                    cluster.CheckinInterval = TimeSpan.FromSeconds(10);
+                    cluster.CheckinMisfireThreshold = TimeSpan.FromSeconds(20);
+                });
+            });
 
             var downloadJobKey = new JobKey("DownloadAvatar");
             q.AddJob<DownloadAvatarJob>(opts => opts.WithIdentity(downloadJobKey).StoreDurably());

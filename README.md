@@ -58,7 +58,7 @@ Planthor follows a **Clean Architecture** pattern with clear separation of conce
 | **API** | HTTP controllers, request/response handling, JWT authentication | `src/Api/Controllers/` |
 | **Application** | Business logic using CQRS pattern (Commands/Queries via MediatR) | `src/Application/` |
 | **Domain** | Core entities, domain events, value objects, business rules | `src/Domain/` |
-| **Infrastructure** | Data persistence (MongoDB), repositories, external service clients | `src/Infrastructure/` |
+| **Infrastructure** | MongoDB repositories, Quartz PostgreSQL persistence, external service clients | `src/Infrastructure/` |
 | **Adapters** | Third-party integrations (Strava, Facebook, activity sync) | `src/Adapters/` |
 
 ### Technology Stack
@@ -69,6 +69,7 @@ Planthor follows a **Clean Architecture** pattern with clear separation of conce
 | **Database** | MongoDB 8.2 with ReplicaSet |
 | **Authentication** | Keycloak 26.5 + JWT |
 | **Identity DB** | PostgreSQL 16 |
+| **Background Jobs** | Quartz.NET with a dedicated PostgreSQL 16 persistent store |
 | **Patterns** | CQRS (MediatR), Clean Architecture, Domain-Driven Design |
 | **Logging** | Serilog (structured logging) |
 | **API Documentation** | OpenAPI 3.0 + Scalar UI |
@@ -81,16 +82,17 @@ src/
 ├── Api/                    # REST API controllers (v1 endpoints)
 ├── Application/            # CQRS commands, queries, DTOs
 ├── Domain/                 # Core domain entities & business logic
-├── Infrastructure/         # MongoDB, repositories, services
+├── Infrastructure/         # MongoDB repositories, Quartz persistence, services
 └── Adapters/               # External integrations (Strava, Facebook)
 
 tests/
 ├── UnitTests/              # Domain & Application layer tests
-└── IntegrationTests/       # API integration tests
+└── ApiTests/               # API tests with MongoDB and PostgreSQL Testcontainers
 
 infrastructure/
 ├── compose.yaml            # Docker Compose services
-└── keycloak/realms/        # Keycloak realm configuration
+├── keycloak/realms/         # Keycloak realm configuration
+└── quartz/                 # Quartz PostgreSQL initialization schema
 ```
 
 ---
@@ -136,6 +138,7 @@ This starts:
 - **Mongo Express** (port 8081) — database UI
 - **Keycloak** (port 8180) — authentication server
 - **PostgreSQL** (port 5432) — Keycloak database
+- **Quartz PostgreSQL** (port 5433) — persistent background jobs and triggers
 - **pgAdmin** (port 5050) — PostgreSQL UI
 
 #### Step 2: Set Dotnet Secret to replace appsetting.json value
@@ -149,6 +152,13 @@ dotnet user-secrets set "MediatR:LicenseKey" "[INPUT License Key for MediatR]"
 ```
 
 Please do not push User Secret in .csproj
+
+Quartz requires `ConnectionStrings:Quartz` in every environment. The checked-in
+[Development settings](src/Api/appsettings.Development.json) include the connection
+for the default Compose service at `localhost:5433`. If you override Compose's
+`QUARTZ_DB_*` values, also update the API connection string. Missing, empty, or
+whitespace values cause startup to fail; there is no in-memory fallback.
+See the [Quartz PostgreSQL setup guide](infrastructure/README.md#quartz-postgresql).
 
 #### Step 3: Build & Run the Application
 
@@ -174,6 +184,7 @@ For rapid development iterations with automatic reloading on file changes:
 
 ```powershell
 $env:ConnectionStrings__PlanthorDbContext = "mongodb://admin:Planthor_123@localhost:27017/"
+$env:ConnectionStrings__Quartz = "Host=localhost;Port=5433;Database=quartz;Username=quartz;Password=Planthor_Quartz_123"
 dotnet watch run --project src/Api/Api.csproj
 ```
 
@@ -181,6 +192,7 @@ dotnet watch run --project src/Api/Api.csproj
 
 ```bash
 export ConnectionStrings__PlanthorDbContext="mongodb://admin:Planthor_123@localhost:27017/"
+export ConnectionStrings__Quartz="Host=localhost;Port=5433;Database=quartz;Username=quartz;Password=Planthor_Quartz_123"
 dotnet watch run --project src/Api/Api.csproj
 ```
 
@@ -200,6 +212,7 @@ The application is designed to be cloud-native and can be fully configured via e
 | Variable | Description | Example |
 | --- | --- | --- |
 | `ConnectionStrings__PlanthorDbContext` | MongoDB connection string | `mongodb://admin:pass@localhost:27017/` |
+| `ConnectionStrings__Quartz` | Required Quartz PostgreSQL connection string | `Host=localhost;Port=5433;Database=quartz;Username=quartz;Password=Planthor_Quartz_123` (local Compose defaults only) |
 | `Authentication__Keycloak__Authority` | Keycloak issuer URL | `https://auth.example.com/realms/planthor-realm` |
 | `Authentication__Keycloak__Audience` | Token audience | `planthor-backend` |
 | `Authentication__Keycloak__RequireHttpsMetadata` | Require HTTPS for metadata | `true` (prod), `false` (dev) |
@@ -274,6 +287,10 @@ curl -H "Authorization: Bearer <your-jwt-token>" https://localhost:5001/v1/membe
 
 Run the complete test suite with code coverage:
 
+Docker must be running. API tests create isolated MongoDB and PostgreSQL containers
+and initialize Quartz with the same schema used by Compose. They do not require
+the local Compose services. See [API test setup](tests/ApiTests/README.md#quartz-persistence-tests).
+
 ```bash
 dotnet test --results-directory ./tests/CodeCoverageResults --collect:"XPlat Code Coverage;Format=lcov,opencover"
 ```
@@ -283,7 +300,7 @@ dotnet test --results-directory ./tests/CodeCoverageResults --collect:"XPlat Cod
 - **UnitTests/** — Domain & Application layer tests (fast, isolated)
   - `Domain.Tests/` — Domain entity and business logic tests
   - `Application.Tests/` — CQRS command/query handler tests
-- **IntegrationTests/Api.Tests/** — Full API integration tests (slower, end-to-end)
+- **ApiTests/Api.Tests/** — Full API tests, including Quartz startup and PostgreSQL persistence
 
 ### Code Coverage Report
 
@@ -348,6 +365,7 @@ Run the container using environment variables. You can pass them directly or use
 docker run -d \
   --name planthor-api \
   -e ConnectionStrings__PlanthorDbContext="mongodb://admin:Planthor_123@mongodb:27017/" \
+  -e ConnectionStrings__Quartz="Host=<postgres-host>;Port=5432;Database=quartz;Username=<user>;Password=<password>" \
   -e Authentication__Authority="https://auth.example.com/realms/planthor-realm" \
   -e Authentication__Audience="planthor-backend" \
   -e Authentication__RequireHttpsMetadata="true" \
@@ -361,6 +379,12 @@ docker run -d \
   -p 8080:8080 \
   planthor-backend:latest
 ```
+
+Replace the PostgreSQL placeholders with a database reachable from the container
+and provision the Quartz schema before starting the API. When attaching the API
+to the Compose `app_network`, use `quartz-postgres:5432`; `localhost:5433` is for
+an API running on the host. An `--env-file` deployment must also supply
+`ConnectionStrings__Quartz`. See [connection settings](infrastructure/README.md#connection-settings).
 
 ### Cloud Service Configuration
 
@@ -514,6 +538,15 @@ dotnet watch run
 ---
 
 ## Troubleshooting
+
+### Quartz Startup or Persistence Failure
+
+`ConnectionStrings:Quartz is required` means the API has no usable PostgreSQL
+connection string. Check JSON settings and environment overrides, then restart
+the API. The default host endpoint is `localhost:5433`; containers on the Compose
+network use `quartz-postgres:5432`. See the
+[Quartz troubleshooting guide](infrastructure/README.md#troubleshooting) for
+schema checks and why completed triggers may no longer have rows.
 
 ### MongoDB Connection Failed
 
