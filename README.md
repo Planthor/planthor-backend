@@ -110,7 +110,6 @@ infrastructure/
 
 - **MongoDB Compass** — GUI for MongoDB administration
 - **pgAdmin Web UI** — Included in Docker Compose (port 5050)
-- **Mongo Express Web UI** — Included in Docker Compose (port 8081)
 
 ---
 
@@ -135,7 +134,6 @@ az login
 This starts:
 
 - **MongoDB** (port 27017)
-- **Mongo Express** (port 8081) — database UI
 - **Keycloak** (port 8180) — authentication server
 - **PostgreSQL** (port 5432) — Keycloak database
 - **Quartz PostgreSQL** (port 5433) — persistent background jobs and triggers
