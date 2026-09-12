@@ -73,7 +73,7 @@ public sealed class StravaActivitySyncTests(CustomWebApplicationFactory<Program>
 
         var memberResponse = await client.PostAsJsonAsync(
             "/v1/members",
-            new CreateMemberRequest("Strava", null, "Athlete", "Sync integration test", "UTC"));
+            new CreateMemberRequest("Strava", null, "Athlete", "Sync integration test", "UTC", false));
         memberResponse.EnsureSuccessStatusCode();
         var memberDto = await memberResponse.Content.ReadFromJsonAsync<MemberDto>();
         Assert.NotNull(memberDto);

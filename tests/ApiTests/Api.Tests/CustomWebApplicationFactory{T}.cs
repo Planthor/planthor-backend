@@ -44,7 +44,11 @@ public class CustomWebApplicationFactory<TProgram>
         .WithResourceMapping(
             new FileInfo(Path.Combine(AppContext.BaseDirectory, "quartz", "tables_postgres.sql")),
             new FileInfo("/docker-entrypoint-initdb.d/001-quartz.sql"))
-        .WithWaitStrategy(Wait.ForUnixContainer().UntilExternalTcpPortIsAvailable(5432))
+        .WithWaitStrategy(Wait.ForUnixContainer()
+            // The Docker port proxy can accept TCP before PostgreSQL finishes initdb.
+            // A loopback query waits for the final server and the mounted Quartz schema.
+            .UntilCommandIsCompleted("psql", "-h", "127.0.0.1", "-U", "quartz", "-d", "quartz_test",
+                "-v", "ON_ERROR_STOP=1", "-c", "SELECT COUNT(*) FROM qrtz_job_details"))
         .Build();
 
     private string QuartzConnectionString => new NpgsqlConnectionStringBuilder
@@ -98,7 +102,19 @@ public class CustomWebApplicationFactory<TProgram>
             // Each test host owns its scheduler, including hosts created by WithWebHostBuilder.
             var schedulerName = $"api-tests-{Guid.NewGuid():N}";
             services.PostConfigure<QuartzOptions>(options =>
-                options[Quartz.Impl.StdSchedulerFactory.PropertySchedulerInstanceName] = schedulerName);
+            {
+                options[Quartz.Impl.StdSchedulerFactory.PropertySchedulerInstanceName] = schedulerName;
+
+                // Quartz's DBConnectionManager is process-wide. Scheduler names alone do not
+                // isolate the default data source when parallel hosts use different containers.
+                const string defaultPrefix = "quartz.dataSource.default.";
+                foreach (var setting in options.Where(pair => pair.Key.StartsWith(defaultPrefix, StringComparison.Ordinal)).ToArray())
+                {
+                    options[$"quartz.dataSource.{schedulerName}.{setting.Key[defaultPrefix.Length..]}"] = setting.Value;
+                    options.Remove(setting.Key);
+                }
+                options["quartz.jobStore.dataSource"] = schedulerName;
+            });
 
             // Replace the production database context with a test container one
             var dbContextDescriptor = services.SingleOrDefault(

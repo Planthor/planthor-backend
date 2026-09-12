@@ -37,6 +37,7 @@ public sealed class CreateMemberCommandHandler(
             request.LastName,
             request.Description ?? string.Empty,
             request.PreferredTimezone,
+            request.AutoLinkUserAdapterToPlan,
             clock);
 
         await memberRepository.AddAsync(member, cancellationToken);

@@ -47,8 +47,8 @@ public class ListMembersQueryHandlerTests
     {
         var dtos = new List<MemberDto>
         {
-            new(Guid.NewGuid(), "John", "", "Doe", null, ""),
-            new(Guid.NewGuid(), "Jane", "", "Smith", null, "")
+            new(Guid.NewGuid(), "John", "", "Doe", null, "", false),
+            new(Guid.NewGuid(), "Jane", "", "Smith", null, "", false)
         };
         SetupMembers(dtos);
 
@@ -75,8 +75,8 @@ public class ListMembersQueryHandlerTests
     {
         var clock = Substitute.For<IClock>();
         clock.GetCurrentInstant().Returns(Instant.FromUtc(2026, 1, 1, 0, 0));
-        var member1 = Member.Create("alice", "Alice", "", "Smith", "desc", "UTC", clock);
-        var member2 = Member.Create("bob", "Bob", "A", "Jones", null!, "UTC", clock);
+        var member1 = Member.Create("alice", "Alice", "", "Smith", "desc", "UTC", false, clock);
+        var member2 = Member.Create("bob", "Bob", "A", "Jones", null!, "UTC", false, clock);
 
         _mockContext
             .QueryAsync(

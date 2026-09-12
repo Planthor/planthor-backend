@@ -8,8 +8,10 @@ using NodaTime;
 namespace Application.Members.Commands.Update;
 
 /// <summary>
-/// Represents the UpdateMemberCommandHandler.
+/// Handles the execution of <see cref="UpdateMemberCommand"/> to update an existing member's properties.
 /// </summary>
+/// <param name="memberRepository">The repository used to access and modify member data.</param>
+/// <param name="clock">The clock used to get the current time for auditing updates.</param>
 public sealed class UpdateMemberCommandHandler(IMemberRepository memberRepository, IClock clock) : ICommandHandler<UpdateMemberCommand>
 {
     /// <inheritdoc />
@@ -33,6 +35,8 @@ public sealed class UpdateMemberCommandHandler(IMemberRepository memberRepositor
             request.PreferredTimezone,
             clock
         );
+
+        member.UpdateActivitySyncPreferences(request.AutoLinkUserAdapterToPlan, clock);
 
         await memberRepository.UpdateAsync(member, cancellationToken);
         await memberRepository.SaveChangesAsync(cancellationToken);

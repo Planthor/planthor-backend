@@ -104,6 +104,7 @@ public sealed class BackgroundJobIntegrationTests(CustomWebApplicationFactory<Pr
             "Member",
             "",
             "UTC",
+            false,
             NodaTime.SystemClock.Instance);
         await repository.AddAsync(member, CancellationToken.None);
         await repository.SaveChangesAsync(CancellationToken.None);
@@ -160,6 +161,7 @@ public sealed class BackgroundJobIntegrationTests(CustomWebApplicationFactory<Pr
             "Member",
             "",
             "UTC",
+            false,
             NodaTime.SystemClock.Instance);
         await repository.AddAsync(unlinkedMember, CancellationToken.None);
         await repository.SaveChangesAsync(CancellationToken.None);
@@ -217,6 +219,7 @@ public sealed class BackgroundJobIntegrationTests(CustomWebApplicationFactory<Pr
             "Failure",
             "",
             "UTC",
+            false,
             NodaTime.SystemClock.Instance);
         member.ConnectExternalProvider(
             ExternalProvider.Keycloak,

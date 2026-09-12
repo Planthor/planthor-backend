@@ -42,7 +42,8 @@ public sealed class MemberDetailsQueryHandler : IQueryHandler<MemberDetailsQuery
                         m.MiddleName,
                         m.LastName,
                         m.Description,
-                        m.PathAvatar ?? string.Empty
+                        m.PathAvatar ?? string.Empty,
+                        m.AutoLinkUserAdapterToPlan
                     )),
                 cancellationToken);
 

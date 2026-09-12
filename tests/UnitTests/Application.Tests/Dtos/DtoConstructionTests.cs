@@ -87,7 +87,7 @@ public class DtoConstructionTests
     {
         var id = Guid.NewGuid();
 
-        var dto = new MemberDto(id, "Alice", "M", "Smith", "desc", "/avatar.jpg");
+        var dto = new MemberDto(id, "Alice", "M", "Smith", "desc", "/avatar.jpg", false);
 
         Assert.Equal(id, dto.Id);
         Assert.Equal("Alice", dto.FirstName);
@@ -101,8 +101,8 @@ public class DtoConstructionTests
     public void MemberDto_RecordEquality_EqualDtosAreEqual()
     {
         var id = Guid.NewGuid();
-        var dto1 = new MemberDto(id, "Alice", "", "Smith", null, "");
-        var dto2 = new MemberDto(id, "Alice", "", "Smith", null, "");
+        var dto1 = new MemberDto(id, "Alice", "", "Smith", null, "", false);
+        var dto2 = new MemberDto(id, "Alice", "", "Smith", null, "", false);
 
         Assert.Equal(dto1, dto2);
     }

@@ -34,7 +34,7 @@ public class ListPersonalPlansQueryHandlerTests
         Plan.Create(name, "km", 100f, _from, _to, "2024-01-01", "2024-12-31", "UTC", true, _clock, Guid.NewGuid());
 
     private Member CreateMember(string identifyName = "user1") =>
-        Member.Create(identifyName, "John", "", "Doe", "", "UTC", _clock);
+        Member.Create(identifyName, "John", "", "Doe", "", "UTC", false, _clock);
 
     private void SetupMemberContext(Member? member)
     {

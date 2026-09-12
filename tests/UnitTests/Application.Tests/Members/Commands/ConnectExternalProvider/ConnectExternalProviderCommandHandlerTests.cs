@@ -59,7 +59,7 @@ public class ConnectExternalProviderCommandHandlerTests
         // Arrange
         var command = new ConnectExternalProviderCommand("user1", ExternalProvider.Strava.Id, ExternalConnectionType.ActivitiesSync.Id, "ext_123", ["read_all"]);
         var clock = SystemClock.Instance;
-        var member = Member.Create("user1", "John", "Doe", "Smith", "desc", "UTC", clock);
+        var member = Member.Create("user1", "John", "Doe", "Smith", "desc", "UTC", false, clock);
 
         _memberRepositoryMock.GetByIdentifyNameAsync(command.IdentifyName, Arg.Any<CancellationToken>())
             .Returns(member);

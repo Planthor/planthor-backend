@@ -24,7 +24,7 @@ public class CreateMemberCommandHandlerTests
     }
 
     private static CreateMemberCommand ValidCommand(string identifyName = "user1") =>
-        new(identifyName, "John", null, "Doe", null, "UTC");
+        new(identifyName, "John", null, "Doe", null, "UTC", false);
 
     [Fact]
     public async Task Handle_NewMember_CreatesAndReturnsId()
@@ -48,7 +48,7 @@ public class CreateMemberCommandHandlerTests
     public async Task Handle_ExistingMember_ReturnsExistingId()
     {
         var command = ValidCommand("existing");
-        var existing = Member.Create("existing", "Jane", "", "Doe", "", "UTC", _mockClock);
+        var existing = Member.Create("existing", "Jane", "", "Doe", "", "UTC", false, _mockClock);
         _mockRepository
             .GetByIdentifyNameAsync("existing", Arg.Any<CancellationToken>())
             .Returns(existing);
@@ -62,7 +62,7 @@ public class CreateMemberCommandHandlerTests
     [Fact]
     public async Task Handle_NewMember_UsesMiddleNameEmpty_WhenNull()
     {
-        var command = new CreateMemberCommand("user1", "John", null, "Doe", null, "UTC");
+        var command = new CreateMemberCommand("user1", "John", null, "Doe", null, "UTC", false);
         _mockRepository
             .GetByIdentifyNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Member?)null);
@@ -84,7 +84,7 @@ public class CreateMemberCommandHandlerTests
     [Fact]
     public async Task Handle_NewMember_UsesDescriptionEmpty_WhenNull()
     {
-        var command = new CreateMemberCommand("user1", "John", null, "Doe", null, "UTC");
+        var command = new CreateMemberCommand("user1", "John", null, "Doe", null, "UTC", false);
         Member? captured = null;
         _mockRepository
             .GetByIdentifyNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -106,7 +106,7 @@ public class CreateMemberCommandHandlerTests
     [Fact]
     public async Task Handle_NewMember_UsesProvidedMiddleNameAndDescription()
     {
-        var command = new CreateMemberCommand("user1", "John", "Mid", "Doe", "Desc", "UTC");
+        var command = new CreateMemberCommand("user1", "John", "Mid", "Doe", "Desc", "UTC", false);
         Member? captured = null;
         _mockRepository
             .GetByIdentifyNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())

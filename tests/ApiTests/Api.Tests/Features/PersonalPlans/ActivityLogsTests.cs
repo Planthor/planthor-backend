@@ -18,7 +18,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
     public async Task ActivityLog_Lifecycle_Tests()
     {
         // 1. Create Member
-        var createMemberCmd = new CreateMemberRequest("Activity", null, "Logger", "Test user", "UTC");
+        var createMemberCmd = new CreateMemberRequest("Activity", null, "Logger", "Test user", "UTC", false);
         var createMemberResponse = await _client.PostAsJsonAsync("/v1/members", createMemberCmd);
         createMemberResponse.EnsureSuccessStatusCode();
 
@@ -110,7 +110,7 @@ public class ActivityLogsTests(CustomWebApplicationFactory<Program> factory) : I
     public async Task ActivityLogs_List_Pagination_And_Validation_Tests()
     {
         // 1. Create Member & Plan
-        await _client.PostAsJsonAsync("/v1/members", new CreateMemberRequest("Pagination", null, "User", "Test user", "UTC"));
+        await _client.PostAsJsonAsync("/v1/members", new CreateMemberRequest("Pagination", null, "User", "Test user", "UTC", false));
         
         var createPlanCmd = new CreatePersonalPlanRequest(
             Name: "Pagination Plan", Unit: "km", Target: 100.0,
