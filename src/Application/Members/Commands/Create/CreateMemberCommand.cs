@@ -12,10 +12,12 @@ namespace Application.Members.Commands.Create;
 /// <param name="Description">A free-text description or bio of the member.</param>
 /// <param name="IdentifyName">The identify name of the member.</param>
 /// <param name="PreferredTimezone">The IANA timezone identifier preferred by the member (e.g., "Asia/Ho_Chi_Minh").</param>
+/// <param name="AutoLinkUserAdapterToPlan">Whether to auto link user adapter to plan.</param>
 public record CreateMemberCommand(
     string IdentifyName,
     string FirstName,
     string? MiddleName,
     string LastName,
     string? Description,
-    string PreferredTimezone) : ICommand<Guid>;
+    string PreferredTimezone,
+    bool AutoLinkUserAdapterToPlan) : ICommand<Guid>;

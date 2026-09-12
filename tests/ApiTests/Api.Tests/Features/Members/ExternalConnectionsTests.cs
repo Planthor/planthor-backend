@@ -22,7 +22,7 @@ public class ExternalConnectionsTests(CustomWebApplicationFactory<Program> facto
     public async Task ExternalConnections_Lifecycle_Tests()
     {
         // 1. Create Member
-        var createMemberCmd = new CreateMemberRequest("Connection", null, "Tester", "Test user", "UTC");
+        var createMemberCmd = new CreateMemberRequest("Connection", null, "Tester", "Test user", "UTC", false);
         var createMemberResponse = await _client.PostAsJsonAsync("/v1/members", createMemberCmd);
         createMemberResponse.EnsureSuccessStatusCode();
 
@@ -203,7 +203,7 @@ public class ExternalConnectionsTests(CustomWebApplicationFactory<Program> facto
         client.DefaultRequestHeaders.Add("X-TestUserId", $"connections-{Guid.NewGuid():N}");
         var createResponse = await client.PostAsJsonAsync(
             "/v1/members",
-            new CreateMemberRequest("Connection", null, "Tester", "Test user", "UTC"));
+            new CreateMemberRequest("Connection", null, "Tester", "Test user", "UTC", false));
         createResponse.EnsureSuccessStatusCode();
         var memberDto = await createResponse.Content.ReadFromJsonAsync<MemberDto>();
         Assert.NotNull(memberDto);

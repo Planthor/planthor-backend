@@ -79,7 +79,8 @@ public sealed class MembersController(
                 request.MiddleName,
                 request.LastName,
                 request.Description,
-                request.PreferredTimezone);
+                request.PreferredTimezone,
+                request.AutoLinkUserAdapterToPlan);
 
             return await CreateInternalAsync(command, token);
         }
@@ -131,7 +132,8 @@ public sealed class MembersController(
                 request.LastName,
                 request.Description,
                 request.PathAvatar,
-                request.PreferredTimezone);
+                request.PreferredTimezone,
+                request.AutoLinkUserAdapterToPlan);
 
             await updateMemberCommandValidator.ValidateAndThrowAsync(command, token);
             await _sender.Send(command, token);
@@ -166,7 +168,8 @@ public sealed class MembersController(
                 request.UpdateMask,
                 request.IdentifyName,
                 request.FirstName,
-                request.LastName);
+                request.LastName,
+                request.AutoLinkUserAdapterToPlan);
 
             await patchMemberCommandValidator.ValidateAndThrowAsync(command, token);
             await _sender.Send(command, token);

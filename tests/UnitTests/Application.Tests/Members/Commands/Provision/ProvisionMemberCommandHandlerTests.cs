@@ -53,7 +53,7 @@ public class ProvisionMemberCommandHandlerTests
     [Fact]
     public async Task Handle_WhenMemberAlreadyExists_ReturnsExistingMemberId()
     {
-        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
+        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", false, _mockClock);
         var command = new ProvisionMemberCommand("test-subject-id", "existing_user", "Jane", "Doe", null);
 
         _mockRepository
@@ -68,7 +68,7 @@ public class ProvisionMemberCommandHandlerTests
     [Fact]
     public async Task Handle_WhenMemberAlreadyExists_DoesNotCreateDuplicate()
     {
-        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
+        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", false, _mockClock);
         var command = new ProvisionMemberCommand("test-subject-id", "existing_user", "Jane", "Doe", null);
 
         _mockRepository
@@ -121,7 +121,7 @@ public class ProvisionMemberCommandHandlerTests
     [Fact]
     public async Task Handle_WhenExistingMemberWithNoAvatarAndUrlProvided_EnqueuesAvatarDownload()
     {
-        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
+        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", false, _mockClock);
         var avatarUrl = new Uri("https://example.com/avatar.jpg");
         var command = new ProvisionMemberCommand("test-subject-id", "existing_user", "Jane", "Doe", avatarUrl);
 
@@ -137,7 +137,7 @@ public class ProvisionMemberCommandHandlerTests
     [Fact]
     public async Task Handle_WhenExistingMemberAlreadyHasAvatar_DoesNotEnqueueAvatarDownload()
     {
-        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", _mockClock);
+        var existingMember = Member.Create("existing_user", "Jane", "", "Doe", "JIT Provisioned", "UTC", false, _mockClock);
         existingMember.UpdateAvatar("https://storage.example.com/stored-avatar.jpg", _mockClock);
 
         var avatarUrl = new Uri("https://example.com/avatar.jpg");

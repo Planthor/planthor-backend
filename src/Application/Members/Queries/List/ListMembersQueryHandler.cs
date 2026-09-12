@@ -31,7 +31,8 @@ public sealed class ListMembersQueryHandler(IReadOnlyContext readOnlyContext)
                     m.MiddleName,
                     m.LastName,
                     m.Description,
-                    m.PathAvatar ?? string.Empty
+                    m.PathAvatar ?? string.Empty,
+                    m.AutoLinkUserAdapterToPlan
                 )),
                 cancellationToken);
         }

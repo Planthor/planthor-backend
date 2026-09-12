@@ -23,7 +23,8 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
             MiddleName: null,
             LastName: "Owner",
             Description: "For testing plans",
-            PreferredTimezone: "UTC"
+            PreferredTimezone: "UTC",
+            AutoLinkUserAdapterToPlan: false
         );
         var createMemberResponse = await _client.PostAsJsonAsync("/v1/members", createMemberCmd);
         createMemberResponse.EnsureSuccessStatusCode();
@@ -97,7 +98,8 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
             MiddleName: null,
             LastName: "Owner",
             Description: "For testing generic plans",
-            PreferredTimezone: "UTC"
+            PreferredTimezone: "UTC",
+            AutoLinkUserAdapterToPlan: false
         );
         var createMemberResponse = await _client.PostAsJsonAsync("/v1/members", createMemberCmd);
         // It might already exist if tests run in parallel/sequence, so we just ensure we try to create it.
@@ -186,7 +188,8 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
             MiddleName: null,
             LastName: "Owner",
             Description: "For testing validation",
-            PreferredTimezone: "UTC"
+            PreferredTimezone: "UTC",
+            AutoLinkUserAdapterToPlan: false
         );
         await _client.PostAsJsonAsync("/v1/members", createMemberCmd);
 

@@ -27,7 +27,7 @@ public class DisconnectExternalProviderCommandHandlerTests
     {
         // Arrange
         var identifyName = "test-subject";
-        var member = Member.Create(identifyName, "John", null, "Doe", "Some description", "UTC", _clockMock);
+        var member = Member.Create(identifyName, "John", null, "Doe", "Some description", "UTC", false, _clockMock);
         
         member.ConnectExternalProvider(ExternalProvider.Strava, ExternalConnectionType.ActivitiesSync, "strava-123", ["read"], _clockMock);
         

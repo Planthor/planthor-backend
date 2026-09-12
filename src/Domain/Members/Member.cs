@@ -22,10 +22,11 @@ public sealed class Member(
     string? middleName,
     string lastName,
     string description,
-    string preferredTimezone) : AggregateRoot<Guid>
+    string preferredTimezone,
+    bool autoLinkUserAdapterToPlan) : AggregateRoot<Guid>
 {
     // Required by EF Core
-    private Member() : this(default!, default!, default!, default!, default!, default!) { }
+    private Member() : this(default!, default!, default!, default!, default!, default!, default!) { }
 
     private readonly List<ExternalConnection> _externalConnections = [];
     private readonly List<PersonalPlan> _personalPlans = [];
@@ -67,9 +68,48 @@ public sealed class Member(
     public string PreferredTimezone { get; private set; } = preferredTimezone;
 
     /// <summary>
+    /// Gets whether new sport plans inherit automatic activity linking when no explicit choice is supplied.
+    /// </summary>
+    /// <remarks>
+    /// Defaults to false, including for members created before this preference existed.
+    /// This preference does not change existing plans or grant access to an external provider.
+    /// </remarks>
+    public bool AutoLinkUserAdapterToPlan { get; private set; } = autoLinkUserAdapterToPlan;
+
+    /// <summary>
+    /// Changes the default for future sport plans without modifying existing plan links or connections.
+    /// </summary>
+    /// <param name="autoLinkUserAdapterToPlan">Whether future sport plans should inherit automatic linking.</param>
+    /// <param name="clock">The clock used to audit a changed preference.</param>
+    /// <exception cref="ArgumentNullException">Thrown when the clock is null.</exception>
+    public void UpdateActivitySyncPreferences(bool autoLinkUserAdapterToPlan, IClock clock)
+    {
+        if (clock is null)
+        {
+            throw new ArgumentNullException(nameof(clock));
+        }
+
+        if (AutoLinkUserAdapterToPlan == autoLinkUserAdapterToPlan)
+        {
+            return;
+        }
+
+        AutoLinkUserAdapterToPlan = autoLinkUserAdapterToPlan;
+        StampUpdatedAudit(Id, clock);
+    }
+
+    /// <summary>
     /// Gets all external service connections owned by this member.
     /// </summary>
     public IReadOnlyList<ExternalConnection> ExternalConnections => _externalConnections.AsReadOnly();
+
+    /// <summary>
+    /// Resolves whether a new plan should link the user adapter based on member default.
+    /// </summary>
+    public bool ResolveLinkUserAdapterForNewPlan()
+    {
+        return AutoLinkUserAdapterToPlan;
+    }
 
     /// <summary>
     /// Gets all personal plan subscriptions owned by this member.
@@ -251,6 +291,7 @@ public sealed class Member(
         string lastName,
         string description,
         string preferredTimezone,
+        bool autoLinkUserAdapterToPlan,
         IClock clock)
     {
         var member = new Member(
@@ -259,7 +300,8 @@ public sealed class Member(
             middleName,
             lastName,
             description,
-            preferredTimezone)
+            preferredTimezone,
+            autoLinkUserAdapterToPlan)
         {
             Id = Guid.NewGuid()
         };

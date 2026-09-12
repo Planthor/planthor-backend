@@ -22,7 +22,8 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
             MiddleName: "A",
             LastName: "Test",
             Description: "Testing",
-            PreferredTimezone: "UTC"
+            PreferredTimezone: "UTC",
+            AutoLinkUserAdapterToPlan: false
         );
         var createResponse = await _client.PostAsJsonAsync("/v1/members", createCmd);
         Assert.True(createResponse.IsSuccessStatusCode, await createResponse.Content.ReadAsStringAsync());
@@ -43,7 +44,8 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
             LastName: "Test",
             Description: "Updated desc",
             PathAvatar: "http://example.com/avatar.png",
-            PreferredTimezone: "UTC"
+            PreferredTimezone: "UTC",
+            AutoLinkUserAdapterToPlan: false
         );
         var updateResponse = await _client.PutAsJsonAsync($"/v1/members/{createdMember.Id}", updateCmd);
         updateResponse.EnsureSuccessStatusCode();
@@ -65,7 +67,7 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
     {
         // 1. Unauthorized Create
         _client.DefaultRequestHeaders.Add("X-Omit-NameIdentifier", "true");
-        var createCmd = new CreateMemberRequest("Test", null, "Test", null, "UTC");
+        var createCmd = new CreateMemberRequest("Test", null, "Test", null, "UTC", false);
         var res1 = await _client.PostAsJsonAsync("/v1/members", createCmd);
         Assert.Equal(HttpStatusCode.Unauthorized, res1.StatusCode);
         _client.DefaultRequestHeaders.Remove("X-Omit-NameIdentifier");
@@ -80,7 +82,7 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
     public async Task Member_Patch_Tests()
     {
         // Create first member to test IdentifyName uniqueness
-        var createCmd1 = new CreateMemberRequest("User", null, "One", null, "UTC");
+        var createCmd1 = new CreateMemberRequest("User", null, "One", null, "UTC", false);
         _client.DefaultRequestHeaders.Add("X-TestUserId", "auth-user-1");
         var res1 = await _client.PostAsJsonAsync("/v1/members", createCmd1);
         res1.EnsureSuccessStatusCode();
@@ -88,7 +90,7 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         _client.DefaultRequestHeaders.Remove("X-TestUserId");
 
         // Create second member to patch
-        var createCmd2 = new CreateMemberRequest("User", null, "Two", null, "UTC");
+        var createCmd2 = new CreateMemberRequest("User", null, "Two", null, "UTC", false);
         _client.DefaultRequestHeaders.Add("X-TestUserId", "auth-user-2");
         var res2 = await _client.PostAsJsonAsync("/v1/members", createCmd2);
         res2.EnsureSuccessStatusCode();
@@ -100,7 +102,8 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
             UpdateMask: ["FirstName", "LastName"],
             IdentifyName: null,
             FirstName: "PatchedFirst",
-            LastName: "PatchedLast"
+            LastName: "PatchedLast",
+            AutoLinkUserAdapterToPlan: null
         );
         
         // Use HttpMethod.Patch because HttpClient doesn't have PatchAsJsonAsync built-in out of the box in .NET 6/7, wait, it has PatchAsJsonAsync in newer .NET. Let's use HttpRequestMessage or just PatchAsJsonAsync if available.
@@ -116,7 +119,8 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
             UpdateMask: ["IdentifyName"],
             IdentifyName: "new-identify-name",
             FirstName: null,
-            LastName: null
+            LastName: null,
+            AutoLinkUserAdapterToPlan: null
         );
         var patchReq2 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd2);
         patchReq2.EnsureSuccessStatusCode();
@@ -129,7 +133,8 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
             UpdateMask: ["IdentifyName"],
             IdentifyName: "",
             FirstName: null,
-            LastName: null
+            LastName: null,
+            AutoLinkUserAdapterToPlan: null
         );
         var patchReq3 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd3);
         Assert.Equal(HttpStatusCode.InternalServerError, patchReq3.StatusCode);
@@ -140,13 +145,14 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
             UpdateMask: ["FirstName"],
             IdentifyName: null,
             FirstName: "",
-            LastName: null
+            LastName: null,
+            AutoLinkUserAdapterToPlan: null
         );
         var patchReq5 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd5);
         Assert.Equal(HttpStatusCode.InternalServerError, patchReq5.StatusCode);
         
         // 6. Patch member not found
-        var patchCmd6 = new PatchMemberRequest(["FirstName"], null, "ValidName", null);
+        var patchCmd6 = new PatchMemberRequest(["FirstName"], null, "ValidName", null, null);
         var patchReq6 = await _client.PatchAsJsonAsync($"/v1/members/{System.Guid.NewGuid()}", patchCmd6);
         Assert.Equal(HttpStatusCode.InternalServerError, patchReq6.StatusCode);
     }

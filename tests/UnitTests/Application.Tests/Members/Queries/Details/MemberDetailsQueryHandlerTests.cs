@@ -36,7 +36,7 @@ public class MemberDetailsQueryHandlerTests
     public async Task Handle_MemberFound_ReturnsDto()
     {
         var id = Guid.NewGuid();
-        var dto = new MemberDto(id, "John", "", "Doe", null, "");
+        var dto = new MemberDto(id, "John", "", "Doe", null, "", false);
         SetupContext(dto);
 
         var result = await _handler.Handle(new MemberDetailsQuery(id), CancellationToken.None);
@@ -76,7 +76,7 @@ public class MemberDetailsQueryHandlerTests
     {
         var clock = Substitute.For<IClock>();
         clock.GetCurrentInstant().Returns(Instant.FromUtc(2026, 1, 1, 0, 0));
-        var member = Member.Create("john", "John", "M", "Doe", "desc", "UTC", clock);
+        var member = Member.Create("john", "John", "M", "Doe", "desc", "UTC", false, clock);
 
         _mockContext
             .FirstOrDefaultAsync(

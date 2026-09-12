@@ -52,6 +52,7 @@ public sealed class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMem
                 request.LastName,
                 "JIT Provisioned",
                 "UTC", //default timezone for JIT-provisioned accounts, can be updated by user
+                false,
                 _clock);
 
             if (existing is null)

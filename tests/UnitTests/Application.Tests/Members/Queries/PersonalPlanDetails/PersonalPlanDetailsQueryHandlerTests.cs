@@ -36,7 +36,7 @@ public class PersonalPlanDetailsQueryHandlerTests
     public async Task Handle_WhenPlanFound_ReturnsPersonalPlanDto()
     {
         var planId = Guid.NewGuid();
-        var member = Member.Create("user1", "Alice", "", "Smith", "desc", "UTC", _mockClock);
+        var member = Member.Create("user1", "Alice", "", "Smith", "desc", "UTC", false, _mockClock);
         member.SubscribeToPlan(planId, true, 3, false, _mockClock);
 
         var plan = Plan.Create("My Plan", "km", 100, _now, _now.Plus(Duration.FromDays(30)), "2026-01-01", "2026-01-31", "UTC", true, _mockClock, member.Id);
@@ -76,7 +76,7 @@ public class PersonalPlanDetailsQueryHandlerTests
     public async Task Handle_WhenPlanEntityNotFound_ThrowsKeyNotFoundException()
     {
         var planId = Guid.NewGuid();
-        var member = Member.Create("user1", "Alice", "", "Smith", "desc", "UTC", _mockClock);
+        var member = Member.Create("user1", "Alice", "", "Smith", "desc", "UTC", false, _mockClock);
         member.SubscribeToPlan(planId, true, 3, false, _mockClock);
 
         SetupContext(member, null);
@@ -102,7 +102,7 @@ public class PersonalPlanDetailsQueryHandlerTests
     [Fact]
     public async Task Handle_ExecutesQueryLambda_ProjectsToDto()
     {
-        var member = Member.Create("alice", "Alice", "", "Smith", "desc", "UTC", _mockClock);
+        var member = Member.Create("alice", "Alice", "", "Smith", "desc", "UTC", false, _mockClock);
         member.ConnectExternalProvider(ExternalProvider.Keycloak, ExternalConnectionType.Identity, "alice", [], _mockClock);
         var planId = Guid.NewGuid();
         member.SubscribeToPlan(planId, true, 1, false, _mockClock);

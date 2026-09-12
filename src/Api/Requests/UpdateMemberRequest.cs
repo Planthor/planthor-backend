@@ -9,10 +9,12 @@ namespace Api.Requests;
 /// <param name="Description">A free-text description or bio of the member.</param>
 /// <param name="PathAvatar">Path or URL to the member's avatar image.</param>
 /// <param name="PreferredTimezone">The IANA timezone identifier preferred by the member.</param>
+/// <param name="AutoLinkUserAdapterToPlan">Whether to auto link user adapter to plan.</param>
 public record UpdateMemberRequest(
     string FirstName,
     string? MiddleName,
     string LastName,
     string? Description,
     string? PathAvatar,
-    string PreferredTimezone);
+    string PreferredTimezone,
+    bool AutoLinkUserAdapterToPlan);

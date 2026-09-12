@@ -11,7 +11,7 @@ public class MemberTests
     private static readonly IClock Clock = new TestClock();
 
     private static Member CreateMember(string identifyName = "user1") =>
-        Member.Create(identifyName, "John", "", "Doe", "", "UTC", Clock);
+        Member.Create(identifyName, "John", "", "Doe", "", "UTC", false, Clock);
 
     private class TestClock : IClock
     {
@@ -23,7 +23,7 @@ public class MemberTests
     [Fact]
     public void Create_WithValidParams_ReturnsMemberWithCorrectProperties()
     {
-        var member = Member.Create("user1", "John", "M", "Doe", "Bio", "UTC", Clock);
+        var member = Member.Create("user1", "John", "M", "Doe", "Bio", "UTC", false, Clock);
 
         Assert.NotEqual(Guid.Empty, member.Id);
         Assert.Equal("user1", member.IdentifyName);
@@ -38,7 +38,7 @@ public class MemberTests
     [Fact]
     public void Create_RaisesMemberRegisteredEvent()
     {
-        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", Clock);
+        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", false, Clock);
 
         Assert.Single(member.DomainEvents);
     }
@@ -68,7 +68,7 @@ public class MemberTests
     [Fact]
     public void Validate_EmptyFirstName_ReturnsError()
     {
-        var member = Member.Create("user1", "", "", "Doe", "", "UTC", Clock);
+        var member = Member.Create("user1", "", "", "Doe", "", "UTC", false, Clock);
 
         var result = member.Validate();
 
@@ -79,7 +79,7 @@ public class MemberTests
     [Fact]
     public void Validate_EmptyLastName_ReturnsError()
     {
-        var member = Member.Create("user1", "John", "", "", "", "UTC", Clock);
+        var member = Member.Create("user1", "John", "", "", "", "UTC", false, Clock);
 
         var result = member.Validate();
 
@@ -90,7 +90,7 @@ public class MemberTests
     [Fact]
     public void Validate_EmptyTimezone_ReturnsError()
     {
-        var member = Member.Create("user1", "John", "", "Doe", "", "", Clock);
+        var member = Member.Create("user1", "John", "", "Doe", "", "", false, Clock);
 
         var result = member.Validate();
 
@@ -101,7 +101,7 @@ public class MemberTests
     [Fact]
     public void Validate_InvalidTimezone_ReturnsError()
     {
-        var member = Member.Create("user1", "John", "", "Doe", "", "Not/Valid", Clock);
+        var member = Member.Create("user1", "John", "", "Doe", "", "Not/Valid", false, Clock);
 
         var result = member.Validate();
 
@@ -112,7 +112,7 @@ public class MemberTests
     [Fact]
     public void Validate_MultipleInvalid_ReturnsMultipleErrors()
     {
-        var member = Member.Create("user1", "", "", "", "", "", Clock);
+        var member = Member.Create("user1", "", "", "", "", "", false, Clock);
 
         var result = member.Validate();
 

@@ -8,7 +8,7 @@ public class UpdateMemberCommandValidatorTests
     private readonly UpdateMemberCommandValidator _validator = new();
 
     private static UpdateMemberCommand Valid() =>
-        new(Guid.NewGuid(), "John", null, "Doe", null, null, "UTC");
+        new(Guid.NewGuid(), "John", null, "Doe", null, null, "UTC", false);
 
     [Fact]
     public void Validate_ValidCommand_Passes()

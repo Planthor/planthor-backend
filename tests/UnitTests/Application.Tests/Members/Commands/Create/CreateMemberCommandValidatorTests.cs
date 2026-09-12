@@ -7,7 +7,7 @@ public class CreateMemberCommandValidatorTests
     private readonly CreateMemberCommandValidator _validator = new();
 
     private static CreateMemberCommand Valid() =>
-        new("user1", "John", null, "Doe", null, "UTC");
+        new("user1", "John", null, "Doe", null, "UTC", false);
 
     [Fact]
     public void Validate_ValidCommand_Passes()

@@ -9,8 +9,10 @@ namespace Api.Requests;
 /// <param name="IdentifyName">The new user-friendly identify name (handle).</param>
 /// <param name="FirstName">The new first name.</param>
 /// <param name="LastName">The new last name.</param>
+/// <param name="AutoLinkUserAdapterToPlan">Whether to auto link user adapter to plan.</param>
 public record PatchMemberRequest(
     [Required] string[] UpdateMask,
     string? IdentifyName,
     string? FirstName,
-    string? LastName);
+    string? LastName,
+    bool? AutoLinkUserAdapterToPlan);

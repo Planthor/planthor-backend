@@ -65,7 +65,7 @@ public class CancelPlanCommandHandlerTests
     [Fact]
     public async Task Handle_PersonalPlanNotFound_ThrowsKeyNotFoundException()
     {
-        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
+        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", false, _mockClock);
         _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _handler.Handle(new CancelPlanCommand("user1", Guid.NewGuid()), CancellationToken.None));
@@ -75,7 +75,7 @@ public class CancelPlanCommandHandlerTests
     public async Task Handle_PlanNotFound_ThrowsKeyNotFoundException()
     {
         var planId = Guid.NewGuid();
-        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
+        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", false, _mockClock);
         member.SubscribeToPlan(planId, true, 0, false, _mockClock);
         
         _mockMemberRepository.GetByIdentifyNameAsync("user1", Arg.Any<CancellationToken>()).Returns(member);
@@ -88,7 +88,7 @@ public class CancelPlanCommandHandlerTests
     public async Task Handle_ValidRequest_CancelsPlan()
     {
         var planId = Guid.NewGuid();
-        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
+        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", false, _mockClock);
         member.SubscribeToPlan(planId, true, 0, false, _mockClock);
         
         var plan = Plan.Create("Plan 1", "km", 100, Instant.FromUtc(2024, 1, 1, 0, 0), Instant.FromUtc(2025, 1, 1, 0, 0), "2024-01-01", "2025-01-01", "UTC", true, _mockClock, Guid.NewGuid());
@@ -110,7 +110,7 @@ public class CancelPlanCommandHandlerTests
     public async Task Handle_ValidRequestWithZeroTarget_ReturnsZeroProgress()
     {
         var planId = Guid.NewGuid();
-        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
+        var member = Member.Create("user1", "John", "", "Doe", "", "UTC", false, _mockClock);
         member.SubscribeToPlan(planId, true, 0, false, _mockClock);
         
         var plan = Plan.Create("Plan 1", "km", 100, Instant.FromUtc(2024, 1, 1, 0, 0), Instant.FromUtc(2025, 1, 1, 0, 0), "2024-01-01", "2025-01-01", "UTC", true, _mockClock, Guid.NewGuid());

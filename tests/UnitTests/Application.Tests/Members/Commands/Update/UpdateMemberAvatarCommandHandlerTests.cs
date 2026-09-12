@@ -24,7 +24,7 @@ public class UpdateMemberAvatarCommandHandlerTests
     }
 
     private Member CreateMember() =>
-        Member.Create("user1", "John", "", "Doe", "", "UTC", _mockClock);
+        Member.Create("user1", "John", "", "Doe", "", "UTC", false, _mockClock);
 
     [Fact]
     public async Task Handle_ExistingMember_UpdatesAvatar()

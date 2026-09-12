@@ -11,10 +11,12 @@ namespace Application.Dtos;
 /// <param name="LastName">The last name of the member.</param>
 /// <param name="Description">A brief personal description or bio of the member.</param>
 /// <param name="PathAvatar">The URL or relative path to the member's avatar image.</param>
+/// <param name="AutoLinkUserAdapterToPlan">Whether the member's new plans will auto link to the user adapter.</param>
 public record MemberDto(
     Guid Id,
     string FirstName,
     string? MiddleName,
     string LastName,
     string? Description,
-    string PathAvatar);
+    string PathAvatar,
+    bool AutoLinkUserAdapterToPlan);

@@ -288,7 +288,7 @@ public sealed class ProcessExternalActivitySyncCommandHandlerTests
     }
 
     private Member CreateMember() =>
-        Member.Create("member", "Test", "", "Member", "", "UTC", _clock);
+        Member.Create("member", "Test", "", "Member", "", "UTC", false, _clock);
 
     private Plan CreateSportPlan(
         Instant? from = null,

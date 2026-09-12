@@ -505,7 +505,7 @@ public class StravaControllerTests(CustomWebApplicationFactory<Program> factory)
         using var client = testFactory.CreateClient();
         var createMember = await client.PostAsJsonAsync(
             "/v1/members",
-            new CreateMemberRequest("Sync", null, "Owner", "", "UTC"));
+            new CreateMemberRequest("Sync", null, "Owner", "", "UTC", false));
         createMember.EnsureSuccessStatusCode();
         var memberDto = await createMember.Content.ReadFromJsonAsync<MemberDto>();
         Assert.NotNull(memberDto);

@@ -11,6 +11,9 @@ namespace Application.Members.PersonalPlans.Commands.Create;
 /// <summary>
 /// Handles the creation of a new plan and subscribing a member to it as a personal plan.
 /// </summary>
+/// <param name="memberRepository">The repository used to access and modify member data.</param>
+/// <param name="planRepository">The repository used to access and modify plan data.</param>
+/// <param name="clock">The clock used to get the current time for auditing updates.</param>
 public sealed class CreatePersonalPlanCommandHandler(
     IMemberRepository memberRepository,
     IPlanRepository planRepository,
@@ -35,6 +38,8 @@ public sealed class CreatePersonalPlanCommandHandler(
 
         var fromInstant = Instant.FromDateTimeOffset(request.FromDate);
         var toInstant = Instant.FromDateTimeOffset(request.ToDate);
+        var linkUserAdapter = request.LinkUserAdapter ?? member.ResolveLinkUserAdapterForNewPlan();
+        var enableActivityLog = request.EnableActivityLog || linkUserAdapter;
 
         var plan = request.PlanDetails is CreateSportPlanDetailsCommand sportDetails 
             ? Plan.CreateSportPlan(
@@ -46,7 +51,7 @@ public sealed class CreatePersonalPlanCommandHandler(
                 request.StartDateLocal,
                 request.EndDateLocal,
                 request.Timezone,
-                request.EnableActivityLog,
+                enableActivityLog,
                 new SportPlanDetails(request.Unit, [.. sportDetails.SportTypes]),
                 _clock,
                 member.Id)
@@ -59,7 +64,7 @@ public sealed class CreatePersonalPlanCommandHandler(
                 request.StartDateLocal,
                 request.EndDateLocal,
                 request.Timezone,
-                request.EnableActivityLog,
+                enableActivityLog,
                 _clock,
                 member.Id);
 
@@ -67,7 +72,7 @@ public sealed class CreatePersonalPlanCommandHandler(
             plan.Id,
             request.DisplayOnProfile,
             request.Prioritize,
-            request.LinkUserAdapter,
+            linkUserAdapter,
             _clock);
 
         await _planRepository.AddAsync(plan, cancellationToken);
