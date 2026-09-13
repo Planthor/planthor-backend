@@ -592,7 +592,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "planthor://callback", "planthor-dev://callback", "http://localhost:5173/*", "http://localhost:5173/callback" ],
+    "redirectUris" : [ "planthor-dev://callback", "planthor://callback", "http://localhost:5173/*", "http://localhost:5173/callback" ],
     "webOrigins" : [ "http://localhost:5173" ],
     "notBefore" : 0,
     "bearerOnly" : false,
@@ -1405,7 +1405,7 @@
       "showInAccountConsole" : "ALWAYS",
       "filteredByClaim" : "false",
       "syncMode" : "IMPORT",
-      "clientSecret" : "${FACEBOOK_CLIENT_SECRET}",
+      "clientSecret" : "855bfb12f72f274bf1e3fdff77ac66ca",
       "caseSensitiveOriginalUsername" : "false",
       "fetchedFields" : "picture.width(500).height(500)",
       "defaultScope" : "openid email"
@@ -1507,6 +1507,14 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : { }
+    } ],
+    "org.keycloak.userprofile.UserProfileProvider" : [ {
+      "id" : "fb676700-8430-4c3f-8790-2bb175f546ae",
+      "providerId" : "declarative-user-profile",
+      "subComponents" : { },
+      "config" : {
+        "kc.user.profile.config" : [ "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{},\"pattern\":{\"pattern\":\"^[A-Za-z0-9._]+$\",\"error-message\":\"usernameInvalidCharacters\"}},\"annotations\":{},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}" ]
+      }
     } ],
     "org.keycloak.keys.KeyProvider" : [ {
       "id" : "66e94d01-8cff-4f5d-ab5f-36ff31ed7683",
