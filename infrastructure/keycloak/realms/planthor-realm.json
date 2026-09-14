@@ -1405,7 +1405,7 @@
       "showInAccountConsole" : "ALWAYS",
       "filteredByClaim" : "false",
       "syncMode" : "IMPORT",
-      "clientSecret" : "855bfb12f72f274bf1e3fdff77ac66ca",
+      "clientSecret" : "${FACEBOOK_CLIENT_SECRET}",
       "caseSensitiveOriginalUsername" : "false",
       "fetchedFields" : "picture.width(500).height(500)",
       "defaultScope" : "openid email"

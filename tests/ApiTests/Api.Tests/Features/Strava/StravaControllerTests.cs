@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Adapters.Strava.Configuration;
+using Adapters.Strava.Persistence;
 using Api.Requests;
 using Application.Dtos;
 using Application.Members.Commands.ConnectExternalProvider;
@@ -35,6 +36,7 @@ public class StravaControllerTests(CustomWebApplicationFactory<Program> factory)
         using var testFactory = CreateFactory(new RecordingBackgroundJobClient());
         using var client = CreateNonRedirectingClient(testFactory);
         client.DefaultRequestHeaders.Add("X-TestUserId", $"oauth-authorize-{Guid.NewGuid():N}");
+        client.DefaultRequestHeaders.Add("X-TestPreferredUsername", "OAuth.Member+authorize@example.com");
 
         // Act
         var response = await client.GetAsync("/v1/Strava/authorize");
@@ -57,7 +59,7 @@ public class StravaControllerTests(CustomWebApplicationFactory<Program> factory)
         var stateJson = AesEncryptionHelper.Decrypt(encryptedState, StateEncryptionKey);
         var state = JsonSerializer.Deserialize<TestOAuthStatePayload>(stateJson);
         Assert.NotNull(state);
-        Assert.NotEmpty(state.IdentifyName);
+        Assert.Equal("OAuth.Member+authorize@example.com", state.IdentifyName);
         Assert.NotEmpty(state.Nonce);
         Assert.True(state.TimestampUtc > 0);
     }
@@ -70,6 +72,7 @@ public class StravaControllerTests(CustomWebApplicationFactory<Program> factory)
         using var testFactory = CreateFactory(new RecordingBackgroundJobClient());
         using var client = CreateNonRedirectingClient(testFactory);
         client.DefaultRequestHeaders.Add("X-TestUserId", $"oauth-success-{Guid.NewGuid():N}");
+        client.DefaultRequestHeaders.Add("X-TestPreferredUsername", "OAuth.Member+callback@example.com");
         var authorizeResponse = await client.GetAsync("/v1/Strava/authorize");
         var state = ReadState(authorizeResponse);
 
@@ -110,6 +113,13 @@ public class StravaControllerTests(CustomWebApplicationFactory<Program> factory)
         Assert.Contains(connections, connection =>
             connection.ProviderId == ExternalProvider.Strava.Id &&
             connection.ExternalUserId == "24680");
+        await using var scope = testFactory.Services.CreateAsyncScope();
+        var tokenDatabase = scope.ServiceProvider.GetRequiredService<StravaAdapterDatabase>();
+        var token = await tokenDatabase.GetByIdentifyNameAsync(
+            "OAuth.Member+callback@example.com", CancellationToken.None);
+        Assert.NotNull(token);
+        Assert.Equal("OAuth.Member+callback@example.com", token.Id);
+        Assert.Equal("oauth-refresh-token", token.RefreshToken);
     }
 
     [Fact]

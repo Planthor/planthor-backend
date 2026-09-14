@@ -48,7 +48,7 @@ public sealed class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMem
             var memberToSave = existing ?? Member.Create(
                 request.IdentifyName,
                 request.FirstName,
-                "", // Middle name not provided by external sources
+                string.Empty, // Middle name not provided by external sources
                 request.LastName,
                 "JIT Provisioned",
                 "UTC", //default timezone for JIT-provisioned accounts, can be updated by user
@@ -65,17 +65,11 @@ public sealed class ProvisionMemberCommandHandler : ICommandHandler<ProvisionMem
                     _clock);
 
                 await _memberRepository.AddAsync(memberToSave, cancellationToken);
-            }
-
-            bool hasChanges = existing is null;
-
-            if (hasChanges)
-            {
                 await _memberRepository.SaveChangesAsync(cancellationToken);
             }
 
             // Always sync identities in the background (idempotent operation).
-            await _backgroundJobClient.EnqueueIdentitySyncAsync(memberToSave.Id, request.IdentifyName, cancellationToken);
+            await _backgroundJobClient.EnqueueIdentitySyncAsync(memberToSave.Id, memberToSave.IdentifyName, cancellationToken);
 
             // Enqueue avatar download if a URL was provided
             if (request.AvatarUrl is not null && memberToSave.PathAvatar is null)

@@ -5,8 +5,9 @@ namespace Adapters.Strava.Persistence;
 /// Stored in the <c>strava_adapter_db / strava_tokens</c> collection.
 /// </summary>
 /// <remarks>
-/// This document uses the Planthor <c>IdentifyName</c> (Keycloak Subject ID) as its primary key,
-/// ensuring a one-to-one mapping between a member's identity provider ID and their Strava credentials.
+/// This document uses the Planthor member's <c>IdentifyName</c> as its primary key.
+/// This is the username captured during provisioning, not the Keycloak subject ID.
+/// Renaming a provisioned member is unsupported because its credentials use this key.
 /// The <see cref="AthleteId"/> field enables reverse lookups when processing
 /// webhook events (which only carry the Strava athlete ID, not the Planthor member ID).
 /// </remarks>

@@ -62,11 +62,11 @@ public sealed class ApplicationValidationTests(CustomWebApplicationFactory<Progr
         var validator = scope.ServiceProvider
             .GetRequiredService<IValidator<DisconnectExternalProviderCommand>>();
         var validCommand = new DisconnectExternalProviderCommand(
-            "VALID_MEMBER",
+            new string('X', 101),
             ExternalProvider.Strava.Id,
             ExternalConnectionType.ActivitiesSync.Id);
         var invalidCommand = new DisconnectExternalProviderCommand(
-            new string('X', 101),
+            "",
             "UNKNOWN_PROVIDER",
             "UNKNOWN_TYPE");
 

@@ -27,7 +27,9 @@ public class TestAuthenticationHandler(
         {
             return Task.FromResult(AuthenticateResult.Fail("Forced unauthorized"));
         }
-        var userIdHeader = Request.Headers["X-TestUserId"].FirstOrDefault() ?? "test-user-id-123";
+        var userIdHeader = Request.Headers.ContainsKey("X-Empty-NameIdentifier")
+            ? string.Empty
+            : Request.Headers["X-TestUserId"].FirstOrDefault() ?? "test-user-id-123";
 
         var claims = new List<Claim> {
             new(ClaimTypes.Name, "TestUser")
@@ -38,7 +40,16 @@ public class TestAuthenticationHandler(
             claims.Add(new Claim(ClaimTypes.NameIdentifier, userIdHeader));
         }
 
-        AddOptionalClaim(claims, "X-TestPreferredUsername", "preferred_username");
+        if (!Request.Headers.ContainsKey("X-Omit-PreferredUsername"))
+        {
+            var username = Request.Headers["X-TestPreferredUsername"].FirstOrDefault()
+                ?? $"username-{userIdHeader}";
+            if (Request.Headers.ContainsKey("X-Empty-PreferredUsername"))
+            {
+                username = string.Empty;
+            }
+            claims.Add(new Claim("preferred_username", username));
+        }
         AddOptionalClaim(claims, "X-TestGivenName", ClaimTypes.GivenName);
         AddOptionalClaim(claims, "X-TestSurname", ClaimTypes.Surname);
         AddOptionalClaim(claims, "X-TestAvatarUrl", "avatarUrl");

@@ -21,11 +21,11 @@ public partial class KeycloakAdminClient(HttpClient httpClient, IConfiguration c
     private readonly ILogger<KeycloakAdminClient> _logger = logger;
 
     /// <inheritdoc />
-    public Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string identifyName)
-        => GetUserFederatedIdentitiesAsync(identifyName, CancellationToken.None);
+    public Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string subjectId)
+        => GetUserFederatedIdentitiesAsync(subjectId, CancellationToken.None);
 
     /// <inheritdoc />
-    public async Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string identifyName, CancellationToken cancellationToken)
+    public async Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string subjectId, CancellationToken cancellationToken)
     {
         var authority = _configuration["Authentication:Keycloak:Authority"];
         var clientId = _configuration["Authentication:Keycloak:ClientId"] ?? "planthor-backend";
@@ -66,7 +66,7 @@ public partial class KeycloakAdminClient(HttpClient httpClient, IConfiguration c
         var baseUrl = $"{uri.Scheme}://{uri.Authority}";
         var realm = uri.Segments[^1].TrimEnd('/'); // Gets "planthor"
         
-        var adminEndpoint = $"{baseUrl}/admin/realms/{realm}/users/{identifyName}/federated-identity";
+        var adminEndpoint = $"{baseUrl}/admin/realms/{realm}/users/{subjectId}/federated-identity";
 
         var request = new HttpRequestMessage(HttpMethod.Get, new Uri(adminEndpoint));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -75,7 +75,7 @@ public partial class KeycloakAdminClient(HttpClient httpClient, IConfiguration c
         
         if (!response.IsSuccessStatusCode)
         {
-            LogFetchFailed(identifyName, response.StatusCode);
+            LogFetchFailed(subjectId, response.StatusCode);
             return [];
         }
 
@@ -83,6 +83,6 @@ public partial class KeycloakAdminClient(HttpClient httpClient, IConfiguration c
         return result ?? [];
     }
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to fetch federated identities for user {IdentifyName}. Status: {StatusCode}")]
-    private partial void LogFetchFailed(string identifyName, System.Net.HttpStatusCode statusCode);
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to fetch federated identities for user {SubjectId}. Status: {StatusCode}")]
+    private partial void LogFetchFailed(string subjectId, System.Net.HttpStatusCode statusCode);
 }

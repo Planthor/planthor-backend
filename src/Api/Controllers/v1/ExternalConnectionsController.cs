@@ -96,7 +96,6 @@ public sealed class ExternalConnectionsController(
     /// <summary>
     /// Disconnects a specific external connection.
     /// </summary>
-    /// <param name="identifier">The member identifier, which can be 'me' or a valid GUID.</param>
     /// <param name="providerId">The unique identifier of the external provider (e.g., 'STRAVA').</param>
     /// <param name="token">A cancellation token.</param>
     /// <returns>No content on success.</returns>
@@ -109,7 +108,7 @@ public sealed class ExternalConnectionsController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Disconnect(string identifier, string providerId, CancellationToken token)
+    public async Task<IActionResult> Disconnect(string providerId, CancellationToken token)
     {
         if (string.IsNullOrEmpty(CurrentIdentifyName))
         {

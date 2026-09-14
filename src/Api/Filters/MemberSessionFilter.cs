@@ -16,10 +16,11 @@ namespace Api.Filters;
 /// <remarks>
 /// This filter delegates actual authentication checks to the default [Authorize] filter.
 /// It only acts if the user is already authenticated by the identity provider (e.g., Keycloak).
+/// A member session requires a subject and preferred_username. New members retain the exact
+/// preferred_username value; existing members are resolved by subject and retain their stored name.
 /// </remarks>
 public sealed class MemberSessionFilter : IAsyncActionFilter
 {
-    private const int RandomSuffixLength = 8;
     private readonly ISender _sender;
 
     /// <summary>
@@ -46,7 +47,7 @@ public sealed class MemberSessionFilter : IAsyncActionFilter
         return OnActionExecutionInternalAsync(context, next);
     }
 
-    private async Task OnActionExecutionInternalAsync(ActionContext context, ActionExecutionDelegate next)
+    private async Task OnActionExecutionInternalAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var user = context.HttpContext.User;
         if (user.Identity?.IsAuthenticated != true)
@@ -56,28 +57,11 @@ public sealed class MemberSessionFilter : IAsyncActionFilter
         }
 
         var subjectId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(subjectId))
-        {
-            await next();
-            return;
-        }
-
         var preferredUsername = user.FindFirst("preferred_username")?.Value;
-        string? identifyName;
-        
-        if (!string.IsNullOrEmpty(preferredUsername) && preferredUsername.Contains('@'))
+        if (string.IsNullOrWhiteSpace(subjectId) || string.IsNullOrWhiteSpace(preferredUsername))
         {
-            var prefix = preferredUsername.Split('@')[0];
-            var suffix = Guid.NewGuid().ToString()[..4];
-            identifyName = $"{prefix}_{suffix}".ToUpperInvariant();
-        }
-        else if (!string.IsNullOrEmpty(preferredUsername))
-        {
-            identifyName = preferredUsername;
-        }
-        else
-        {
-            identifyName = $"{user.FindFirst(ClaimTypes.GivenName)?.Value}_{Guid.NewGuid().ToString()[..RandomSuffixLength]}".ToUpperInvariant();
+            context.Result = new UnauthorizedResult();
+            return;
         }
 
         var avatarUrlString = user.FindFirst("avatarUrl")?.Value;
@@ -89,11 +73,11 @@ public sealed class MemberSessionFilter : IAsyncActionFilter
 
         var result = await _sender.Send(new ProvisionMemberCommand(
             SubjectId: subjectId,
-            IdentifyName: identifyName,
+            IdentifyName: preferredUsername,
             FirstName: user.FindFirst(ClaimTypes.GivenName)?.Value ?? "New",
             LastName: user.FindFirst(ClaimTypes.Surname)?.Value ?? "User",
             AvatarUrl: avatarUrl
-        ));
+        ), context.HttpContext.RequestAborted);
 
         context.HttpContext.Items["MemberId"] = result.MemberId;
         context.HttpContext.Items["IdentifyName"] = result.IdentifyName;

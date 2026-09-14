@@ -89,7 +89,7 @@ public class ProvisionMemberTests : IClassFixture<CustomWebApplicationFactory<Pr
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, secondResponse.StatusCode);
         Assert.Equal("JIT Provisioned", provisionedMember.Description);
-        Assert.StartsWith("TEST.USER_", provisionedMember.IdentifyName, System.StringComparison.Ordinal);
+        Assert.Equal("test.user@example.com", provisionedMember.IdentifyName);
         Assert.Equal("https://cdn.planthor.test/avatar.jpg", provisionedMember.PathAvatar);
         Assert.Contains(provisionedMember.ExternalConnections, connection =>
             connection.Provider == ExternalProvider.Facebook &&

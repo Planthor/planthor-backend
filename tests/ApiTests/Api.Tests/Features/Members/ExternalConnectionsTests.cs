@@ -200,7 +200,10 @@ public class ExternalConnectionsTests(CustomWebApplicationFactory<Program> facto
         string externalUserId)
     {
         var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-TestUserId", $"connections-{Guid.NewGuid():N}");
+        var subjectId = $"connections-{Guid.NewGuid():N}";
+        client.DefaultRequestHeaders.Add("X-TestUserId", subjectId);
+        client.DefaultRequestHeaders.Add("X-TestPreferredUsername",
+            $"Connection.Owner+{subjectId}@{new string('a', 60)}.example.com");
         var createResponse = await client.PostAsJsonAsync(
             "/v1/members",
             new CreateMemberRequest("Connection", null, "Tester", "Test user", "UTC", false));

@@ -57,7 +57,7 @@ public class MemberSessionFilterTests
     }
 
     [Fact]
-    public async Task OnActionExecutionAsync_MissingSubjectId_DoesNothing()
+    public async Task OnActionExecutionAsync_MissingSubjectId_ReturnsUnauthorized()
     {
         // Arrange
         var identity = new ClaimsIdentity("TestAuthType"); // IsAuthenticated = true
@@ -74,12 +74,13 @@ public class MemberSessionFilterTests
         await _filter.OnActionExecutionAsync(context, next);
 
         // Assert
-        Assert.True(nextCalled);
+        Assert.False(nextCalled);
+        Assert.IsType<UnauthorizedResult>(context.Result);
         await _senderMock.DidNotReceiveWithAnyArgs().Send(default!);
     }
 
     [Fact]
-    public async Task OnActionExecutionAsync_EmailPreferredUsername_ExtractsPrefixAndAppendsSuffix()
+    public async Task OnActionExecutionAsync_EmailPreferredUsername_UsesUsernameAsIs()
     {
         // Arrange
         var identity = new ClaimsIdentity("TestAuthType");
@@ -87,6 +88,8 @@ public class MemberSessionFilterTests
         identity.AddClaim(new Claim("preferred_username", "user@example.com"));
         var user = new ClaimsPrincipal(identity);
         var context = CreateContext(user);
+        using var cancellation = new CancellationTokenSource();
+        context.HttpContext.RequestAborted = cancellation.Token;
 
         Task<ActionExecutedContext> next() => Task.FromResult(new ActionExecutedContext(context, [], null!));
 
@@ -97,12 +100,11 @@ public class MemberSessionFilterTests
         await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
             c != null &&
             c.SubjectId == "sub123" &&
-            c.IdentifyName.StartsWith("USER_") &&
-            c.IdentifyName.Length == 9 && // 'user_' (5) + 4 random chars = 9.
+            c.IdentifyName == "user@example.com" &&
             c.FirstName == "New" && // default
             c.LastName == "User" && // default
             c.AvatarUrl == null
-        ), Arg.Any<CancellationToken>());
+        ), cancellation.Token);
         Assert.True(context.HttpContext.Items.ContainsKey("MemberId"));
         Assert.True(context.HttpContext.Items.ContainsKey("IdentifyName"));
         Assert.Equal("test_user", context.HttpContext.Items["IdentifyName"]);
@@ -134,49 +136,36 @@ public class MemberSessionFilterTests
         ), Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task OnActionExecutionAsync_NoPreferredUsername_FallsBackToGivenName()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task OnActionExecutionAsync_InvalidPreferredUsername_ReturnsUnauthorized(string? username)
     {
         // Arrange
         var identity = new ClaimsIdentity("TestAuthType");
         identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, "sub123"));
         identity.AddClaim(new Claim(ClaimTypes.GivenName, "Alice"));
-        var user = new ClaimsPrincipal(identity);
-        var context = CreateContext(user);
-
-        Task<ActionExecutedContext> next() => Task.FromResult(new ActionExecutedContext(context, [], null!));
-
-        // Act
-        await _filter.OnActionExecutionAsync(context, next);
-
-        // Assert
-        await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
-            c != null &&
-            c.IdentifyName.StartsWith("ALICE_") &&
-            c.IdentifyName.Length == 14 // 'alice_' (6) + 8 random chars = 14
-        ), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task OnActionExecutionAsync_NoPreferredUsernameNoGivenName_FallsBackToGuid()
-    {
-        // Arrange
-        var identity = new ClaimsIdentity("TestAuthType");
-        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, "sub123"));
-        var user = new ClaimsPrincipal(identity);
-        var context = CreateContext(user);
-
-        Task<ActionExecutedContext> next() => Task.FromResult(new ActionExecutedContext(context, [], null!));
+        if (username is not null)
+        {
+            identity.AddClaim(new Claim("preferred_username", username));
+        }
+        var context = CreateContext(new ClaimsPrincipal(identity));
+        var nextCalled = false;
+        Task<ActionExecutedContext> next()
+        {
+            nextCalled = true;
+            return Task.FromResult(new ActionExecutedContext(context, [], null!));
+        }
 
         // Act
         await _filter.OnActionExecutionAsync(context, next);
 
         // Assert
-        await _senderMock.Received(1).Send(Arg.Is<ProvisionMemberCommand>(c =>
-            c != null &&
-            c.IdentifyName.StartsWith('_') &&
-            c.IdentifyName.Length == 9 // '_' (1) + 8 random chars = 9
-        ), Arg.Any<CancellationToken>());
+        Assert.False(nextCalled);
+        Assert.IsType<UnauthorizedResult>(context.Result);
+        Assert.Empty(context.HttpContext.Items);
+        await _senderMock.DidNotReceiveWithAnyArgs().Send(default!);
     }
 
     [Fact]

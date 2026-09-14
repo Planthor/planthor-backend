@@ -17,15 +17,15 @@ public interface IKeycloakAdminClient
     /// <summary>
     /// Retrieves all federated identities linked to a specific user.
     /// </summary>
-    /// <param name="identifyName">The user's unique identifier (e.g., ID or username in Keycloak).</param>
+    /// <param name="subjectId">The Keycloak subject ID stored in the member's external identity connection.</param>
     /// <returns>A list of federated identities linked to the user.</returns>
-    Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string identifyName);
+    Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string subjectId);
 
     /// <summary>
     /// Retrieves all federated identities linked to a specific user.
     /// </summary>
-    /// <param name="identifyName">The user's unique identifier (e.g., ID or username in Keycloak).</param>
+    /// <param name="subjectId">The Keycloak subject ID stored in the member's external identity connection.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A list of federated identities linked to the user.</returns>
-    Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string identifyName, CancellationToken cancellationToken);
+    Task<List<FederatedIdentityDto>> GetUserFederatedIdentitiesAsync(string subjectId, CancellationToken cancellationToken);
 }

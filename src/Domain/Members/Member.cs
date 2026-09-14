@@ -32,7 +32,7 @@ public sealed class Member(
     private readonly List<PersonalPlan> _personalPlans = [];
 
     /// <summary>
-    /// Gets the unique identifier or username from the identity provider.
+    /// Gets the username supplied by the identity provider when this member was provisioned.
     /// </summary>
     public string IdentifyName { get; private set; } = identifyName;
 
@@ -375,20 +375,6 @@ public sealed class Member(
             UpdateAvatar(pathAvatar, clock);
         }
         PreferredTimezone = preferredTimezone;
-        StampUpdatedAudit(Id, clock);
-    }
-
-    /// <summary>
-    /// Updates the member's identify name (handle).
-    /// </summary>
-    public void UpdateIdentifyName(string identifyName, IClock clock)
-    {
-        if (string.IsNullOrWhiteSpace(identifyName))
-        {
-            throw new ArgumentException("IdentifyName cannot be empty.", nameof(identifyName));
-        }
-
-        IdentifyName = identifyName;
         StampUpdatedAudit(Id, clock);
     }
 

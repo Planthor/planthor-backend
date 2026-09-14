@@ -81,15 +81,7 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
     [Fact]
     public async Task Member_Patch_Tests()
     {
-        // Create first member to test IdentifyName uniqueness
-        var createCmd1 = new CreateMemberRequest("User", null, "One", null, "UTC", false);
-        _client.DefaultRequestHeaders.Add("X-TestUserId", "auth-user-1");
-        var res1 = await _client.PostAsJsonAsync("/v1/members", createCmd1);
-        res1.EnsureSuccessStatusCode();
-        var member1 = await res1.Content.ReadFromJsonAsync<MemberDto>();
-        _client.DefaultRequestHeaders.Remove("X-TestUserId");
-
-        // Create second member to patch
+        // Arrange a member to patch
         var createCmd2 = new CreateMemberRequest("User", null, "Two", null, "UTC", false);
         _client.DefaultRequestHeaders.Add("X-TestUserId", "auth-user-2");
         var res2 = await _client.PostAsJsonAsync("/v1/members", createCmd2);
@@ -100,13 +92,11 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         // 1. Patch FirstName and LastName successfully
         var patchCmd1 = new PatchMemberRequest(
             UpdateMask: ["FirstName", "LastName"],
-            IdentifyName: null,
             FirstName: "PatchedFirst",
             LastName: "PatchedLast",
             AutoLinkUserAdapterToPlan: null
         );
         
-        // Use HttpMethod.Patch because HttpClient doesn't have PatchAsJsonAsync built-in out of the box in .NET 6/7, wait, it has PatchAsJsonAsync in newer .NET. Let's use HttpRequestMessage or just PatchAsJsonAsync if available.
         var patchReq1 = await _client.PatchAsJsonAsync($"/v1/members/{member2!.Id}", patchCmd1);
         patchReq1.EnsureSuccessStatusCode();
 
@@ -114,36 +104,9 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         Assert.Equal("PatchedFirst", getRes1!.FirstName);
         Assert.Equal("PatchedLast", getRes1.LastName);
 
-        // 2. Patch IdentifyName successfully
-        var patchCmd2 = new PatchMemberRequest(
-            UpdateMask: ["IdentifyName"],
-            IdentifyName: "new-identify-name",
-            FirstName: null,
-            LastName: null,
-            AutoLinkUserAdapterToPlan: null
-        );
-        var patchReq2 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd2);
-        patchReq2.EnsureSuccessStatusCode();
-
-        var getRes2 = await _client.GetFromJsonAsync<MemberDto>($"/v1/members/{member2.Id}");
-        Assert.NotNull(getRes2); // IdentifyName is not returned in MemberDto currently, but we ensure the patch succeeded.
-
-        // 3. Patch IdentifyName failure (empty string)
-        var patchCmd3 = new PatchMemberRequest(
-            UpdateMask: ["IdentifyName"],
-            IdentifyName: "",
-            FirstName: null,
-            LastName: null,
-            AutoLinkUserAdapterToPlan: null
-        );
-        var patchReq3 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd3);
-        Assert.Equal(HttpStatusCode.InternalServerError, patchReq3.StatusCode);
-
-
-        // 5. Patch FirstName failure (empty string)
+        // 2. Patch FirstName failure (empty string)
         var patchCmd5 = new PatchMemberRequest(
             UpdateMask: ["FirstName"],
-            IdentifyName: null,
             FirstName: "",
             LastName: null,
             AutoLinkUserAdapterToPlan: null
@@ -151,8 +114,8 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         var patchReq5 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd5);
         Assert.Equal(HttpStatusCode.InternalServerError, patchReq5.StatusCode);
         
-        // 6. Patch member not found
-        var patchCmd6 = new PatchMemberRequest(["FirstName"], null, "ValidName", null, null);
+        // 3. Patch member not found
+        var patchCmd6 = new PatchMemberRequest(["FirstName"], "ValidName", null, null);
         var patchReq6 = await _client.PatchAsJsonAsync($"/v1/members/{System.Guid.NewGuid()}", patchCmd6);
         Assert.Equal(HttpStatusCode.InternalServerError, patchReq6.StatusCode);
     }

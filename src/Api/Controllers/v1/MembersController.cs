@@ -166,7 +166,6 @@ public sealed class MembersController(
             var command = new PatchMemberCommand(
                 id,
                 request.UpdateMask,
-                request.IdentifyName,
                 request.FirstName,
                 request.LastName,
                 request.AutoLinkUserAdapterToPlan);

@@ -17,6 +17,8 @@ public class PersonalPlanTests(CustomWebApplicationFactory<Program> factory) : I
     [Fact]
     public async Task PersonalPlan_Lifecycle_Tests()
     {
+        _client.DefaultRequestHeaders.Add("X-TestPreferredUsername", "Plan.Owner+training@example.com");
+
         // We first need a member for the identity
         var createMemberCmd = new CreateMemberRequest(
             FirstName: "Plan",
