@@ -29,6 +29,9 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         Assert.True(createResponse.IsSuccessStatusCode, await createResponse.Content.ReadAsStringAsync());
         var createdMember = await createResponse.Content.ReadFromJsonAsync<MemberDto>();
         Assert.NotNull(createdMember);
+        Assert.Equal($"/v1/members/{createdMember.Id}", createResponse.Headers.Location?.AbsolutePath, ignoreCase: true);
+        var locationMember = await _client.GetFromJsonAsync<MemberDto>(createResponse.Headers.Location);
+        Assert.Equal(createdMember, locationMember);
         
         // 2. Read Member by ID
         var getResponse = await _client.GetAsync($"/v1/members/{createdMember.Id}");
@@ -87,7 +90,6 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         var res2 = await _client.PostAsJsonAsync("/v1/members", createCmd2);
         res2.EnsureSuccessStatusCode();
         var member2 = await res2.Content.ReadFromJsonAsync<MemberDto>();
-        _client.DefaultRequestHeaders.Remove("X-TestUserId");
 
         // 1. Patch FirstName and LastName successfully
         var patchCmd1 = new PatchMemberRequest(
@@ -114,9 +116,9 @@ public class MemberTests(CustomWebApplicationFactory<Program> factory) : IClassF
         var patchReq5 = await _client.PatchAsJsonAsync($"/v1/members/{member2.Id}", patchCmd5);
         Assert.Equal(HttpStatusCode.InternalServerError, patchReq5.StatusCode);
         
-        // 3. Patch member not found
+        // 3. Patching an ID other than the authenticated member is forbidden.
         var patchCmd6 = new PatchMemberRequest(["FirstName"], "ValidName", null, null);
         var patchReq6 = await _client.PatchAsJsonAsync($"/v1/members/{System.Guid.NewGuid()}", patchCmd6);
-        Assert.Equal(HttpStatusCode.InternalServerError, patchReq6.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, patchReq6.StatusCode);
     }
 }
